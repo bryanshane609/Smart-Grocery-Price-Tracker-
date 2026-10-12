@@ -1555,14 +1555,8 @@ document.addEventListener('DOMContentLoaded', () => {
     renderBenchmarkCatalog(e.target.value);
   });
 
-  // Preset Preload and Reset buttons
-  document.getElementById('loadPresetDataBtn')?.addEventListener('click', loadSampleData);
-  document.getElementById('btnLoadSampleAll')?.addEventListener('click', loadSampleData);
-  document.getElementById('btnExportData')?.addEventListener('click', exportDataJSON);
-  document.getElementById('btnResetAll')?.addEventListener('click', resetAllData);
-
-  // Setup Firebase Cloud Sync UI & Listeners
-  setupFirebaseUI();
+  // Setup Background Realtime Cloud Synchronization
+  setupRealtimeCloudSync();
 
   // Initial Load: If fresh, auto-load realistic sample data so user immediately sees comparator in action!
   if (state.cart.length === 0 && state.history.length === 0) {
@@ -1581,58 +1575,10 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // =============================================================================
-// 13. FIREBASE REALTIME SHARED CLOUD UI & LISTENERS
+// 13. BACKGROUND REALTIME CLOUD SYNCHRONIZATION
 // =============================================================================
-function setupFirebaseUI() {
-  const cloudStatusDot = document.getElementById('cloudStatusDot');
-  const cloudStatusText = document.getElementById('cloudStatusText');
-  const firebaseStatusBadge = document.getElementById('firebaseStatusBadge');
-  const btnPushToCloud = document.getElementById('btnPushToCloud');
-  const btnPullFromCloud = document.getElementById('btnPullFromCloud');
-  const cloudSyncHeaderBtn = document.getElementById('cloudSyncHeaderBtn');
-
-  // 1. Status Connection Listener
-  window.addEventListener('firebase-status-change', (e) => {
-    const { status, message } = e.detail || {};
-
-    if (cloudStatusDot && cloudStatusText) {
-      if (status === 'connected') {
-        cloudStatusDot.className = 'w-2 h-2 rounded-full bg-emerald-400';
-        cloudStatusText.textContent = 'Live Cloud';
-        cloudStatusText.className = 'text-[10px] font-bold font-mono text-emerald-400';
-      } else if (status === 'syncing') {
-        cloudStatusDot.className = 'w-2 h-2 rounded-full bg-sky-400 animate-pulse';
-        cloudStatusText.textContent = 'Syncing...';
-        cloudStatusText.className = 'text-[10px] font-bold font-mono text-sky-400';
-      } else if (status === 'offline') {
-        cloudStatusDot.className = 'w-2 h-2 rounded-full bg-slate-500';
-        cloudStatusText.textContent = 'Offline';
-        cloudStatusText.className = 'text-[10px] font-bold font-mono text-slate-400';
-      } else if (status === 'error') {
-        cloudStatusDot.className = 'w-2 h-2 rounded-full bg-amber-400';
-        cloudStatusText.textContent = 'Lokal';
-        cloudStatusText.className = 'text-[10px] font-bold font-mono text-amber-400';
-      }
-    }
-
-    if (firebaseStatusBadge) {
-      if (status === 'connected') {
-        firebaseStatusBadge.className = 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/40';
-        firebaseStatusBadge.textContent = 'Live Realtime ☁️';
-      } else if (status === 'syncing') {
-        firebaseStatusBadge.className = 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-sky-500/20 text-sky-400 border border-sky-500/40 animate-pulse';
-        firebaseStatusBadge.textContent = 'Menyinkronkan...';
-      } else if (status === 'offline') {
-        firebaseStatusBadge.className = 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-800 text-slate-400 border border-slate-700';
-        firebaseStatusBadge.textContent = 'Mode Offline';
-      } else {
-        firebaseStatusBadge.className = 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/40';
-        firebaseStatusBadge.textContent = message || 'Mode Lokal';
-      }
-    }
-  });
-
-  // 2. ⚡ REALTIME LISTENER: Troli Belanja Aktif (Updated across all devices instantly!)
+function setupRealtimeCloudSync() {
+  // 1. ⚡ REALTIME LISTENER: Troli Belanja Aktif (Updated across all devices instantly!)
   window.addEventListener('cloud-cart-update', (e) => {
     const remoteItems = e.detail?.items;
     if (!Array.isArray(remoteItems)) return;
@@ -1648,7 +1594,7 @@ function setupFirebaseUI() {
     }
   });
 
-  // 3. ⚡ REALTIME LISTENER: Pengaturan Anggaran
+  // 2. ⚡ REALTIME LISTENER: Pengaturan Anggaran
   window.addEventListener('cloud-settings-update', (e) => {
     const remoteBudget = e.detail?.budgetLimit;
     if (remoteBudget && remoteBudget !== state.budgetLimit) {
@@ -1660,7 +1606,7 @@ function setupFirebaseUI() {
     }
   });
 
-  // 4. ⚡ REALTIME LISTENER: Patokan Harga Bulan Lalu
+  // 3. ⚡ REALTIME LISTENER: Patokan Harga Bulan Lalu
   window.addEventListener('cloud-benchmarks-update', (e) => {
     const remoteCatalog = e.detail?.catalog;
     if (remoteCatalog && typeof remoteCatalog === 'object') {
@@ -1675,7 +1621,7 @@ function setupFirebaseUI() {
     }
   });
 
-  // 5. ⚡ REALTIME LISTENER: Riwayat Belanja
+  // 4. ⚡ REALTIME LISTENER: Riwayat Belanja
   window.addEventListener('cloud-history-update', (e) => {
     const remoteTrips = e.detail?.trips;
     if (Array.isArray(remoteTrips)) {
@@ -1686,54 +1632,6 @@ function setupFirebaseUI() {
         localStorage.setItem('sg_history_trips', remoteJson);
         renderHistoryView();
       }
-    }
-  });
-
-  // Header cloud pill -> Go to Anggaran/Cloud tab
-  cloudSyncHeaderBtn?.addEventListener('click', () => {
-    document.querySelector('.nav-tab-btn[data-target="tab-anggaran"]')?.click();
-  });
-
-  // Manual Push to Cloud (Paksa Upload Data Saat Ini)
-  btnPushToCloud?.addEventListener('click', async () => {
-    if (!window.FirebaseSync) {
-      showToast('Firebase belum terhubung', 'alert');
-      return;
-    }
-    showToast('Menyimpan ke 1 Cloud Bersama...');
-    await window.FirebaseSync.syncCart(state.cart);
-    await window.FirebaseSync.syncSettings({ budgetLimit: state.budgetLimit, soundEnabled: state.soundEnabled });
-    await window.FirebaseSync.syncBenchmarks(state.benchmarks);
-    await window.FirebaseSync.syncHistory(state.history);
-    showToast('Tersimpan di Cloud untuk Semua Device! ☁️');
-  });
-
-  // Manual Pull from Cloud (Segarkan Data dari Cloud)
-  btnPullFromCloud?.addEventListener('click', async () => {
-    if (!window.FirebaseSync) {
-      showToast('Firebase belum terhubung', 'alert');
-      return;
-    }
-    showToast('Mengambil data terbaru dari Cloud...');
-    const data = await window.FirebaseSync.pullAllSharedData();
-    if (data && (data.cart || data.settings || data.benchmarks || data.history)) {
-      if (data.cart) state.cart = data.cart;
-      if (data.settings?.budgetLimit) state.budgetLimit = data.settings.budgetLimit;
-      if (data.benchmarks) state.benchmarks = data.benchmarks;
-      if (data.history) state.history = data.history;
-
-      localStorage.setItem('sg_cart_items', JSON.stringify(state.cart));
-      localStorage.setItem('sg_budget_limit', state.budgetLimit);
-      localStorage.setItem('sg_benchmark_prices', JSON.stringify(state.benchmarks));
-      localStorage.setItem('sg_history_trips', JSON.stringify(state.history));
-
-      renderBudgetSafety();
-      renderCartItems();
-      renderHistoryView();
-      renderBenchmarkCatalog();
-      showToast('Data cloud berhasil diperbarui!');
-    } else {
-      showToast('Data cloud sudah sinkron.');
     }
   });
 }

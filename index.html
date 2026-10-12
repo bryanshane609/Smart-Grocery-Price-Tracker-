@@ -140,20 +140,13 @@
             <i data-lucide="shopping-cart" class="w-5 h-5 text-white"></i>
           </div>
           <div>
-            <div class="flex items-center space-x-1.5">
-              <h1 class="text-base font-extrabold tracking-tight text-white leading-tight">Smart Grocery</h1>
-              <span class="text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">PWA</span>
-            </div>
+            <h1 class="text-base font-extrabold tracking-tight text-white leading-tight">Smart Grocery</h1>
             <p class="text-[11px] text-slate-400 font-medium">Troli Anak Rantau &bull; <span id="currentDateDisplay" class="text-slate-300">Okt 2026</span></p>
           </div>
         </div>
 
-        <!-- Quick Action: Cloud Sync, Audio / Sound Feedback & Quick Reset/Demo -->
+        <!-- Quick Action: Audio / Sound Feedback & SRS Help -->
         <div class="flex items-center space-x-1.5">
-          <button id="cloudSyncHeaderBtn" class="flex items-center gap-1 px-2 py-1.5 rounded-xl bg-slate-800/90 text-slate-300 hover:text-white border border-slate-700/60 active:scale-95 transition" title="Status Sinkronisasi Firebase Cloud">
-            <span id="cloudStatusDot" class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
-            <span id="cloudStatusText" class="text-[10px] font-bold font-mono">Cloud...</span>
-          </button>
           <button id="toggleSoundBtn" class="p-2 rounded-xl bg-slate-800/90 text-slate-300 hover:text-white border border-slate-700/60 active:scale-95 transition" title="Suara Sentuhan">
             <i data-lucide="volume-2" id="soundIcon" class="w-4 h-4"></i>
           </button>
@@ -270,14 +263,10 @@
           <p class="text-xs text-slate-400 mt-1 max-w-[260px] mx-auto">
             Mulai masukkan barang belanjaanmu sambil berkeliling rak supermarket.
           </p>
-          <div class="mt-4 flex flex-col gap-2 max-w-[240px] mx-auto">
+          <div class="mt-4 flex flex-col gap-2 max-w-[220px] mx-auto">
             <button id="emptyAddBtn" class="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow-lg shadow-emerald-900/40 active:scale-95 transition flex items-center justify-center gap-1.5">
               <i data-lucide="plus-circle" class="w-4 h-4"></i>
               <span>+ Masukkan Barang Pertama</span>
-            </button>
-            <button id="loadPresetDataBtn" class="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-medium border border-slate-700/60 active:scale-95 transition flex items-center justify-center gap-1.5">
-              <i data-lucide="sparkles" class="w-3.5 h-3.5 text-amber-400"></i>
-              <span>Muat Contoh Belanja Anak Rantau</span>
             </button>
           </div>
         </div>
@@ -403,67 +392,9 @@
           </div>
         </div>
 
-        <!-- FIREBASE REALTIME SHARED CLOUD CARD -->
-        <div class="p-4 rounded-2xl bg-slate-900/80 border border-slate-800 space-y-3">
-          <div class="flex items-center justify-between">
-            <div class="flex items-center gap-1.5">
-              <i data-lucide="cloud-lightning" class="w-4 h-4 text-emerald-400"></i>
-              <h3 class="text-xs font-bold text-slate-200">Realtime Shared Database</h3>
-            </div>
-            <span id="firebaseStatusBadge" class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
-              Live Realtime ☁️
-            </span>
-          </div>
-          <p class="text-[11px] text-slate-400 leading-relaxed">
-            <b>1 Tempat, 1 Data Bersama:</b> Semua HP, tablet, dan laptop langsung tersambung ke keranjang & limit anggaran yang sama tanpa perlu login atau input ID user.
-          </p>
-          
-          <div class="p-2.5 rounded-xl bg-slate-950 border border-slate-800/80 flex items-center justify-between text-xs">
-            <div class="flex items-center gap-2">
-              <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
-              <span class="text-slate-300 font-medium text-[11px]">Sinkronisasi Otomatis Antar Device</span>
-            </div>
-            <span class="text-[10px] font-mono text-emerald-400 font-bold">AKTIF</span>
-          </div>
-
-          <div class="grid grid-cols-2 gap-2 pt-1">
-            <button id="btnPushToCloud" class="py-2 px-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-slate-700 active:scale-95 transition flex items-center justify-center gap-1.5">
-              <i data-lucide="upload-cloud" class="w-3.5 h-3.5 text-sky-400"></i>
-              <span>Simpan ke Cloud</span>
-            </button>
-            <button id="btnPullFromCloud" class="py-2 px-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-slate-700 active:scale-95 transition flex items-center justify-center gap-1.5">
-              <i data-lucide="download" class="w-3.5 h-3.5 text-emerald-400"></i>
-              <span>Tarik dr Cloud</span>
-            </button>
-          </div>
-        </div>
-
-        <!-- Data Management & Preload Presets -->
-        <div class="p-4 rounded-2xl bg-slate-900/80 border border-slate-800 space-y-2.5">
-          <h3 class="text-xs font-bold text-slate-200 flex items-center gap-1.5">
-            <i data-lucide="sliders" class="w-4 h-4 text-emerald-400"></i>
-            <span>Manajemen Data & Uji Coba</span>
-          </h3>
-          <div class="grid grid-cols-2 gap-2">
-            <button id="btnLoadSampleAll" class="py-2.5 px-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-slate-700/60 active:scale-95 transition flex items-center justify-center gap-1">
-              <i data-lucide="download-cloud" class="w-3.5 h-3.5 text-amber-400"></i>
-              <span>Muat Contoh Data</span>
-            </button>
-            <button id="btnExportData" class="py-2.5 px-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-slate-700/60 active:scale-95 transition flex items-center justify-center gap-1">
-              <i data-lucide="share-2" class="w-3.5 h-3.5 text-sky-400"></i>
-              <span>Salin Backup (JSON)</span>
-            </button>
-          </div>
-          <button id="btnResetAll" class="w-full py-2 px-3 rounded-xl bg-red-950/40 hover:bg-red-900/50 text-red-300 text-xs font-semibold border border-red-800/40 active:scale-95 transition flex items-center justify-center gap-1">
-            <i data-lucide="trash-2" class="w-3.5 h-3.5 text-red-400"></i>
-            <span>Reset Semua Data (Mulai Baru)</span>
-          </button>
-        </div>
-
-        <!-- About Developer & SRS Compliance -->
-        <div class="p-3 text-center text-[10px] text-slate-500 space-y-1">
-          <p class="font-semibold text-slate-400">Smart Grocery & Budget Safety Tracker PWA</p>
-          <p>Sesuai Standar Checklist SRS (F-01 s/d F-06) & PWA Standalone</p>
+        <!-- App Clean Footer -->
+        <div class="pt-2 pb-4 text-center text-[11px] text-slate-500">
+          <p class="font-semibold text-slate-400">Smart Grocery &bull; Budget Safety Tracker</p>
         </div>
       </section>
 
