@@ -1,6 +1,7 @@
 /**
- * Firebase Integration Service for Smart Grocery & Budget Safety Tracker
- * Menggunakan Firebase Web SDK v10 (Modular ES Module)
+ * Firebase Integration Service - SINGLE SHARED REALTIME DATABASE
+ * Semua perangkat (HP, laptop, tablet) terhubung ke 1 tempat & 1 data yang sama secara realtime.
+ * Tidak ada pemisahan ID User.
  */
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
@@ -10,13 +11,10 @@ import {
   doc, 
   setDoc, 
   getDoc, 
-  collection, 
-  getDocs,
-  enableNetwork,
-  disableNetwork
+  onSnapshot
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-// Konfigurasi Firebase dari Pengguna
+// Konfigurasi Firebase Proyek
 const firebaseConfig = {
   apiKey: "AIzaSyC82Gdng1O2o1IluxYMekduvX1PnoTI1PE",
   authDomain: "smartgrocery-1f9cb.firebaseapp.com",
@@ -26,39 +24,23 @@ const firebaseConfig = {
   appId: "1:522355385292:web:6bec97bc5e8caf1c18b369"
 };
 
-class FirebaseSyncService {
+class FirebaseSharedService {
   constructor() {
     this.app = null;
     this.db = null;
     this.isInitialized = false;
-    this.syncStatus = 'connecting'; // 'connected' | 'offline' | 'error' | 'syncing'
-    this.userId = this.getOrCreateUserId();
-    this.onStatusChangeCallback = null;
+    this.syncStatus = 'connecting'; // 'connected' | 'syncing' | 'offline' | 'error'
+    this.unsubscribers = [];
+    this.isSyncingLocally = false;
   }
 
-  getOrCreateUserId() {
-    let uid = localStorage.getItem('sg_firebase_user_id');
-    if (!uid) {
-      uid = 'test_student_anak_rantau';
-      localStorage.setItem('sg_firebase_user_id', uid);
-    }
-    return uid;
-  }
-
-  setUserId(newUid) {
-    if (!newUid || !newUid.trim()) return;
-    this.userId = newUid.trim();
-    localStorage.setItem('sg_firebase_user_id', this.userId);
-  }
-
-  async init(onStatusChange) {
-    this.onStatusChangeCallback = onStatusChange;
-    this.updateStatus('connecting', 'Menghubungkan ke Firebase...');
+  async init() {
+    this.updateStatus('connecting', 'Menghubungkan ke Realtime Cloud...');
 
     try {
       this.app = initializeApp(firebaseConfig);
-      
-      // Mengaktifkan auto-detect long polling agar stabil di GitHub Pages & jaringan sekolah/kampus
+
+      // Auto-detect long polling agar stabil di mobile browser & GitHub Pages
       try {
         this.db = initializeFirestore(this.app, {
           experimentalAutoDetectLongPolling: true
@@ -68,172 +50,186 @@ class FirebaseSyncService {
       }
 
       this.isInitialized = true;
-      this.updateStatus('connected', 'Firebase Terhubung ☁️');
-      console.log('Firebase initialized successfully for user:', this.userId);
+      this.updateStatus('connected', 'Cloud Realtime Aktif ☁️');
+      console.log('Firebase Shared Realtime Database Initialized (1 Tempat 1 Data).');
 
-      // Verifikasi koneksi awal ke Firestore
-      this.testConnection();
+      // Aktifkan Realtime Listeners ke 1 Data Bersama
+      this.startRealtimeSync();
       return true;
     } catch (error) {
-      console.warn('Firebase initialization error:', error);
+      console.warn('Firebase init error:', error);
       this.handleFirestoreError(error);
       return false;
     }
   }
 
-  async testConnection() {
-    try {
-      const pingRef = doc(this.db, 'users', this.userId, 'settings', 'config');
-      await getDoc(pingRef);
-      this.updateStatus('connected', 'Firebase Terhubung ☁️');
-    } catch (err) {
-      console.warn('Firebase connection test warning:', err);
-      this.handleFirestoreError(err);
-    }
-  }
-
   updateStatus(status, message) {
     this.syncStatus = status;
-    if (this.onStatusChangeCallback) {
-      this.onStatusChangeCallback(status, message);
-    }
     window.dispatchEvent(new CustomEvent('firebase-status-change', {
-      detail: { status, message, userId: this.userId }
+      detail: { status, message }
     }));
   }
 
   /**
-   * 1. Sinkronisasi Keranjang Belanja Aktif (Cart)
+   * ⚡ REALTIME SYNC (onSnapshot)
+   * Setiap ada perubahan di perangkat A, perangkat B langsung otomatis terupdate seketika!
+   */
+  startRealtimeSync() {
+    if (!this.db) return;
+
+    // Bersihkan listener lama jika ada
+    this.unsubscribers.forEach(unsub => unsub && unsub());
+    this.unsubscribers = [];
+
+    // 1. Realtime Listener: Troli Belanja Aktif (Shared Cart)
+    const cartDocRef = doc(this.db, 'grocery_data', 'active_cart');
+    const unsubCart = onSnapshot(cartDocRef, (snap) => {
+      if (snap.exists()) {
+        const data = snap.data();
+        window.dispatchEvent(new CustomEvent('cloud-cart-update', {
+          detail: { items: data.items || [], updatedAt: data.updatedAt }
+        }));
+      }
+    }, (err) => this.handleFirestoreError(err));
+    this.unsubscribers.push(unsubCart);
+
+    // 2. Realtime Listener: Pengaturan Anggaran (Shared Settings)
+    const settingsDocRef = doc(this.db, 'grocery_data', 'settings');
+    const unsubSettings = onSnapshot(settingsDocRef, (snap) => {
+      if (snap.exists()) {
+        const data = snap.data();
+        window.dispatchEvent(new CustomEvent('cloud-settings-update', {
+          detail: { budgetLimit: data.budgetLimit, soundEnabled: data.soundEnabled }
+        }));
+      }
+    }, (err) => this.handleFirestoreError(err));
+    this.unsubscribers.push(unsubSettings);
+
+    // 3. Realtime Listener: Patokan Harga Bulan Lalu (Shared Benchmarks)
+    const benchDocRef = doc(this.db, 'grocery_data', 'price_benchmarks');
+    const unsubBench = onSnapshot(benchDocRef, (snap) => {
+      if (snap.exists()) {
+        const data = snap.data();
+        window.dispatchEvent(new CustomEvent('cloud-benchmarks-update', {
+          detail: { catalog: data.catalog || {} }
+        }));
+      }
+    }, (err) => this.handleFirestoreError(err));
+    this.unsubscribers.push(unsubBench);
+
+    // 4. Realtime Listener: Riwayat Struk Belanja (Shared History)
+    const historyDocRef = doc(this.db, 'grocery_data', 'shopping_history');
+    const unsubHistory = onSnapshot(historyDocRef, (snap) => {
+      if (snap.exists()) {
+        const data = snap.data();
+        window.dispatchEvent(new CustomEvent('cloud-history-update', {
+          detail: { trips: data.trips || [] }
+        }));
+      }
+    }, (err) => this.handleFirestoreError(err));
+    this.unsubscribers.push(unsubHistory);
+  }
+
+  /**
+   * 📤 SIMPAN DATA KE 1 TEMPAT BERSAMA
    */
   async syncCart(cart) {
     if (!this.isInitialized || !this.db) return false;
     try {
-      this.updateStatus('syncing', 'Menyimpan Troli...');
-      const cartRef = doc(this.db, 'users', this.userId, 'active_cart', 'current');
+      this.updateStatus('syncing', 'Menyinkronkan Troli...');
+      const cartRef = doc(this.db, 'grocery_data', 'active_cart');
       await setDoc(cartRef, {
         items: cart,
         totalItems: cart.length,
         totalQty: cart.reduce((sum, it) => sum + (it.qty || 1), 0),
         updatedAt: new Date().toISOString()
       }, { merge: true });
-      this.updateStatus('connected', 'Tersinkron ☁️');
+      this.updateStatus('connected', 'Cloud Realtime Aktif ☁️');
       return true;
     } catch (err) {
-      console.warn('Gagal sinkronisasi cart ke Firebase:', err);
       this.handleFirestoreError(err);
       return false;
     }
   }
 
-  /**
-   * 2. Sinkronisasi Limit Anggaran & Preferensi (Settings)
-   */
   async syncSettings(settings) {
     if (!this.isInitialized || !this.db) return false;
     try {
-      this.updateStatus('syncing', 'Menyimpan Anggaran...');
-      const settingsRef = doc(this.db, 'users', this.userId, 'settings', 'config');
+      this.updateStatus('syncing', 'Menyinkronkan Anggaran...');
+      const settingsRef = doc(this.db, 'grocery_data', 'settings');
       await setDoc(settingsRef, {
         budgetLimit: settings.budgetLimit || 800000,
         soundEnabled: settings.soundEnabled !== false,
-        activeCategoryFilter: settings.activeCategoryFilter || 'ALL',
         updatedAt: new Date().toISOString()
       }, { merge: true });
-      this.updateStatus('connected', 'Tersinkron ☁️');
+      this.updateStatus('connected', 'Cloud Realtime Aktif ☁️');
       return true;
     } catch (err) {
-      console.warn('Gagal sinkronisasi settings ke Firebase:', err);
       this.handleFirestoreError(err);
       return false;
     }
   }
 
-  /**
-   * 3. Sinkronisasi Database Harga Pembanding Bulan Lalu (Benchmarks)
-   */
   async syncBenchmarks(benchmarks) {
     if (!this.isInitialized || !this.db) return false;
     try {
-      this.updateStatus('syncing', 'Menyimpan Patokan Harga...');
-      const benchRef = doc(this.db, 'users', this.userId, 'price_benchmarks', 'catalog');
+      this.updateStatus('syncing', 'Menyinkronkan Patokan Harga...');
+      const benchRef = doc(this.db, 'grocery_data', 'price_benchmarks');
       await setDoc(benchRef, {
         catalog: benchmarks,
         itemCount: Object.keys(benchmarks).length,
         updatedAt: new Date().toISOString()
       }, { merge: true });
-      this.updateStatus('connected', 'Tersinkron ☁️');
+      this.updateStatus('connected', 'Cloud Realtime Aktif ☁️');
       return true;
     } catch (err) {
-      console.warn('Gagal sinkronisasi benchmarks ke Firebase:', err);
       this.handleFirestoreError(err);
       return false;
     }
   }
 
-  /**
-   * 4. Simpan Riwayat Belanja ke Koleksi Cloud (Shopping History)
-   */
-  async saveHistoryTrip(trip) {
+  async syncHistory(trips) {
     if (!this.isInitialized || !this.db) return false;
     try {
-      this.updateStatus('syncing', 'Menyimpan Struk ke Cloud...');
-      const tripRef = doc(this.db, 'users', this.userId, 'shopping_history', trip.id);
-      await setDoc(tripRef, {
-        ...trip,
-        syncedAt: new Date().toISOString()
-      });
-      this.updateStatus('connected', 'Struk Tersimpan ☁️');
+      this.updateStatus('syncing', 'Menyinkronkan Riwayat Struk...');
+      const historyRef = doc(this.db, 'grocery_data', 'shopping_history');
+      await setDoc(historyRef, {
+        trips: trips,
+        totalTrips: trips.length,
+        updatedAt: new Date().toISOString()
+      }, { merge: true });
+      this.updateStatus('connected', 'Cloud Realtime Aktif ☁️');
       return true;
     } catch (err) {
-      console.warn('Gagal menyimpan trip history ke Firebase:', err);
       this.handleFirestoreError(err);
       return false;
     }
   }
 
   /**
-   * Tarik Data dari Cloud saat pertama kali buka aplikasi di perangkat baru
+   * Tarik manual semua data jika dibutuhkan
    */
-  async pullDataFromCloud() {
+  async pullAllSharedData() {
     if (!this.isInitialized || !this.db) return null;
     try {
       this.updateStatus('syncing', 'Mengambil data cloud...');
 
-      // 1. Ambil Settings
-      const settingsRef = doc(this.db, 'users', this.userId, 'settings', 'config');
-      const settingsSnap = await getDoc(settingsRef);
-      const settingsData = settingsSnap.exists() ? settingsSnap.data() : null;
+      const [cartSnap, settingsSnap, benchSnap, historySnap] = await Promise.all([
+        getDoc(doc(this.db, 'grocery_data', 'active_cart')),
+        getDoc(doc(this.db, 'grocery_data', 'settings')),
+        getDoc(doc(this.db, 'grocery_data', 'price_benchmarks')),
+        getDoc(doc(this.db, 'grocery_data', 'shopping_history'))
+      ]);
 
-      // 2. Ambil Active Cart
-      const cartRef = doc(this.db, 'users', this.userId, 'active_cart', 'current');
-      const cartSnap = await getDoc(cartRef);
-      const cartData = cartSnap.exists() ? cartSnap.data() : null;
-
-      // 3. Ambil Benchmarks
-      const benchRef = doc(this.db, 'users', this.userId, 'price_benchmarks', 'catalog');
-      const benchSnap = await getDoc(benchRef);
-      const benchData = benchSnap.exists() ? benchSnap.data() : null;
-
-      // 4. Ambil History
-      const historyCol = collection(this.db, 'users', this.userId, 'shopping_history');
-      const historySnap = await getDocs(historyCol);
-      const historyList = [];
-      historySnap.forEach(docSnap => {
-        historyList.push(docSnap.data());
-      });
-      // Sort descending by timestamp
-      historyList.sort((a, b) => new Date(b.timestamp || 0) - new Date(a.timestamp || 0));
-
-      this.updateStatus('connected', 'Data Cloud Dimuat ☁️');
+      this.updateStatus('connected', 'Cloud Realtime Aktif ☁️');
 
       return {
-        settings: settingsData,
-        cart: cartData?.items || null,
-        benchmarks: benchData?.catalog || null,
-        history: historyList.length > 0 ? historyList : null
+        cart: cartSnap.exists() ? cartSnap.data().items : null,
+        settings: settingsSnap.exists() ? settingsSnap.data() : null,
+        benchmarks: benchSnap.exists() ? benchSnap.data().catalog : null,
+        history: historySnap.exists() ? historySnap.data().trips : null
       };
     } catch (err) {
-      console.warn('Gagal mengambil data dari Firebase:', err);
       this.handleFirestoreError(err);
       return null;
     }
@@ -241,6 +237,7 @@ class FirebaseSyncService {
 
   handleFirestoreError(err) {
     const msg = err?.message || String(err);
+    console.warn('Firestore error handled:', msg);
     if (msg.includes('permission-denied') || msg.includes('Missing or insufficient permissions')) {
       this.updateStatus('error', 'Izin Ditolak (Cek Security Rules)');
     } else if (msg.includes('NOT_FOUND') || msg.includes('does not exist')) {
@@ -253,11 +250,11 @@ class FirebaseSyncService {
   }
 }
 
-// Inisialisasi Singleton & ekspos ke global window
-const firebaseSync = new FirebaseSyncService();
+// Inisialisasi Singleton
+const firebaseSync = new FirebaseSharedService();
 window.FirebaseSync = firebaseSync;
 
-// Auto-init saat module siap
+// Otomatis aktifkan saat modul dimuat
 firebaseSync.init();
 
 export default firebaseSync;

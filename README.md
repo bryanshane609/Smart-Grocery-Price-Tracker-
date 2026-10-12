@@ -58,16 +58,16 @@ Cukup klik ganda (double click) file **`index.html`** langsung di peramban (Chro
 
 ---
 
-## ☁️ Integrasi Firebase Cloud (Multi-Device Sync)
+## ⚡ Realtime Shared Database (1 Tempat, 1 Data Bersama)
 
-Aplikasi telah terhubung ke proyek **Firebase Firestore**: `smartgrocery-1f9cb` dengan konfigurasi:
-* **SDK:** Firebase Web SDK v10 (Modular ES Module via CDN).
-* **Arsitektur Sinkronisasi:** *Offline-First Hybrid*. Data langsung disimpan di memori HP (`LocalStorage`) untuk kecepatan 0ms di lorong supermarket, lalu otomatis disinkronkan ke cloud saat perangkat online.
-* **Struktur Data Firestore:**
-  * `users/{userId}/active_cart/current` : Keranjang belanja aktif saat ini.
-  * `users/{userId}/settings/config` : Batas limit anggaran & preferensi audio.
-  * `users/{userId}/price_benchmarks/catalog` : Kamus patokan harga bulan lalu.
-  * `users/{userId}/shopping_history/{tripId}` : Arsip struk belanja digital per transaksi.
+Aplikasi terhubung ke proyek **Firebase Firestore**: `smartgrocery-1f9cb` dengan arsitektur **Single Shared Realtime State**:
+* **Tanpa ID Pengguna:** Semua perangkat (HP, laptop, tablet) langsung terhubung ke database yang sama tanpa login atau input akun.
+* **Sinkronisasi Realtime (`onSnapshot`):** Saat ada barang ditambah atau diubah di HP A, layar HP B dan laptop langsung terbarui secara otomatis seketika dalam hitungan detik.
+* **Struktur Dokumen Firestore:**
+  * `grocery_data/active_cart` : Keranjang belanja aktif bersama.
+  * `grocery_data/settings` : Batas limit anggaran & preferensi audio bersama.
+  * `grocery_data/price_benchmarks` : Kamus patokan harga bulan lalu bersama.
+  * `grocery_data/shopping_history` : Arsip riwayat struk belanja bersama.
 
 > 💡 **Pengaturan Security Rules Firebase:**
 > Pastikan di [Firebase Console](https://console.firebase.google.com/) > Firestore Database > Tab Rules telah diaktifkan untuk mode pengembangan:
@@ -85,7 +85,7 @@ Aplikasi telah terhubung ke proyek **Firebase Firestore**: `smartgrocery-1f9cb` 
 ---
 
 ## 💡 Fitur Unggulan Tambahan
-- **Multi-Device Cloud Sync:** Anda dapat menyalin ID Pengguna Cloud dari Tab Anggaran dan memasukkannya di HP/laptop lain untuk menyinkronkan keranjang belanja yang sama.
+- **Realtime Live Collaboration:** Perubahan barang di keranjang belanja langsung tersinkronisasi otomatis antar semua perangkat secara langsung (live update).
 - **Contoh Data Anak Rantau (Preload Seed Data):** Tersedia tombol satu kali klik untuk memuat keranjang dan riwayat bulan lalu yang realistis (Beras, Telur, Indomie, Minyak Sania, Sabun Lifebuoy) agar Anda bisa langsung menguji komparator dan safety cap seketika.
 - **Audio Feedback Synthesizer (Web Audio API):** Memberikan umpan balik suara klik saat memasukkan item dan suara nada alarm saat keranjang *over budget* (dapat dimatikan melalui tombol di header).
 - **Struk Belanja Digital:** Format struk rapi dengan tombol salin otomatis ke format pesan teks WhatsApp.
