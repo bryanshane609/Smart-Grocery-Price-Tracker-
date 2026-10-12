@@ -1,10 +1,12 @@
 <!DOCTYPE html>
 <html lang="id" class="h-full bg-slate-100">
+
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="viewport"
+    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>Smart Grocery & Budget Safety Tracker</title>
-  
+
   <!-- PWA Meta Tags -->
   <meta name="theme-color" content="#fafbfc">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -12,7 +14,8 @@
   <meta name="apple-mobile-web-app-title" content="SmartGrocery">
   <meta name="application-name" content="SmartGrocery">
   <meta name="mobile-web-app-capable" content="yes">
-  <meta name="description" content="Aplikasi mobile PWA pengontrol anggaran & komparator harga belanja bulanan anak rantau">
+  <meta name="description"
+    content="Aplikasi mobile PWA pengontrol anggaran & komparator harga belanja bulanan anak rantau">
 
   <!-- Favicon & Icons -->
   <link rel="icon" type="image/svg+xml" href="./icons/icon.svg">
@@ -22,7 +25,9 @@
   <!-- Google Fonts: Plus Jakarta Sans -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap"
+    rel="stylesheet">
 
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -91,17 +96,23 @@
       user-select: none;
       -webkit-user-select: none;
     }
-    input, textarea, select {
+
+    input,
+    textarea,
+    select {
       user-select: auto;
       -webkit-user-select: auto;
     }
+
     .scrollbar-none::-webkit-scrollbar {
       display: none;
     }
+
     .scrollbar-none {
       -ms-overflow-style: none;
       scrollbar-width: none;
     }
+
     /* Mobile app container centering */
     .mobile-frame {
       max-width: 430px;
@@ -112,58 +123,71 @@
       display: flex;
       flex-direction: column;
       position: relative;
-      background-color: #f3f6f9;
+      background-color: #fafbfc;
     }
+
     @media (min-width: 640px) {
       body {
-        background: radial-gradient(circle at 50% 15%, #e2e8f0 0%, #cbd5e1 50%, #94a3b8 100%);
+        background: radial-gradient(circle at 50% 15%, #ecfdf5 0%, #f1f5f9 50%, #e2e8f0 100%);
       }
+
       .mobile-frame {
-        box-shadow: 0 20px 45px -15px rgba(15, 23, 42, 0.15), 0 0 0 1px rgba(203, 213, 225, 0.8);
+        box-shadow: 0 20px 45px -15px rgba(100, 116, 139, 0.15), 0 0 0 1px rgba(226, 232, 240, 0.9);
       }
     }
+
     /* Number stepper styling */
-    input[type=number]::-webkit-inner-spin-button, 
-    input[type=number]::-webkit-outer-spin-button { 
-      -webkit-appearance: none; 
-      margin: 0; 
+    input[type=number]::-webkit-inner-spin-button,
+    input[type=number]::-webkit-outer-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
     }
+
     input[type=number] {
       -moz-appearance: textfield;
     }
   </style>
 </head>
+
 <body class="text-slate-800 antialiased font-sans flex flex-col justify-center items-center min-h-screen">
 
   <!-- Mobile View Container (Max 430px) -->
   <div class="mobile-frame w-full shadow-2xl overflow-x-hidden pb-24">
 
     <!-- TOP HEADER: App Title & Supermarket Trolley Companion -->
-    <header class="sticky top-0 z-30 bg-white/90 backdrop-blur-md border-b border-slate-200/90 px-4 pt-3 pb-2.5 shadow-[0_2px_10px_rgba(0,0,0,0.02)]">
+    <header
+      class="sticky top-0 z-30 bg-white/90 backdrop-blur-md border-b border-slate-200/90 px-4 pt-3 pb-2.5 shadow-[0_2px_10px_rgba(0,0,0,0.02)]">
       <div class="flex items-center justify-between">
         <div class="flex items-center space-x-2.5">
-          <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-emerald-500 via-teal-400 to-sky-400 flex items-center justify-center shadow-md shadow-emerald-200/80">
+          <div
+            class="w-9 h-9 rounded-xl bg-gradient-to-tr from-emerald-500 via-teal-400 to-sky-400 flex items-center justify-center shadow-md shadow-emerald-200/80">
             <i data-lucide="shopping-cart" class="w-5 h-5 text-white"></i>
           </div>
           <div>
             <h1 class="text-base font-extrabold tracking-tight text-slate-800 leading-tight">Smart Grocery</h1>
-            <p class="text-[11px] text-slate-500 font-medium">Troli Anak Rantau &bull; <span id="currentDateDisplay" class="text-slate-700 font-semibold">Okt 2026</span></p>
+            <p class="text-[11px] text-slate-500 font-medium">Troli Anak Rantau &bull; <span id="currentDateDisplay"
+                class="text-slate-700 font-semibold">Okt 2026</span></p>
           </div>
         </div>
 
         <!-- Quick Action: Audio / Sound Feedback & SRS Help -->
         <div class="flex items-center space-x-1.5">
-          <button id="toggleSoundBtn" class="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 hover:text-slate-800 border border-slate-200/80 active:scale-95 transition" title="Suara Sentuhan">
+          <button id="toggleSoundBtn"
+            class="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 hover:text-slate-800 border border-slate-200/80 active:scale-95 transition"
+            title="Suara Sentuhan">
             <i data-lucide="volume-2" id="soundIcon" class="w-4 h-4"></i>
           </button>
-          <button id="quickHelpBtn" class="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 hover:text-slate-800 border border-slate-200/80 active:scale-95 transition" title="Info Fitur SRS">
+          <button id="quickHelpBtn"
+            class="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 hover:text-slate-800 border border-slate-200/80 active:scale-95 transition"
+            title="Info Fitur SRS">
             <i data-lucide="info" class="w-4 h-4"></i>
           </button>
         </div>
       </div>
 
       <!-- F-05: SAFETY CAP & BUDGET CONTROLLER COMPONENT (Sticky at Top) -->
-      <div id="budgetSafetyWidget" class="mt-2.5 p-3 rounded-2xl bg-white border border-slate-200/90 shadow-sm transition-all duration-300">
+      <div id="budgetSafetyWidget"
+        class="mt-2.5 p-3 rounded-2xl bg-emerald-50/75 border border-emerald-200/90 shadow-sm transition-all duration-300">
         <!-- Budget Numbers Row -->
         <div class="flex items-end justify-between mb-1.5">
           <div>
@@ -171,7 +195,8 @@
               <i data-lucide="shield-alert" class="w-3 h-3 text-emerald-600" id="safetyStatusIcon"></i>
               <span>Total Troli Saat Ini</span>
             </div>
-            <div class="text-lg font-extrabold text-slate-900 font-mono tracking-tight flex items-baseline gap-1" id="cartTotalHeader">
+            <div class="text-lg font-extrabold text-slate-900 font-mono tracking-tight flex items-baseline gap-1"
+              id="cartTotalHeader">
               <span class="text-xs text-slate-400 font-sans">Rp</span> 0
             </div>
           </div>
@@ -185,28 +210,33 @@
 
         <!-- Progress Bar & Indicator -->
         <div class="relative w-full h-3 bg-slate-100 rounded-full overflow-hidden p-0.5 border border-slate-200">
-          <div id="budgetProgressBar" class="h-full rounded-full transition-all duration-500 bg-emerald-400 shadow-sm" style="width: 0%"></div>
+          <div id="budgetProgressBar" class="h-full rounded-full transition-all duration-500 bg-emerald-400 shadow-sm"
+            style="width: 0%"></div>
         </div>
 
         <!-- Realtime Status & Sisa Anggaran -->
         <div class="flex items-center justify-between mt-2 pt-1.5 border-t border-slate-100 text-[11px]">
-          <div id="budgetSafetyBadge" class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full font-semibold text-[10px] bg-emerald-50 text-emerald-700 border border-emerald-200">
+          <div id="budgetSafetyBadge"
+            class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full font-semibold text-[10px] bg-emerald-50 text-emerald-700 border border-emerald-200">
             <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
             <span id="budgetSafetyText">Aman (0%)</span>
           </div>
           <div class="text-slate-600 font-medium">
-            <span class="text-slate-400 text-[10px]">Sisa:</span> <span id="budgetRemainingText" class="font-bold font-mono text-emerald-600">Rp 800.000</span>
+            <span class="text-slate-400 text-[10px]">Sisa:</span> <span id="budgetRemainingText"
+              class="font-bold font-mono text-emerald-600">Rp 800.000</span>
           </div>
         </div>
 
         <!-- OVER BUDGET DANGER ALERT BANNER (Hidden by default, shown when >= 100%) -->
-        <div id="overBudgetBanner" class="hidden mt-2 p-2.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-[11px] flex items-center gap-2">
+        <div id="overBudgetBanner"
+          class="hidden mt-2 p-2.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-[11px] flex items-center gap-2">
           <div class="p-1 rounded-lg bg-rose-100 text-rose-600 shrink-0">
             <i data-lucide="alert-triangle" class="w-4 h-4 text-rose-500 animate-bounce"></i>
           </div>
           <div class="leading-tight">
             <span class="font-bold text-rose-900 block">PERINGATAN SAFETY CAP!</span>
-            <span id="overBudgetDiffText" class="text-rose-700">Melebihi jatah belanja bulananmu! Segera kurangi barang tersier.</span>
+            <span id="overBudgetDiffText" class="text-rose-700">Melebihi jatah belanja bulananmu! Segera kurangi barang
+              tersier.</span>
           </div>
         </div>
       </div>
@@ -217,36 +247,50 @@
 
       <!-- TAB 1: BELANJA (Active Shopping Trolley) -->
       <section id="tab-belanja" class="tab-content space-y-3">
-        
+
         <!-- Category Filter Pills (Horizontal Scroll Touch Friendly) -->
         <div class="flex items-center gap-1.5 overflow-x-auto scrollbar-none py-1 -mx-3.5 px-3.5">
-          <button class="cat-pill active px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap bg-emerald-500 text-white shadow-sm shadow-emerald-200 transition active:scale-95" data-category="ALL">
+          <button
+            class="cat-pill active px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap bg-emerald-500 text-white shadow-sm shadow-emerald-200 transition active:scale-95"
+            data-category="ALL">
             Semua (<span id="catCountAll">0</span>)
           </button>
-          <button class="cat-pill px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap bg-white text-slate-700 hover:text-slate-900 border border-slate-200/90 shadow-xs transition active:scale-95" data-category="Sembako">
+          <button
+            class="cat-pill px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap bg-slate-100 text-slate-600 hover:text-slate-800 border border-slate-200/80 transition active:scale-95"
+            data-category="Sembako">
             🌾 Sembako (<span id="catCountSembako">0</span>)
           </button>
-          <button class="cat-pill px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap bg-white text-slate-700 hover:text-slate-900 border border-slate-200/90 shadow-xs transition active:scale-95" data-category="Makanan Instan">
+          <button
+            class="cat-pill px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap bg-slate-100 text-slate-600 hover:text-slate-800 border border-slate-200/80 transition active:scale-95"
+            data-category="Makanan Instan">
             🍜 Instan (<span id="catCountInstan">0</span>)
           </button>
-          <button class="cat-pill px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap bg-white text-slate-700 hover:text-slate-900 border border-slate-200/90 shadow-xs transition active:scale-95" data-category="Daging & Sayur">
+          <button
+            class="cat-pill px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap bg-slate-100 text-slate-600 hover:text-slate-800 border border-slate-200/80 transition active:scale-95"
+            data-category="Daging & Sayur">
             🥩 Daging/Sayur (<span id="catCountFresh">0</span>)
           </button>
-          <button class="cat-pill px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap bg-white text-slate-700 hover:text-slate-900 border border-slate-200/90 shadow-xs transition active:scale-95" data-category="Toiletries">
+          <button
+            class="cat-pill px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap bg-slate-100 text-slate-600 hover:text-slate-800 border border-slate-200/80 transition active:scale-95"
+            data-category="Toiletries">
             🧼 Toiletries (<span id="catCountToiletries">0</span>)
           </button>
-          <button class="cat-pill px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap bg-white text-slate-700 hover:text-slate-900 border border-slate-200/90 shadow-xs transition active:scale-95" data-category="Bumbu & Minyak">
+          <button
+            class="cat-pill px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap bg-slate-100 text-slate-600 hover:text-slate-800 border border-slate-200/80 transition active:scale-95"
+            data-category="Bumbu & Minyak">
             🧂 Bumbu/Minyak (<span id="catCountBumbu">0</span>)
           </button>
-          <button class="cat-pill px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap bg-white text-slate-700 hover:text-slate-900 border border-slate-200/90 shadow-xs transition active:scale-95" data-category="Lainnya">
+          <button
+            class="cat-pill px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap bg-slate-100 text-slate-600 hover:text-slate-800 border border-slate-200/80 transition active:scale-95"
+            data-category="Lainnya">
             📦 Lainnya (<span id="catCountLainnya">0</span>)
           </button>
         </div>
 
-        <!-- Quick Summary Bar: Floating Card with Stat Indicators -->
-        <div class="flex items-center justify-between text-xs px-3.5 py-2.5 rounded-2xl bg-white border border-slate-200/90 shadow-xs text-slate-500">
+        <!-- Quick Summary Bar: Total Items & Total Saved from Discounts -->
+        <div class="flex items-center justify-between text-xs px-3 py-2 rounded-xl bg-slate-100/90 border border-slate-200 text-slate-600">
           <div class="flex items-center gap-1.5">
-            <i data-lucide="package" class="w-3.5 h-3.5 text-slate-400"></i>
+            <i data-lucide="package" class="w-3.5 h-3.5 text-slate-500"></i>
             <span>Keranjang: <b class="text-slate-800 font-bold" id="totalItemsCount">0 item</b></span>
           </div>
           <div class="text-emerald-700 font-bold flex items-center gap-1" id="totalSavingsTag">
@@ -261,8 +305,10 @@
         </div>
 
         <!-- EMPTY STATE (Shown when cart has 0 items) -->
-        <div id="emptyCartView" class="py-12 px-4 text-center rounded-2xl bg-white border border-dashed border-slate-200 shadow-sm">
-          <div class="w-16 h-16 mx-auto mb-3 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-400">
+        <div id="emptyCartView"
+          class="py-12 px-4 text-center rounded-2xl bg-slate-50/80 border border-dashed border-slate-200 shadow-sm">
+          <div
+            class="w-16 h-16 mx-auto mb-3 rounded-2xl bg-white border border-slate-200/80 flex items-center justify-center text-slate-400 shadow-2xs">
             <i data-lucide="shopping-bag" class="w-8 h-8 text-slate-400"></i>
           </div>
           <h3 class="text-sm font-bold text-slate-700">Troli Masih Kosong</h3>
@@ -270,7 +316,8 @@
             Mulai masukkan barang belanjaanmu sambil berkeliling rak supermarket.
           </p>
           <div class="mt-4 flex flex-col gap-2 max-w-[220px] mx-auto">
-            <button id="emptyAddBtn" class="px-4 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold shadow-md shadow-emerald-200 active:scale-95 transition flex items-center justify-center gap-1.5">
+            <button id="emptyAddBtn"
+              class="px-4 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold shadow-md shadow-emerald-200 active:scale-95 transition flex items-center justify-center gap-1.5">
               <i data-lucide="plus-circle" class="w-4 h-4"></i>
               <span>+ Masukkan Barang Pertama</span>
             </button>
@@ -279,7 +326,8 @@
 
         <!-- Action Footer inside Trolley: Checkout / Selesai Belanja -->
         <div id="cartActionFooter" class="pt-2 pb-6 space-y-2 hidden">
-          <button id="checkoutTripBtn" class="w-full py-3.5 px-4 rounded-2xl bg-gradient-to-r from-emerald-500 via-teal-500 to-sky-500 hover:from-emerald-600 hover:to-teal-600 text-white font-extrabold text-sm shadow-lg shadow-emerald-200 active:scale-98 transition flex items-center justify-center gap-2">
+          <button id="checkoutTripBtn"
+            class="w-full py-3.5 px-4 rounded-2xl bg-gradient-to-r from-emerald-500 via-teal-500 to-sky-500 hover:from-emerald-600 hover:to-teal-600 text-white font-extrabold text-sm shadow-lg shadow-emerald-200 active:scale-98 transition flex items-center justify-center gap-2">
             <i data-lucide="check-circle-2" class="w-5 h-5"></i>
             <span>Selesaikan & Simpan ke Riwayat</span>
           </button>
@@ -300,27 +348,29 @@
             <h2 class="text-sm font-bold text-slate-800">Riwayat Belanja Bulanan</h2>
             <p class="text-[11px] text-slate-500">Basis data pembanding resmi harga anak rantau</p>
           </div>
-          <span class="text-xs px-2.5 py-1 rounded-lg bg-slate-100 text-slate-700 font-mono font-bold border border-slate-200" id="historyTripCount">
+          <span
+            class="text-xs px-2.5 py-1 rounded-lg bg-slate-100 text-slate-700 font-mono font-bold border border-slate-200"
+            id="historyTripCount">
             0 Transaksi
           </span>
         </div>
 
-        <!-- Spending Summary Card -->
-        <div class="p-3.5 rounded-2xl bg-white border border-slate-200/90 shadow-sm">
-          <div class="grid grid-cols-2 gap-3 divide-x divide-slate-100">
+        <!-- Spending Summary Card (Soft Pastel Sky Blue) -->
+        <div class="p-3.5 rounded-2xl bg-sky-50/85 border border-sky-200/90 shadow-sm">
+          <div class="grid grid-cols-2 gap-3 divide-x divide-sky-200/70">
             <div>
-              <div class="text-[10px] text-slate-500 uppercase font-semibold">Total Pengeluaran</div>
-              <div class="text-base font-extrabold text-emerald-600 font-mono mt-0.5" id="historyTotalSpend">
+              <div class="text-[10px] text-sky-800 uppercase font-bold">Total Pengeluaran</div>
+              <div class="text-base font-black text-slate-900 font-mono mt-0.5" id="historyTotalSpend">
                 Rp 0
               </div>
-              <div class="text-[10px] text-slate-400 mt-0.5">Tersimpan di LocalStorage</div>
+              <div class="text-[10px] text-sky-700/80 font-medium mt-0.5">Tersimpan di Cloud Firebase</div>
             </div>
             <div class="pl-3">
-              <div class="text-[10px] text-slate-500 uppercase font-semibold">Item Terdaftar</div>
-              <div class="text-base font-extrabold text-sky-600 font-mono mt-0.5" id="historyBenchmarkCount">
+              <div class="text-[10px] text-sky-800 uppercase font-bold">Item Terdaftar</div>
+              <div class="text-base font-black text-sky-900 font-mono mt-0.5" id="historyBenchmarkCount">
                 0 Produk
               </div>
-              <div class="text-[10px] text-slate-400 mt-0.5">Siap dibandingkan realtime</div>
+              <div class="text-[10px] text-sky-700/80 font-medium mt-0.5">Siap dibandingkan realtime</div>
             </div>
           </div>
         </div>
@@ -330,8 +380,10 @@
           <!-- Rendered via JS -->
         </div>
 
-        <div id="emptyHistoryView" class="py-12 px-4 text-center rounded-2xl bg-white border border-dashed border-slate-200 shadow-sm hidden">
-          <div class="w-12 h-12 mx-auto mb-2 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-400">
+        <div id="emptyHistoryView"
+          class="py-12 px-4 text-center rounded-2xl bg-white border border-dashed border-slate-200 shadow-sm hidden">
+          <div
+            class="w-12 h-12 mx-auto mb-2 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-400">
             <i data-lucide="archive" class="w-6 h-6 text-slate-400"></i>
           </div>
           <h4 class="text-xs font-bold text-slate-700">Belum Ada Riwayat Belanja</h4>
@@ -348,49 +400,60 @@
           <p class="text-[11px] text-slate-500">Atur safety cap dan kelola referensi harga bulan lalu</p>
         </div>
 
-        <!-- Budget Form Card -->
-        <div class="p-4 rounded-2xl bg-white border border-slate-200/90 shadow-sm space-y-3">
-          <label class="block text-xs font-bold text-slate-700">
+        <!-- Budget Form Card (Pastel Grey/Slate Card) -->
+        <div class="p-4 rounded-2xl bg-slate-100/90 border border-slate-200 shadow-sm space-y-3">
+          <label class="block text-xs font-bold text-slate-800">
             Batas Maksimal Anggaran Belanja (Safety Cap)
           </label>
           <div class="relative">
-            <span class="absolute left-3.5 top-1/2 -translate-y-1/2 font-mono font-bold text-slate-400 text-sm">Rp</span>
-            <input type="number" id="budgetLimitInput" min="50000" step="50000" 
-              class="w-full pl-10 pr-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 font-mono font-bold text-base focus:outline-none focus:border-emerald-500 focus:bg-white transition" 
+            <span
+              class="absolute left-3.5 top-1/2 -translate-y-1/2 font-mono font-bold text-slate-400 text-sm">Rp</span>
+            <input type="number" id="budgetLimitInput" min="50000" step="50000"
+              class="w-full pl-10 pr-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900 font-mono font-bold text-base focus:outline-none focus:border-emerald-500 transition shadow-2xs"
               placeholder="800000">
           </div>
-          <p class="text-[11px] text-slate-500">
+          <p class="text-[11px] text-slate-600">
             Aplikasi akan memberi peringatan visual jika troli mendekati atau melampaui nominal ini.
           </p>
           <div class="flex gap-2">
-            <button class="budget-preset-btn flex-1 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-medium border border-slate-200" data-amount="500000">500 rb</button>
-            <button class="budget-preset-btn flex-1 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-medium border border-slate-200" data-amount="750000">750 rb</button>
-            <button class="budget-preset-btn flex-1 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-medium border border-slate-200" data-amount="1000000">1 jt</button>
-            <button class="budget-preset-btn flex-1 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-medium border border-slate-200" data-amount="1500000">1.5 jt</button>
+            <button
+              class="budget-preset-btn flex-1 py-1.5 rounded-lg bg-white hover:bg-slate-50 text-slate-800 text-xs font-bold border border-slate-200 shadow-2xs active:scale-95 transition"
+              data-amount="500000">500 rb</button>
+            <button
+              class="budget-preset-btn flex-1 py-1.5 rounded-lg bg-white hover:bg-slate-50 text-slate-800 text-xs font-bold border border-slate-200 shadow-2xs active:scale-95 transition"
+              data-amount="750000">750 rb</button>
+            <button
+              class="budget-preset-btn flex-1 py-1.5 rounded-lg bg-white hover:bg-slate-50 text-slate-800 text-xs font-bold border border-slate-200 shadow-2xs active:scale-95 transition"
+              data-amount="1000000">1 jt</button>
+            <button
+              class="budget-preset-btn flex-1 py-1.5 rounded-lg bg-white hover:bg-slate-50 text-slate-800 text-xs font-bold border border-slate-200 shadow-2xs active:scale-95 transition"
+              data-amount="1500000">1.5 jt</button>
           </div>
-          <button id="saveBudgetLimitBtn" class="w-full py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold active:scale-95 transition shadow-md shadow-emerald-200">
+          <button id="saveBudgetLimitBtn"
+            class="w-full py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold active:scale-95 transition shadow-md shadow-emerald-200">
             Simpan Limit Anggaran
           </button>
         </div>
 
-        <!-- Benchmark Price Catalog Overview Card -->
-        <div class="p-4 rounded-2xl bg-white border border-slate-200/90 shadow-sm space-y-3">
+        <!-- Benchmark Price Catalog Overview Card (Pastel Sky Blue Card) -->
+        <div class="p-4 rounded-2xl bg-sky-50/70 border border-sky-200/80 shadow-sm space-y-3">
           <div class="flex items-center justify-between">
             <div class="flex items-center gap-1.5">
-              <i data-lucide="database" class="w-4 h-4 text-sky-500"></i>
-              <h3 class="text-xs font-bold text-slate-800">Daftar Harga Bulan Lalu</h3>
+              <i data-lucide="database" class="w-4 h-4 text-sky-600"></i>
+              <h3 class="text-xs font-bold text-slate-900">Daftar Harga Bulan Lalu</h3>
             </div>
-            <span class="text-[11px] font-mono text-slate-500 font-semibold" id="benchmarkItemCount">0 Produk</span>
+            <span class="text-[11px] font-mono text-sky-800 font-bold" id="benchmarkItemCount">0 Produk</span>
           </div>
-          <p class="text-[11px] text-slate-500">
-            Data ini menjadi patokan panah naik (↑), turun (↓), atau setara (=) saat Anda berbelanja di lorong supermarket.
+          <p class="text-[11px] text-slate-600">
+            Data ini menjadi patokan panah naik (↑), turun (↓), atau setara (=) saat Anda berbelanja di lorong
+            supermarket.
           </p>
 
           <!-- Search & Filter in Benchmark List -->
           <div class="relative">
             <i data-lucide="search" class="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
             <input type="text" id="benchmarkSearchInput" placeholder="Cari data harga bulan lalu..."
-              class="w-full pl-9 pr-3 py-2 rounded-lg bg-slate-50 border border-slate-200 text-xs text-slate-800 focus:outline-none focus:border-sky-500 focus:bg-white placeholder-slate-400">
+              class="w-full pl-9 pr-3 py-2 rounded-lg bg-white border border-sky-200 text-xs text-slate-800 focus:outline-none focus:border-sky-500 placeholder-slate-400 shadow-2xs">
           </div>
 
           <div id="benchmarkListPreview" class="max-h-52 overflow-y-auto space-y-1.5 pr-1 scrollbar-none">
@@ -407,33 +470,43 @@
     </main>
 
     <!-- FLOATING ACTION BUTTON (FAB) FOR QUICK ADD ITEM (Thumb Friendly) -->
-    <div id="fabContainer" class="fixed bottom-20 left-1/2 -translate-x-1/2 z-40 w-full max-w-[430px] px-4 pointer-events-none flex justify-end">
-      <button id="openAddModalBtn" class="pointer-events-auto w-14 h-14 rounded-2xl bg-gradient-to-tr from-emerald-500 via-teal-400 to-sky-400 text-white flex items-center justify-center shadow-lg shadow-emerald-200/90 active:scale-90 transition-all border border-emerald-200 group">
+    <div id="fabContainer"
+      class="fixed bottom-20 left-1/2 -translate-x-1/2 z-40 w-full max-w-[430px] px-4 pointer-events-none flex justify-end">
+      <button id="openAddModalBtn"
+        class="pointer-events-auto w-14 h-14 rounded-2xl bg-gradient-to-tr from-emerald-500 via-teal-400 to-sky-400 text-white flex items-center justify-center shadow-lg shadow-emerald-200/90 active:scale-90 transition-all border border-emerald-200 group">
         <i data-lucide="plus" class="w-7 h-7 group-hover:rotate-90 transition-transform duration-200"></i>
       </button>
     </div>
 
     <!-- FLOATING BOTTOM NAVIGATION BAR (Thumb Ergonomics) -->
-    <nav class="fixed bottom-0 left-1/2 -translate-x-1/2 z-40 w-full max-w-[430px] bg-white/95 backdrop-blur-xl border-t border-slate-200/90 px-3 py-2 shadow-[0_-4px_20px_rgba(0,0,0,0.03)]">
+    <nav
+      class="fixed bottom-0 left-1/2 -translate-x-1/2 z-40 w-full max-w-[430px] bg-white/95 backdrop-blur-xl border-t border-slate-200/90 px-3 py-2 shadow-[0_-4px_20px_rgba(0,0,0,0.03)]">
       <div class="flex items-center justify-around">
-        
+
         <!-- Tab 1: Belanja (Troli) -->
-        <button class="nav-tab-btn flex-1 flex flex-col items-center py-1 rounded-xl text-emerald-600 font-bold active:scale-95 transition relative" data-target="tab-belanja">
+        <button
+          class="nav-tab-btn flex-1 flex flex-col items-center py-1 rounded-xl text-emerald-600 font-bold active:scale-95 transition relative"
+          data-target="tab-belanja">
           <div class="relative">
             <i data-lucide="shopping-cart" class="w-5 h-5"></i>
-            <span id="navCartBadge" class="absolute -top-1.5 -right-2 px-1.5 py-0.2 rounded-full text-[9px] font-extrabold bg-emerald-500 text-white min-w-4 text-center shadow-xs">0</span>
+            <span id="navCartBadge"
+              class="absolute -top-1.5 -right-2 px-1.5 py-0.2 rounded-full text-[9px] font-extrabold bg-emerald-500 text-white min-w-4 text-center shadow-xs">0</span>
           </div>
           <span class="text-[10px] mt-1 tracking-tight">Belanja</span>
         </button>
 
         <!-- Tab 2: Riwayat -->
-        <button class="nav-tab-btn flex-1 flex flex-col items-center py-1 rounded-xl text-slate-400 hover:text-slate-600 font-medium active:scale-95 transition" data-target="tab-riwayat">
+        <button
+          class="nav-tab-btn flex-1 flex flex-col items-center py-1 rounded-xl text-slate-400 hover:text-slate-600 font-medium active:scale-95 transition"
+          data-target="tab-riwayat">
           <i data-lucide="history" class="w-5 h-5"></i>
           <span class="text-[10px] mt-1 tracking-tight">Riwayat</span>
         </button>
 
         <!-- Tab 3: Anggaran -->
-        <button class="nav-tab-btn flex-1 flex flex-col items-center py-1 rounded-xl text-slate-400 hover:text-slate-600 font-medium active:scale-95 transition" data-target="tab-anggaran">
+        <button
+          class="nav-tab-btn flex-1 flex flex-col items-center py-1 rounded-xl text-slate-400 hover:text-slate-600 font-medium active:scale-95 transition"
+          data-target="tab-anggaran">
           <i data-lucide="pie-chart" class="w-5 h-5"></i>
           <span class="text-[10px] mt-1 tracking-tight">Anggaran</span>
         </button>
@@ -446,13 +519,16 @@
   <!-- ========================================================================= -->
   <!-- MODAL / BOTTOM SHEET: INPUT ITEM BELANJA (F-01, F-02, F-03, F-04)        -->
   <!-- ========================================================================= -->
-  <div id="itemModalBackdrop" class="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm hidden flex items-end sm:items-center justify-center p-0 sm:p-4 transition-opacity">
-    <div id="itemModalCard" class="w-full max-w-[430px] max-h-[92vh] overflow-y-auto bg-white border-t sm:border border-slate-200/90 rounded-t-3xl sm:rounded-3xl shadow-2xl p-4 sm:p-5 flex flex-col space-y-3.5 animate-slide-up scrollbar-none text-slate-800">
-      
+  <div id="itemModalBackdrop"
+    class="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm hidden flex items-end sm:items-center justify-center p-0 sm:p-4 transition-opacity">
+    <div id="itemModalCard"
+      class="w-full max-w-[430px] max-h-[92vh] overflow-y-auto bg-white border-t sm:border border-slate-200/90 rounded-t-3xl sm:rounded-3xl shadow-2xl p-4 sm:p-5 flex flex-col space-y-3.5 animate-slide-up scrollbar-none text-slate-800">
+
       <!-- Modal Header & Close Handle -->
       <div class="flex items-center justify-between pb-2 border-b border-slate-100">
         <div class="flex items-center gap-2">
-          <div class="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-600 border border-emerald-200/80 flex items-center justify-center">
+          <div
+            class="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-600 border border-emerald-200/80 flex items-center justify-center">
             <i data-lucide="tag" class="w-4 h-4" id="modalHeaderIcon"></i>
           </div>
           <div>
@@ -460,7 +536,8 @@
             <p class="text-[10px] text-slate-500">Catat cepat saat ambil barang di lorong</p>
           </div>
         </div>
-        <button id="closeModalBtn" class="p-1.5 rounded-full bg-slate-100 text-slate-400 hover:text-slate-600 transition">
+        <button id="closeModalBtn"
+          class="p-1.5 rounded-full bg-slate-100 text-slate-400 hover:text-slate-600 transition">
           <i data-lucide="x" class="w-4 h-4"></i>
         </button>
       </div>
@@ -478,9 +555,10 @@
             <input type="text" id="inputItemName" required autocomplete="off"
               placeholder="Contoh: Beras Ramos, Indomie, Minyak 2L..."
               class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-sm font-semibold text-slate-800 focus:outline-none focus:border-emerald-500 focus:bg-white transition placeholder-slate-400">
-            
+
             <!-- Quick Suggestion Dropdown -->
-            <div id="suggestionsBox" class="absolute left-0 right-0 top-full mt-1 bg-white border border-slate-200 rounded-xl shadow-xl z-20 max-h-40 overflow-y-auto hidden">
+            <div id="suggestionsBox"
+              class="absolute left-0 right-0 top-full mt-1 bg-white border border-slate-200 rounded-xl shadow-xl z-20 max-h-40 overflow-y-auto hidden">
               <!-- Rendered via JS -->
             </div>
           </div>
@@ -490,7 +568,8 @@
         <div class="grid grid-cols-2 gap-2.5">
           <div>
             <label class="block text-[11px] font-bold text-slate-600 mb-1">Kategori</label>
-            <select id="inputItemCategory" class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-800 focus:outline-none focus:border-emerald-500 focus:bg-white">
+            <select id="inputItemCategory"
+              class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-800 focus:outline-none focus:border-emerald-500 focus:bg-white">
               <option value="Sembako">🌾 Sembako</option>
               <option value="Makanan Instan">🍜 Makanan Instan</option>
               <option value="Daging & Sayur">🥩 Daging & Sayur</option>
@@ -504,7 +583,8 @@
 
           <div>
             <label class="block text-[11px] font-bold text-slate-600 mb-1">Satuan</label>
-            <select id="inputItemUnit" class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-800 focus:outline-none focus:border-emerald-500 focus:bg-white">
+            <select id="inputItemUnit"
+              class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-800 focus:outline-none focus:border-emerald-500 focus:bg-white">
               <option value="pcs">pcs (buah)</option>
               <option value="pack">pack</option>
               <option value="kg">kg</option>
@@ -523,19 +603,27 @@
             <label class="text-[11px] font-bold text-slate-600">Kuantitas (Qty)</label>
             <!-- Quick Add Chips -->
             <div class="flex gap-1">
-              <button type="button" class="qty-preset px-1.5 py-0.5 rounded bg-slate-100 text-[10px] text-slate-600 hover:text-slate-800 border border-slate-200" data-add="1">+1</button>
-              <button type="button" class="qty-preset px-1.5 py-0.5 rounded bg-slate-100 text-[10px] text-slate-600 hover:text-slate-800 border border-slate-200" data-add="2">+2</button>
-              <button type="button" class="qty-preset px-1.5 py-0.5 rounded bg-slate-100 text-[10px] text-slate-600 hover:text-slate-800 border border-slate-200" data-add="5">+5</button>
+              <button type="button"
+                class="qty-preset px-1.5 py-0.5 rounded bg-slate-100 text-[10px] text-slate-600 hover:text-slate-800 border border-slate-200"
+                data-add="1">+1</button>
+              <button type="button"
+                class="qty-preset px-1.5 py-0.5 rounded bg-slate-100 text-[10px] text-slate-600 hover:text-slate-800 border border-slate-200"
+                data-add="2">+2</button>
+              <button type="button"
+                class="qty-preset px-1.5 py-0.5 rounded bg-slate-100 text-[10px] text-slate-600 hover:text-slate-800 border border-slate-200"
+                data-add="5">+5</button>
             </div>
           </div>
-          
+
           <div class="flex items-center gap-2">
-            <button type="button" id="btnQtyMinus" class="w-11 h-11 rounded-xl bg-slate-100 active:bg-slate-200 text-slate-700 text-lg font-bold flex items-center justify-center border border-slate-200 active:scale-95 transition">
+            <button type="button" id="btnQtyMinus"
+              class="w-11 h-11 rounded-xl bg-slate-100 active:bg-slate-200 text-slate-700 text-lg font-bold flex items-center justify-center border border-slate-200 active:scale-95 transition">
               -
             </button>
             <input type="number" id="inputItemQty" min="1" max="999" value="1" step="1" required
               class="flex-1 py-2 text-center rounded-xl bg-slate-50 border border-slate-200 text-lg font-extrabold text-slate-900 font-mono focus:outline-none focus:border-emerald-500 focus:bg-white">
-            <button type="button" id="btnQtyPlus" class="w-11 h-11 rounded-xl bg-slate-100 active:bg-slate-200 text-slate-700 text-lg font-bold flex items-center justify-center border border-slate-200 active:scale-95 transition">
+            <button type="button" id="btnQtyPlus"
+              class="w-11 h-11 rounded-xl bg-slate-100 active:bg-slate-200 text-slate-700 text-lg font-bold flex items-center justify-center border border-slate-200 active:scale-95 transition">
               +
             </button>
           </div>
@@ -551,16 +639,19 @@
           </div>
 
           <div class="relative">
-            <span class="absolute left-3.5 top-1/2 -translate-y-1/2 font-mono font-bold text-slate-400 text-sm">Rp</span>
+            <span
+              class="absolute left-3.5 top-1/2 -translate-y-1/2 font-mono font-bold text-slate-400 text-sm">Rp</span>
             <input type="number" id="inputItemPrice" min="0" step="100" required placeholder="0"
               class="w-full pl-10 pr-3 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-base font-extrabold text-slate-900 font-mono focus:outline-none focus:border-emerald-500 focus:bg-white transition placeholder-slate-400">
           </div>
 
           <!-- F-04: KOMPARATOR HARGA REALTIME VS BULAN LALU (Banner Tampilan Seketika) -->
-          <div id="comparatorBadgeContainer" class="mt-2 p-2 rounded-xl bg-slate-50 border border-slate-200 transition-all">
+          <div id="comparatorBadgeContainer"
+            class="mt-2 p-2 rounded-xl bg-slate-50 border border-slate-200 transition-all">
             <div class="flex items-center justify-between text-xs">
               <div class="flex items-center gap-1.5" id="compIconAndTitle">
-                <span id="compIcon" class="w-5 h-5 rounded-md flex items-center justify-center text-xs font-bold bg-slate-200 text-slate-600">=</span>
+                <span id="compIcon"
+                  class="w-5 h-5 rounded-md flex items-center justify-center text-xs font-bold bg-slate-200 text-slate-600">=</span>
                 <span id="compText" class="font-bold text-[11px] text-slate-700">Belum ada data pembanding</span>
               </div>
               <div class="text-[10px] text-slate-500 font-mono" id="compRefPrice">
@@ -585,10 +676,18 @@
 
           <!-- Discount Mode Selector -->
           <div class="grid grid-cols-4 gap-1">
-            <button type="button" class="disc-mode-btn active py-1 rounded-lg text-[10px] font-semibold bg-amber-100 text-amber-900 border border-amber-300" data-mode="none">Tanpa</button>
-            <button type="button" class="disc-mode-btn py-1 rounded-lg text-[10px] font-semibold bg-white text-slate-600 border border-slate-200" data-mode="single">Tunggal %</button>
-            <button type="button" class="disc-mode-btn py-1 rounded-lg text-[10px] font-semibold bg-white text-slate-600 border border-slate-200" data-mode="tier">Bertingkat</button>
-            <button type="button" class="disc-mode-btn py-1 rounded-lg text-[10px] font-semibold bg-white text-slate-600 border border-slate-200" data-mode="nominal">Nominal Rp</button>
+            <button type="button"
+              class="disc-mode-btn active py-1 rounded-lg text-[10px] font-semibold bg-amber-100 text-amber-900 border border-amber-300"
+              data-mode="none">Tanpa</button>
+            <button type="button"
+              class="disc-mode-btn py-1 rounded-lg text-[10px] font-semibold bg-white text-slate-600 border border-slate-200"
+              data-mode="single">Tunggal %</button>
+            <button type="button"
+              class="disc-mode-btn py-1 rounded-lg text-[10px] font-semibold bg-white text-slate-600 border border-slate-200"
+              data-mode="tier">Bertingkat</button>
+            <button type="button"
+              class="disc-mode-btn py-1 rounded-lg text-[10px] font-semibold bg-white text-slate-600 border border-slate-200"
+              data-mode="nominal">Nominal Rp</button>
           </div>
 
           <!-- Dynamic Discount Inputs based on Mode -->
@@ -601,10 +700,18 @@
             </div>
             <!-- Preset Quick buttons -->
             <div class="flex gap-1">
-              <button type="button" class="disc-quick-btn flex-1 py-0.5 rounded bg-white text-[10px] text-slate-600 hover:bg-amber-100 border border-amber-200/60" data-val="10">10%</button>
-              <button type="button" class="disc-quick-btn flex-1 py-0.5 rounded bg-white text-[10px] text-slate-600 hover:bg-amber-100 border border-amber-200/60" data-val="20">20%</button>
-              <button type="button" class="disc-quick-btn flex-1 py-0.5 rounded bg-white text-[10px] text-slate-600 hover:bg-amber-100 border border-amber-200/60" data-val="30">30%</button>
-              <button type="button" class="disc-quick-btn flex-1 py-0.5 rounded bg-white text-[10px] text-slate-600 hover:bg-amber-100 border border-amber-200/60" data-val="50">50%</button>
+              <button type="button"
+                class="disc-quick-btn flex-1 py-0.5 rounded bg-white text-[10px] text-slate-600 hover:bg-amber-100 border border-amber-200/60"
+                data-val="10">10%</button>
+              <button type="button"
+                class="disc-quick-btn flex-1 py-0.5 rounded bg-white text-[10px] text-slate-600 hover:bg-amber-100 border border-amber-200/60"
+                data-val="20">20%</button>
+              <button type="button"
+                class="disc-quick-btn flex-1 py-0.5 rounded bg-white text-[10px] text-slate-600 hover:bg-amber-100 border border-amber-200/60"
+                data-val="30">30%</button>
+              <button type="button"
+                class="disc-quick-btn flex-1 py-0.5 rounded bg-white text-[10px] text-slate-600 hover:bg-amber-100 border border-amber-200/60"
+                data-val="50">50%</button>
             </div>
           </div>
 
@@ -625,9 +732,15 @@
             </div>
             <!-- Tier presets -->
             <div class="flex gap-1">
-              <button type="button" class="tier-quick-btn flex-1 py-0.5 rounded bg-white text-[10px] text-slate-600 hover:bg-amber-100 border border-amber-200/60" data-t1="50" data-t2="20">50% + 20%</button>
-              <button type="button" class="tier-quick-btn flex-1 py-0.5 rounded bg-white text-[10px] text-slate-600 hover:bg-amber-100 border border-amber-200/60" data-t1="30" data-t2="10">30% + 10%</button>
-              <button type="button" class="tier-quick-btn flex-1 py-0.5 rounded bg-white text-[10px] text-slate-600 hover:bg-amber-100 border border-amber-200/60" data-t1="70" data-t2="10">70% + 10%</button>
+              <button type="button"
+                class="tier-quick-btn flex-1 py-0.5 rounded bg-white text-[10px] text-slate-600 hover:bg-amber-100 border border-amber-200/60"
+                data-t1="50" data-t2="20">50% + 20%</button>
+              <button type="button"
+                class="tier-quick-btn flex-1 py-0.5 rounded bg-white text-[10px] text-slate-600 hover:bg-amber-100 border border-amber-200/60"
+                data-t1="30" data-t2="10">30% + 10%</button>
+              <button type="button"
+                class="tier-quick-btn flex-1 py-0.5 rounded bg-white text-[10px] text-slate-600 hover:bg-amber-100 border border-amber-200/60"
+                data-t1="70" data-t2="10">70% + 10%</button>
             </div>
           </div>
 
@@ -641,7 +754,8 @@
           </div>
 
           <!-- Calculated Discount Breakdown Note -->
-          <div id="discountExplanation" class="text-[10px] text-amber-800 pt-1 border-t border-amber-200/70 hidden leading-relaxed">
+          <div id="discountExplanation"
+            class="text-[10px] text-amber-800 pt-1 border-t border-amber-200/70 hidden leading-relaxed">
             <!-- Math calculation: e.g. 50% + 20% -> Efektif 60% -->
           </div>
         </div>
@@ -664,10 +778,12 @@
 
         <!-- Submit & Cancel Buttons -->
         <div class="pt-1 flex gap-2">
-          <button type="button" id="cancelModalBtn" class="flex-1 py-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold active:scale-95 transition border border-slate-200">
+          <button type="button" id="cancelModalBtn"
+            class="flex-1 py-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold active:scale-95 transition border border-slate-200">
             Batal
           </button>
-          <button type="submit" id="saveItemBtn" class="flex-2 w-2/3 py-3 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-extrabold shadow-md shadow-emerald-200 active:scale-95 transition flex items-center justify-center gap-1.5">
+          <button type="submit" id="saveItemBtn"
+            class="flex-2 w-2/3 py-3 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-extrabold shadow-md shadow-emerald-200 active:scale-95 transition flex items-center justify-center gap-1.5">
             <i data-lucide="check" class="w-4 h-4"></i>
             <span id="saveBtnText">Simpan ke Troli</span>
           </button>
@@ -680,12 +796,15 @@
   <!-- ========================================================================= -->
   <!-- MODAL: DETAIL STRUK DIGITAL RIWAYAT BELANJA (F-06 Digital Receipt)       -->
   <!-- ========================================================================= -->
-  <div id="receiptModalBackdrop" class="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm hidden flex items-center justify-center p-3.5 transition-opacity">
-    <div class="w-full max-w-[400px] max-h-[90vh] overflow-y-auto bg-white border border-slate-200 rounded-3xl shadow-2xl p-4 flex flex-col space-y-3 scrollbar-none text-slate-800">
-      
+  <div id="receiptModalBackdrop"
+    class="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm hidden flex items-center justify-center p-3.5 transition-opacity">
+    <div
+      class="w-full max-w-[400px] max-h-[90vh] overflow-y-auto bg-white border border-slate-200 rounded-3xl shadow-2xl p-4 flex flex-col space-y-3 scrollbar-none text-slate-800">
+
       <div class="flex items-center justify-between pb-2 border-b border-slate-100">
         <div class="flex items-center gap-2">
-          <div class="w-7 h-7 rounded-lg bg-sky-50 text-sky-600 border border-sky-200/80 flex items-center justify-center">
+          <div
+            class="w-7 h-7 rounded-lg bg-sky-50 text-sky-600 border border-sky-200/80 flex items-center justify-center">
             <i data-lucide="receipt" class="w-4 h-4"></i>
           </div>
           <h3 class="text-xs font-bold text-slate-800">Struk Digital Belanja</h3>
@@ -700,11 +819,13 @@
       </div>
 
       <div class="pt-2 flex gap-2">
-        <button id="copyReceiptTextBtn" class="flex-1 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold flex items-center justify-center gap-1.5 active:scale-95 transition border border-slate-200">
+        <button id="copyReceiptTextBtn"
+          class="flex-1 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold flex items-center justify-center gap-1.5 active:scale-95 transition border border-slate-200">
           <i data-lucide="copy" class="w-3.5 h-3.5"></i>
           <span>Salin ke WA / Catatan</span>
         </button>
-        <button id="dismissReceiptBtn" class="py-2.5 px-4 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold active:scale-95 transition shadow-sm shadow-emerald-200">
+        <button id="dismissReceiptBtn"
+          class="py-2.5 px-4 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold active:scale-95 transition shadow-sm shadow-emerald-200">
           Tutup
         </button>
       </div>
@@ -714,8 +835,10 @@
   <!-- ========================================================================= -->
   <!-- MODAL: SRS INFO & PETUNJUK PENGGUNAAN                                     -->
   <!-- ========================================================================= -->
-  <div id="helpModalBackdrop" class="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm hidden flex items-center justify-center p-3.5">
-    <div class="w-full max-w-[400px] max-h-[85vh] overflow-y-auto bg-white border border-slate-200 rounded-3xl shadow-2xl p-4 space-y-3 text-xs scrollbar-none text-slate-800">
+  <div id="helpModalBackdrop"
+    class="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm hidden flex items-center justify-center p-3.5">
+    <div
+      class="w-full max-w-[400px] max-h-[85vh] overflow-y-auto bg-white border border-slate-200 rounded-3xl shadow-2xl p-4 space-y-3 text-xs scrollbar-none text-slate-800">
       <div class="flex items-center justify-between pb-2 border-b border-slate-100">
         <h3 class="font-bold text-slate-800 flex items-center gap-1.5">
           <i data-lucide="shield-check" class="w-4 h-4 text-emerald-600"></i>
@@ -725,7 +848,7 @@
           <i data-lucide="x" class="w-4 h-4"></i>
         </button>
       </div>
-      
+
       <div class="space-y-2 text-slate-600 leading-relaxed text-[11px]">
         <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-200/80">
           <b class="text-emerald-700 block mb-0.5">F-01: Pencatatan Item Lengkap</b>
@@ -741,7 +864,9 @@
         </div>
         <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-200/80">
           <b class="text-emerald-700 block mb-0.5">F-04: Komparator Harga Realtime vs Bulan Lalu</b>
-          <span class="text-rose-600 font-bold">↑ Panah Merah</span> (Lebih mahal), <span class="text-emerald-600 font-bold">↓ Panah Hijau</span> (Lebih murah), <span class="text-slate-600 font-bold">= Setara</span>.
+          <span class="text-rose-600 font-bold">↑ Panah Merah</span> (Lebih mahal), <span
+            class="text-emerald-600 font-bold">↓ Panah Hijau</span> (Lebih murah), <span
+            class="text-slate-600 font-bold">= Setara</span>.
         </div>
         <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-200/80">
           <b class="text-emerald-700 block mb-0.5">F-05: Pengendali Anggaran / Safety Cap</b>
@@ -753,14 +878,16 @@
         </div>
       </div>
 
-      <button id="dismissHelpBtn" class="w-full py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-xs mt-2 shadow-sm shadow-emerald-200">
+      <button id="dismissHelpBtn"
+        class="w-full py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-xs mt-2 shadow-sm shadow-emerald-200">
         Mengerti & Lanjutkan Belanja
       </button>
     </div>
   </div>
 
   <!-- TOAST NOTIFICATION CONTAINER -->
-  <div id="toastNotification" class="fixed top-5 left-1/2 -translate-x-1/2 z-50 px-4 py-2.5 rounded-xl bg-white/95 border border-slate-200 text-slate-800 text-xs font-semibold shadow-xl transition-all duration-300 pointer-events-none opacity-0 -translate-y-4 max-w-[360px] flex items-center gap-2">
+  <div id="toastNotification"
+    class="fixed top-5 left-1/2 -translate-x-1/2 z-50 px-4 py-2.5 rounded-xl bg-white/95 border border-slate-200 text-slate-800 text-xs font-semibold shadow-xl transition-all duration-300 pointer-events-none opacity-0 -translate-y-4 max-w-[360px] flex items-center gap-2">
     <i data-lucide="check-circle" id="toastIcon" class="w-4 h-4 text-emerald-500 shrink-0"></i>
     <span id="toastMessage">Pemberitahuan</span>
   </div>
@@ -782,4 +909,5 @@
     }
   </script>
 </body>
+
 </html>
