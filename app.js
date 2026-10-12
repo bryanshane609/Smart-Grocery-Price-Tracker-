@@ -322,7 +322,7 @@ function comparePriceWithBenchmark(productName, currentUnitPrice) {
       diff: 0,
       diffPercent: 0,
       refPrice: null,
-      colorClass: 'text-sky-400 bg-sky-950/60 border-sky-800'
+      colorClass: 'text-sky-700 bg-sky-50 border-sky-200'
     };
   }
 
@@ -339,7 +339,7 @@ function comparePriceWithBenchmark(productName, currentUnitPrice) {
       diff,
       diffPercent,
       refPrice,
-      colorClass: 'text-red-400 bg-red-950/60 border-red-800/80'
+      colorClass: 'text-rose-700 bg-rose-50 border-rose-200'
     };
   } else if (diff < 0) {
     return {
@@ -350,7 +350,7 @@ function comparePriceWithBenchmark(productName, currentUnitPrice) {
       diff,
       diffPercent,
       refPrice,
-      colorClass: 'text-emerald-400 bg-emerald-950/60 border-emerald-800/80'
+      colorClass: 'text-emerald-700 bg-emerald-50 border-emerald-200'
     };
   } else {
     return {
@@ -361,7 +361,7 @@ function comparePriceWithBenchmark(productName, currentUnitPrice) {
       diff: 0,
       diffPercent: 0,
       refPrice,
-      colorClass: 'text-slate-300 bg-slate-800/80 border-slate-700'
+      colorClass: 'text-slate-600 bg-slate-100 border-slate-200'
     };
   }
 }
@@ -441,48 +441,48 @@ function renderBudgetSafety() {
 
   // Safety stages styling
   if (percentage < 75) {
-    // Stage 1: Aman (Hijau)
-    budgetProgressBar.className = 'h-full rounded-full transition-all duration-500 bg-emerald-500 shadow-sm';
-    budgetSafetyBadge.className = 'inline-flex items-center gap-1 px-2 py-0.5 rounded-full font-semibold text-[10px] bg-emerald-500/15 text-emerald-400 border border-emerald-500/30';
+    // Stage 1: Aman (Hijau Pastel)
+    budgetProgressBar.className = 'h-full rounded-full transition-all duration-500 bg-emerald-400 shadow-sm';
+    budgetSafetyBadge.className = 'inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full font-semibold text-[10px] bg-emerald-50 text-emerald-700 border border-emerald-200';
     budgetSafetyText.textContent = `Aman (${percentage}%)`;
-    budgetRemainingText.className = 'font-bold font-mono text-emerald-400';
+    budgetRemainingText.className = 'font-bold font-mono text-emerald-600';
     budgetRemainingText.textContent = formatRupiah(remaining);
-    safetyStatusIcon.className = 'w-3 h-3 text-emerald-400';
+    safetyStatusIcon.className = 'w-3 h-3 text-emerald-600';
     overBudgetBanner.classList.add('hidden');
-    budgetWidget.classList.remove('animate-pulse-danger', 'border-red-500');
+    budgetWidget.classList.remove('animate-pulse-danger', 'border-rose-400');
   } else if (percentage < 90) {
-    // Stage 2: Waspada (Kuning / Amber)
-    budgetProgressBar.className = 'h-full rounded-full transition-all duration-500 bg-amber-400 shadow-sm';
-    budgetSafetyBadge.className = 'inline-flex items-center gap-1 px-2 py-0.5 rounded-full font-semibold text-[10px] bg-amber-500/15 text-amber-300 border border-amber-500/30';
+    // Stage 2: Waspada (Kuning / Amber Pastel)
+    budgetProgressBar.className = 'h-full rounded-full transition-all duration-500 bg-amber-300 shadow-sm';
+    budgetSafetyBadge.className = 'inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full font-semibold text-[10px] bg-amber-50 text-amber-800 border border-amber-200';
     budgetSafetyText.textContent = `Waspada (${percentage}%)`;
-    budgetRemainingText.className = 'font-bold font-mono text-amber-400';
+    budgetRemainingText.className = 'font-bold font-mono text-amber-700';
     budgetRemainingText.textContent = formatRupiah(remaining);
-    safetyStatusIcon.className = 'w-3 h-3 text-amber-400';
+    safetyStatusIcon.className = 'w-3 h-3 text-amber-600';
     overBudgetBanner.classList.add('hidden');
-    budgetWidget.classList.remove('animate-pulse-danger', 'border-red-500');
+    budgetWidget.classList.remove('animate-pulse-danger', 'border-rose-400');
   } else if (percentage < 100) {
-    // Stage 3: Kritis (Oranye Tua)
-    budgetProgressBar.className = 'h-full rounded-full transition-all duration-500 bg-orange-500 shadow-sm';
-    budgetSafetyBadge.className = 'inline-flex items-center gap-1 px-2 py-0.5 rounded-full font-semibold text-[10px] bg-orange-500/20 text-orange-400 border border-orange-500/40';
+    // Stage 3: Kritis (Oranye Pastel)
+    budgetProgressBar.className = 'h-full rounded-full transition-all duration-500 bg-orange-400 shadow-sm';
+    budgetSafetyBadge.className = 'inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full font-semibold text-[10px] bg-orange-50 text-orange-800 border border-orange-200';
     budgetSafetyText.textContent = `Kritis! (${percentage}%)`;
-    budgetRemainingText.className = 'font-bold font-mono text-orange-400';
+    budgetRemainingText.className = 'font-bold font-mono text-orange-700';
     budgetRemainingText.textContent = formatRupiah(remaining);
-    safetyStatusIcon.className = 'w-3 h-3 text-orange-400';
+    safetyStatusIcon.className = 'w-3 h-3 text-orange-600';
     overBudgetBanner.classList.add('hidden');
-    budgetWidget.classList.remove('animate-pulse-danger', 'border-red-500');
+    budgetWidget.classList.remove('animate-pulse-danger', 'border-rose-400');
   } else {
-    // Stage 4: DANGER / OVER BUDGET (Merah Menyala Pulsa)
-    budgetProgressBar.className = 'h-full rounded-full transition-all duration-500 bg-red-600 shadow-md shadow-red-500/50';
-    budgetSafetyBadge.className = 'inline-flex items-center gap-1 px-2 py-0.5 rounded-full font-semibold text-[10px] bg-red-500/20 text-red-400 border border-red-500/40 animate-pulse';
+    // Stage 4: DANGER / OVER BUDGET (Merah/Rose Pastel Aksen)
+    budgetProgressBar.className = 'h-full rounded-full transition-all duration-500 bg-rose-500 shadow-md shadow-rose-200';
+    budgetSafetyBadge.className = 'inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full font-semibold text-[10px] bg-rose-50 text-rose-700 border border-rose-200 animate-pulse';
     budgetSafetyText.textContent = `OVER BUDGET! (${percentage}%)`;
-    budgetRemainingText.className = 'font-bold font-mono text-red-400';
+    budgetRemainingText.className = 'font-bold font-mono text-rose-600';
     budgetRemainingText.textContent = `-Rp ${formatNumber(Math.abs(remaining))}`;
-    safetyStatusIcon.className = 'w-3 h-3 text-red-400';
+    safetyStatusIcon.className = 'w-3 h-3 text-rose-600';
 
     // Show Alarm Banner
     overBudgetBanner.classList.remove('hidden');
     overBudgetDiffText.textContent = `Melebihi jatah ${formatRupiah(Math.abs(remaining))}. Hapus beberapa barang opsional!`;
-    budgetWidget.classList.add('animate-pulse-danger', 'border-red-500');
+    budgetWidget.classList.add('animate-pulse-danger', 'border-rose-400');
 
     // Trigger Warning Sound
     sounds.playWarning();
@@ -583,30 +583,30 @@ function renderCartItems() {
     let discountBadgeHtml = '';
     if (item.discount && item.discount.mode !== 'none') {
       discountBadgeHtml = `
-        <span class="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">
+        <span class="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-200">
           Diskon ${item.effectivePercent}% (-Rp ${formatNumber(item.totalSaved)})
         </span>
       `;
     }
 
     return `
-      <div class="p-3 rounded-2xl bg-slate-900 border border-slate-800 shadow-md hover:border-slate-700/80 transition-all flex flex-col space-y-2" data-item-id="${item.id}">
+      <div class="p-3 rounded-2xl bg-white border border-slate-200/90 shadow-sm hover:border-slate-300 transition-all flex flex-col space-y-2" data-item-id="${item.id}">
         <!-- Top Row: Name, Category, Action Delete -->
         <div class="flex items-start justify-between gap-2">
           <div class="flex-1 min-w-0">
             <div class="flex items-center gap-1.5 mb-0.5 flex-wrap">
               <span class="text-xs">${catIcon}</span>
-              <span class="text-[10px] font-semibold text-slate-400">${item.category}</span>
+              <span class="text-[10px] font-semibold text-slate-500">${item.category}</span>
               ${discountBadgeHtml}
             </div>
-            <h4 class="text-xs font-bold text-white tracking-tight truncate">${item.name}</h4>
+            <h4 class="text-xs font-bold text-slate-800 tracking-tight truncate">${item.name}</h4>
           </div>
           
           <div class="flex items-center gap-1 shrink-0">
-            <button class="btn-edit-item p-1.5 rounded-lg bg-slate-800/80 hover:bg-slate-700 text-slate-400 hover:text-white transition active:scale-95" data-id="${item.id}" title="Edit Item">
+            <button class="btn-edit-item p-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-800 transition active:scale-95" data-id="${item.id}" title="Edit Item">
               <i data-lucide="edit-3" class="w-3.5 h-3.5"></i>
             </button>
-            <button class="btn-delete-item p-1.5 rounded-lg bg-slate-800/80 hover:bg-red-950 text-slate-400 hover:text-red-400 transition active:scale-95" data-id="${item.id}" title="Hapus">
+            <button class="btn-delete-item p-1.5 rounded-lg bg-slate-100 hover:bg-rose-50 text-slate-400 hover:text-rose-600 transition active:scale-95" data-id="${item.id}" title="Hapus">
               <i data-lucide="trash" class="w-3.5 h-3.5"></i>
             </button>
           </div>
@@ -624,25 +624,25 @@ function renderCartItems() {
         </div>
 
         <!-- Price & Qty Stepper Row (Thumb Ergonomics) -->
-        <div class="flex items-center justify-between pt-1 border-t border-slate-800/60">
+        <div class="flex items-center justify-between pt-1 border-t border-slate-100">
           <!-- Pricing Breakdown -->
           <div>
-            <div class="text-[10px] text-slate-400 font-mono">
+            <div class="text-[10px] text-slate-500 font-mono">
               ${item.qty} × ${formatRupiah(item.unitFinal)} / ${item.unit}
-              ${item.price !== item.unitFinal ? `<s class="text-slate-600 ml-1">Rp ${formatNumber(item.price)}</s>` : ''}
+              ${item.price !== item.unitFinal ? `<s class="text-slate-400 ml-1">Rp ${formatNumber(item.price)}</s>` : ''}
             </div>
-            <div class="text-sm font-extrabold text-emerald-400 font-mono">
+            <div class="text-sm font-extrabold text-emerald-600 font-mono">
               ${formatRupiah(item.subtotal)}
             </div>
           </div>
 
           <!-- Fast Stepper Component -->
-          <div class="flex items-center gap-1.5 bg-slate-950 px-1 py-0.5 rounded-xl border border-slate-800">
-            <button class="btn-step-minus w-8 h-8 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 font-extrabold text-sm flex items-center justify-center active:scale-90 transition" data-id="${item.id}">
+          <div class="flex items-center gap-1.5 bg-slate-50 px-1 py-0.5 rounded-xl border border-slate-200">
+            <button class="btn-step-minus w-8 h-8 rounded-lg bg-white hover:bg-slate-100 text-slate-700 font-extrabold text-sm flex items-center justify-center active:scale-90 transition border border-slate-200/60 shadow-xs" data-id="${item.id}">
               -
             </button>
-            <span class="w-7 text-center font-bold text-xs font-mono text-white">${item.qty}</span>
-            <button class="btn-step-plus w-8 h-8 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 font-extrabold text-sm flex items-center justify-center active:scale-90 transition" data-id="${item.id}">
+            <span class="w-7 text-center font-bold text-xs font-mono text-slate-800">${item.qty}</span>
+            <button class="btn-step-plus w-8 h-8 rounded-lg bg-white hover:bg-slate-100 text-slate-700 font-extrabold text-sm flex items-center justify-center active:scale-90 transition border border-slate-200/60 shadow-xs" data-id="${item.id}">
               +
             </button>
           </div>
@@ -806,9 +806,9 @@ function setDiscountMode(mode) {
   currentDiscountMode = mode;
   document.querySelectorAll('.disc-mode-btn').forEach(btn => {
     if (btn.getAttribute('data-mode') === mode) {
-      btn.className = 'disc-mode-btn active py-1 rounded-lg text-[10px] font-semibold bg-amber-500/20 text-amber-300 border border-amber-500/40';
+      btn.className = 'disc-mode-btn active py-1 rounded-lg text-[10px] font-semibold bg-amber-100 text-amber-900 border border-amber-300';
     } else {
-      btn.className = 'disc-mode-btn py-1 rounded-lg text-[10px] font-semibold bg-slate-800 text-slate-300 border border-slate-700';
+      btn.className = 'disc-mode-btn py-1 rounded-lg text-[10px] font-semibold bg-white text-slate-600 border border-slate-200';
     }
   });
 
@@ -890,14 +890,14 @@ function handleNameInputSuggestions() {
   }
 
   suggestionsBox.innerHTML = matches.map(([_, item]) => `
-    <button type="button" class="w-full text-left px-3 py-2 border-b border-slate-800 hover:bg-slate-800/90 flex items-center justify-between text-xs transition" data-name="${item.name}" data-cat="${item.category}" data-unit="${item.unit}" data-price="${item.price}">
+    <button type="button" class="w-full text-left px-3 py-2 border-b border-slate-100 hover:bg-slate-50 flex items-center justify-between text-xs transition" data-name="${item.name}" data-cat="${item.category}" data-unit="${item.unit}" data-price="${item.price}">
       <div>
-        <span class="font-bold text-slate-100 block">${item.name}</span>
-        <span class="text-[10px] text-slate-400">${item.category} &bull; ${item.unit}</span>
+        <span class="font-bold text-slate-800 block">${item.name}</span>
+        <span class="text-[10px] text-slate-500">${item.category} &bull; ${item.unit}</span>
       </div>
       <div class="text-right">
         <span class="text-[10px] text-slate-400 block">Bln Lalu</span>
-        <span class="font-mono font-bold text-sky-400 text-xs">Rp ${formatNumber(item.price)}</span>
+        <span class="font-mono font-bold text-sky-600 text-xs">Rp ${formatNumber(item.price)}</span>
       </div>
     </button>
   `).join('');
@@ -1067,32 +1067,32 @@ function renderHistoryView() {
 
   container.innerHTML = state.history.map(trip => {
     const isOver = trip.totalSpent > trip.budgetLimit;
-    const badgeColor = isOver ? 'bg-red-500/20 text-red-400 border-red-500/40' : 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40';
+    const badgeColor = isOver ? 'bg-rose-50 text-rose-700 border-rose-200' : 'bg-emerald-50 text-emerald-700 border-emerald-200';
 
     return `
-      <div class="p-3.5 rounded-2xl bg-slate-900 border border-slate-800 hover:border-slate-700 transition flex flex-col space-y-2.5">
+      <div class="p-3.5 rounded-2xl bg-white border border-slate-200/90 hover:border-slate-300 shadow-sm transition flex flex-col space-y-2.5">
         <div class="flex items-start justify-between">
           <div>
             <div class="flex items-center gap-1.5">
-              <span class="text-xs font-bold text-white">${trip.storeName}</span>
+              <span class="text-xs font-bold text-slate-800">${trip.storeName}</span>
               <span class="text-[9px] px-1.5 py-0.2 rounded font-semibold border ${badgeColor}">
                 ${isOver ? 'Over Budget' : 'Aman'}
               </span>
             </div>
-            <p class="text-[10px] text-slate-400 mt-0.5">${trip.date} &bull; ${trip.time || ''} &bull; ${trip.itemCount} Item</p>
+            <p class="text-[10px] text-slate-500 mt-0.5">${trip.date} &bull; ${trip.time || ''} &bull; ${trip.itemCount} Item</p>
           </div>
           <div class="text-right">
-            <span class="text-sm font-extrabold text-emerald-400 font-mono block">${formatRupiah(trip.totalSpent)}</span>
-            ${trip.totalSaved > 0 ? `<span class="text-[9px] text-amber-400 font-mono">Hemat: ${formatRupiah(trip.totalSaved)}</span>` : ''}
+            <span class="text-sm font-extrabold text-emerald-600 font-mono block">${formatRupiah(trip.totalSpent)}</span>
+            ${trip.totalSaved > 0 ? `<span class="text-[9px] text-amber-700 font-mono">Hemat: ${formatRupiah(trip.totalSaved)}</span>` : ''}
           </div>
         </div>
 
-        <div class="flex items-center justify-between pt-1 border-t border-slate-800/70 text-xs">
-          <button class="btn-view-receipt text-[11px] font-semibold text-sky-400 hover:text-sky-300 flex items-center gap-1 active:scale-95 transition" data-id="${trip.id}">
+        <div class="flex items-center justify-between pt-1 border-t border-slate-100 text-xs">
+          <button class="btn-view-receipt text-[11px] font-semibold text-sky-600 hover:text-sky-700 flex items-center gap-1 active:scale-95 transition" data-id="${trip.id}">
             <i data-lucide="receipt" class="w-3.5 h-3.5"></i>
             <span>Lihat Struk Digital</span>
           </button>
-          <button class="btn-delete-trip text-[10px] text-slate-500 hover:text-red-400 flex items-center gap-0.5 active:scale-95 transition" data-id="${trip.id}">
+          <button class="btn-delete-trip text-[10px] text-slate-400 hover:text-rose-600 flex items-center gap-0.5 active:scale-95 transition" data-id="${trip.id}">
             <i data-lucide="trash-2" class="w-3 h-3"></i>
             <span>Hapus</span>
           </button>
@@ -1135,10 +1135,10 @@ function showReceiptModal(trip) {
 
   content.innerHTML = `
     <!-- Receipt Header -->
-    <div class="text-center pb-2 border-b border-dashed border-slate-700">
-      <h4 class="font-extrabold text-white text-sm">SMART GROCERY RECEIPT</h4>
-      <p class="text-[10px] text-slate-400 font-mono">${trip.date} • ${trip.time || ''}</p>
-      <p class="text-[10px] text-slate-400">${trip.storeName}</p>
+    <div class="text-center pb-2 border-b border-dashed border-slate-200">
+      <h4 class="font-extrabold text-slate-800 text-sm">SMART GROCERY RECEIPT</h4>
+      <p class="text-[10px] text-slate-500 font-mono">${trip.date} • ${trip.time || ''}</p>
+      <p class="text-[10px] text-slate-500">${trip.storeName}</p>
     </div>
 
     <!-- Items List -->
@@ -1146,10 +1146,10 @@ function showReceiptModal(trip) {
       ${trip.items.map(it => `
         <div class="flex items-start justify-between text-[11px] leading-tight">
           <div class="flex-1 pr-2">
-            <span class="font-bold text-slate-200 block">${it.name}</span>
-            <span class="text-[10px] text-slate-400 font-mono">${it.qty} × Rp ${formatNumber(it.unitFinal)}</span>
+            <span class="font-bold text-slate-800 block">${it.name}</span>
+            <span class="text-[10px] text-slate-500 font-mono">${it.qty} × Rp ${formatNumber(it.unitFinal)}</span>
           </div>
-          <div class="text-right font-mono font-bold text-slate-200">
+          <div class="text-right font-mono font-bold text-slate-800">
             Rp ${formatNumber(it.subtotal)}
           </div>
         </div>
@@ -1157,22 +1157,22 @@ function showReceiptModal(trip) {
     </div>
 
     <!-- Receipt Totals -->
-    <div class="pt-2 border-t border-dashed border-slate-700 space-y-1 font-mono text-[11px]">
-      <div class="flex justify-between text-slate-400">
+    <div class="pt-2 border-t border-dashed border-slate-200 space-y-1 font-mono text-[11px]">
+      <div class="flex justify-between text-slate-500">
         <span>Total Barang:</span>
         <span>${trip.itemCount} pcs</span>
       </div>
       ${trip.totalSaved > 0 ? `
-        <div class="flex justify-between text-amber-400">
+        <div class="flex justify-between text-amber-700">
           <span>Hemat Diskon:</span>
           <span>-Rp ${formatNumber(trip.totalSaved)}</span>
         </div>
       ` : ''}
-      <div class="flex justify-between text-sm font-extrabold text-emerald-400 pt-1 border-t border-slate-800">
+      <div class="flex justify-between text-sm font-extrabold text-emerald-700 pt-1 border-t border-slate-200">
         <span>TOTAL BELANJA:</span>
         <span>${formatRupiah(trip.totalSpent)}</span>
       </div>
-      <div class="flex justify-between text-[10px] text-slate-400">
+      <div class="flex justify-between text-[10px] text-slate-500">
         <span>Limit Anggaran:</span>
         <span>${formatRupiah(trip.budgetLimit)}</span>
       </div>
@@ -1233,13 +1233,13 @@ function renderBenchmarkCatalog(filterText = '') {
   }
 
   container.innerHTML = filtered.map(([_, item]) => `
-    <div class="px-2.5 py-1.5 rounded-lg bg-slate-950 border border-slate-800 flex items-center justify-between text-xs">
+    <div class="px-2.5 py-1.5 rounded-lg bg-slate-50 border border-slate-200 flex items-center justify-between text-xs">
       <div>
-        <span class="font-bold text-slate-200 block">${item.name}</span>
+        <span class="font-bold text-slate-800 block">${item.name}</span>
         <span class="text-[10px] text-slate-500">${item.category} &bull; per ${item.unit}</span>
       </div>
       <div class="text-right">
-        <span class="font-mono font-bold text-sky-400 text-xs">Rp ${formatNumber(item.price)}</span>
+        <span class="font-mono font-bold text-sky-600 text-xs">Rp ${formatNumber(item.price)}</span>
       </div>
     </div>
   `).join('');
@@ -1362,9 +1362,9 @@ function setupNavigationTabs() {
       // Update Tab Styles
       tabs.forEach(t => {
         if (t === tab) {
-          t.className = 'nav-tab-btn flex-1 flex flex-col items-center py-1 rounded-xl text-emerald-400 font-bold active:scale-95 transition relative';
+          t.className = 'nav-tab-btn flex-1 flex flex-col items-center py-1 rounded-xl text-emerald-600 font-bold active:scale-95 transition relative';
         } else {
-          t.className = 'nav-tab-btn flex-1 flex flex-col items-center py-1 rounded-xl text-slate-400 hover:text-slate-200 font-medium active:scale-95 transition relative';
+          t.className = 'nav-tab-btn flex-1 flex flex-col items-center py-1 rounded-xl text-slate-400 hover:text-slate-600 font-medium active:scale-95 transition relative';
         }
       });
 
@@ -1408,9 +1408,9 @@ document.addEventListener('DOMContentLoaded', () => {
   document.querySelectorAll('.cat-pill').forEach(pill => {
     pill.addEventListener('click', () => {
       document.querySelectorAll('.cat-pill').forEach(p => {
-        p.className = 'cat-pill px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap bg-slate-800 text-slate-300 hover:text-white border border-slate-700/60 transition active:scale-95';
+        p.className = 'cat-pill px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap bg-slate-100 text-slate-600 hover:text-slate-800 border border-slate-200/80 transition active:scale-95';
       });
-      pill.className = 'cat-pill active px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap bg-emerald-600 text-white shadow-md shadow-emerald-900/30 transition active:scale-95';
+      pill.className = 'cat-pill active px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap bg-emerald-500 text-white shadow-sm shadow-emerald-200 transition active:scale-95';
 
       state.activeCategoryFilter = pill.getAttribute('data-category');
       sounds.playPop();
