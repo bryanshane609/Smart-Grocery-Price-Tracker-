@@ -148,8 +148,12 @@
           </div>
         </div>
 
-        <!-- Quick Action: Audio / Sound Feedback & Quick Reset/Demo -->
+        <!-- Quick Action: Cloud Sync, Audio / Sound Feedback & Quick Reset/Demo -->
         <div class="flex items-center space-x-1.5">
+          <button id="cloudSyncHeaderBtn" class="flex items-center gap-1 px-2 py-1.5 rounded-xl bg-slate-800/90 text-slate-300 hover:text-white border border-slate-700/60 active:scale-95 transition" title="Status Sinkronisasi Firebase Cloud">
+            <span id="cloudStatusDot" class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
+            <span id="cloudStatusText" class="text-[10px] font-bold font-mono">Cloud...</span>
+          </button>
           <button id="toggleSoundBtn" class="p-2 rounded-xl bg-slate-800/90 text-slate-300 hover:text-white border border-slate-700/60 active:scale-95 transition" title="Suara Sentuhan">
             <i data-lucide="volume-2" id="soundIcon" class="w-4 h-4"></i>
           </button>
@@ -396,6 +400,51 @@
 
           <div id="benchmarkListPreview" class="max-h-52 overflow-y-auto space-y-1.5 pr-1 scrollbar-none">
             <!-- Rendered by JS -->
+          </div>
+        </div>
+
+        <!-- FIREBASE CLOUD SYNC CARD -->
+        <div class="p-4 rounded-2xl bg-slate-900/80 border border-slate-800 space-y-3">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-1.5">
+              <i data-lucide="cloud" class="w-4 h-4 text-sky-400"></i>
+              <h3 class="text-xs font-bold text-slate-200">Sinkronisasi Cloud Firebase</h3>
+            </div>
+            <span id="firebaseStatusBadge" class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-300 border border-amber-500/30">
+              Menghubungkan...
+            </span>
+          </div>
+          <p class="text-[11px] text-slate-400 leading-relaxed">
+            Proyek: <code class="text-sky-300 font-mono text-[10px] bg-slate-950 px-1 py-0.5 rounded">smartgrocery-1f9cb</code>. Data troli, patokan harga, dan struk tersimpan aman di cloud.
+          </p>
+          
+          <div>
+            <label class="block text-[10px] font-bold text-slate-400 mb-1">ID Pengguna Cloud (Untuk Sinkron Lintas HP/Laptop):</label>
+            <div class="flex gap-1.5">
+              <input type="text" id="firebaseUserIdInput" 
+                class="flex-1 px-2.5 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-xs font-mono text-slate-200 focus:outline-none focus:border-sky-500">
+              <button id="btnCopyUserId" class="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-medium border border-slate-700 active:scale-95 transition" title="Salin ID">
+                <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+              </button>
+              <button id="btnApplyUserId" class="px-2.5 py-1.5 rounded-lg bg-sky-600 hover:bg-sky-500 text-white text-xs font-bold active:scale-95 transition">
+                Ganti
+              </button>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-2 pt-1">
+            <button id="btnPushToCloud" class="py-2 px-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-slate-700 active:scale-95 transition flex items-center justify-center gap-1.5">
+              <i data-lucide="upload-cloud" class="w-3.5 h-3.5 text-sky-400"></i>
+              <span>Upload ke Cloud</span>
+            </button>
+            <button id="btnPullFromCloud" class="py-2 px-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-slate-700 active:scale-95 transition flex items-center justify-center gap-1.5">
+              <i data-lucide="download" class="w-3.5 h-3.5 text-emerald-400"></i>
+              <span>Tarik dr Cloud</span>
+            </button>
+          </div>
+
+          <div class="text-[10px] text-slate-500 bg-slate-950 p-2 rounded-xl border border-slate-800/80 leading-relaxed">
+            💡 <b>Tips Firestore:</b> Data disinkronkan otomatis saat ada koneksi. Jika baru buat project, pastikan Firestore Rules diaktifkan (misal Test Mode: <code>allow read, write: if true;</code>).
           </div>
         </div>
 
@@ -788,6 +837,9 @@
     <i data-lucide="check-circle" id="toastIcon" class="w-4 h-4 text-emerald-400 shrink-0"></i>
     <span id="toastMessage">Pemberitahuan</span>
   </div>
+
+  <!-- Firebase Service Module -->
+  <script type="module" src="./firebase-service.js"></script>
 
   <!-- Application Script -->
   <script src="./app.js"></script>
