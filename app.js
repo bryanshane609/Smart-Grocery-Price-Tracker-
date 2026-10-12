@@ -579,70 +579,97 @@ function renderCartItems() {
     };
     const catIcon = catIcons[item.category] || '📦';
 
+    // Professional Pastel Category Tag Badges
+    const catBadgeStyles = {
+      'Sembako': 'bg-amber-100/80 text-amber-900 border-amber-200/90',
+      'Makanan Instan': 'bg-orange-100/80 text-orange-900 border-orange-200/90',
+      'Daging & Sayur': 'bg-emerald-100/80 text-emerald-900 border-emerald-200/90',
+      'Toiletries': 'bg-sky-100/80 text-sky-900 border-sky-200/90',
+      'Bumbu & Minyak': 'bg-yellow-100/80 text-yellow-900 border-yellow-200/90',
+      'Minuman': 'bg-blue-100/80 text-blue-900 border-blue-200/90',
+      'Camilan': 'bg-amber-100/80 text-amber-900 border-amber-200/90',
+      'Lainnya': 'bg-slate-100 text-slate-700 border-slate-200/90'
+    };
+    const catBadgeClass = catBadgeStyles[item.category] || 'bg-slate-100 text-slate-700 border-slate-200';
+
     // Discount badge
     let discountBadgeHtml = '';
     if (item.discount && item.discount.mode !== 'none') {
       discountBadgeHtml = `
-        <span class="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-200">
+        <span class="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-lg text-[10px] font-bold bg-amber-100 text-amber-900 border border-amber-300">
           Diskon ${item.effectivePercent}% (-Rp ${formatNumber(item.totalSaved)})
         </span>
       `;
     }
 
+    // Dynamic Left Accent Border for Instant Visual Recognition
+    let cardBorderAccent = 'border-l-slate-300';
+    if (item.discount && item.discount.mode !== 'none') {
+      cardBorderAccent = 'border-l-amber-400';
+    } else if (comp.status === 'higher') {
+      cardBorderAccent = 'border-l-rose-400';
+    } else if (comp.status === 'lower') {
+      cardBorderAccent = 'border-l-emerald-500';
+    } else if (comp.status === 'new') {
+      cardBorderAccent = 'border-l-sky-400';
+    }
+
     return `
-      <div class="p-3 rounded-2xl bg-white border border-slate-200/90 shadow-sm hover:border-slate-300 transition-all flex flex-col space-y-2" data-item-id="${item.id}">
-        <!-- Top Row: Name, Category, Action Delete -->
+      <div class="p-3.5 rounded-2xl bg-white border border-slate-200/90 ${cardBorderAccent} border-l-[5px] shadow-[0_2px_10px_rgba(15,23,42,0.04)] hover:shadow-md transition-all flex flex-col space-y-2.5" data-item-id="${item.id}">
+        <!-- Top Row: Category Chip, Name, and Quick Actions -->
         <div class="flex items-start justify-between gap-2">
           <div class="flex-1 min-w-0">
-            <div class="flex items-center gap-1.5 mb-0.5 flex-wrap">
-              <span class="text-xs">${catIcon}</span>
-              <span class="text-[10px] font-semibold text-slate-500">${item.category}</span>
+            <div class="flex items-center gap-1.5 mb-1 flex-wrap">
+              <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[10px] font-bold border ${catBadgeClass}">
+                <span>${catIcon}</span>
+                <span>${item.category}</span>
+              </span>
               ${discountBadgeHtml}
             </div>
-            <h4 class="text-xs font-bold text-slate-800 tracking-tight truncate">${item.name}</h4>
+            <h4 class="text-sm font-extrabold text-slate-900 tracking-tight truncate">${item.name}</h4>
           </div>
           
           <div class="flex items-center gap-1 shrink-0">
-            <button class="btn-edit-item p-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-800 transition active:scale-95" data-id="${item.id}" title="Edit Item">
+            <button class="btn-edit-item p-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-800 transition active:scale-95 border border-slate-200/60" data-id="${item.id}" title="Edit Item">
               <i data-lucide="edit-3" class="w-3.5 h-3.5"></i>
             </button>
-            <button class="btn-delete-item p-1.5 rounded-lg bg-slate-100 hover:bg-rose-50 text-slate-400 hover:text-rose-600 transition active:scale-95" data-id="${item.id}" title="Hapus">
+            <button class="btn-delete-item p-1.5 rounded-xl bg-slate-100 hover:bg-rose-50 text-slate-400 hover:text-rose-600 transition active:scale-95 border border-slate-200/60" data-id="${item.id}" title="Hapus">
               <i data-lucide="trash" class="w-3.5 h-3.5"></i>
             </button>
           </div>
         </div>
 
         <!-- F-04: Realtime Comparator Badge Row -->
-        <div class="flex items-center justify-between px-2 py-1 rounded-lg border ${comp.colorClass} text-[10px]">
-          <div class="flex items-center gap-1 font-bold">
-            <span class="w-3.5 h-3.5 rounded flex items-center justify-center font-extrabold text-xs">${comp.symbol}</span>
+        <div class="flex items-center justify-between px-2.5 py-1.5 rounded-xl border ${comp.colorClass} text-[11px]">
+          <div class="flex items-center gap-1.5 font-bold">
+            <span class="w-4 h-4 rounded-md flex items-center justify-center font-extrabold text-xs shadow-2xs">${comp.symbol}</span>
             <span>${comp.label}</span>
           </div>
-          <div class="text-[9px] opacity-80 font-mono">
+          <div class="text-[10px] font-semibold opacity-90 font-mono">
             ${comp.refPrice ? `Bln Lalu: Rp ${formatNumber(comp.refPrice)}` : 'Item Baru'}
           </div>
         </div>
 
         <!-- Price & Qty Stepper Row (Thumb Ergonomics) -->
-        <div class="flex items-center justify-between pt-1 border-t border-slate-100">
+        <div class="flex items-center justify-between pt-2 border-t border-slate-100">
           <!-- Pricing Breakdown -->
           <div>
             <div class="text-[10px] text-slate-500 font-mono">
               ${item.qty} × ${formatRupiah(item.unitFinal)} / ${item.unit}
               ${item.price !== item.unitFinal ? `<s class="text-slate-400 ml-1">Rp ${formatNumber(item.price)}</s>` : ''}
             </div>
-            <div class="text-sm font-extrabold text-emerald-600 font-mono">
+            <div class="text-base font-extrabold text-emerald-700 font-mono">
               ${formatRupiah(item.subtotal)}
             </div>
           </div>
 
           <!-- Fast Stepper Component -->
-          <div class="flex items-center gap-1.5 bg-slate-50 px-1 py-0.5 rounded-xl border border-slate-200">
-            <button class="btn-step-minus w-8 h-8 rounded-lg bg-white hover:bg-slate-100 text-slate-700 font-extrabold text-sm flex items-center justify-center active:scale-90 transition border border-slate-200/60 shadow-xs" data-id="${item.id}">
+          <div class="flex items-center gap-1 bg-slate-100 p-1 rounded-xl border border-slate-200/80">
+            <button class="btn-step-minus w-8 h-8 rounded-lg bg-white hover:bg-slate-50 text-slate-800 font-extrabold text-sm flex items-center justify-center active:scale-90 transition border border-slate-200/80 shadow-xs" data-id="${item.id}">
               -
             </button>
-            <span class="w-7 text-center font-bold text-xs font-mono text-slate-800">${item.qty}</span>
-            <button class="btn-step-plus w-8 h-8 rounded-lg bg-white hover:bg-slate-100 text-slate-700 font-extrabold text-sm flex items-center justify-center active:scale-90 transition border border-slate-200/60 shadow-xs" data-id="${item.id}">
+            <span class="w-8 text-center font-bold text-xs font-mono text-slate-900">${item.qty}</span>
+            <button class="btn-step-plus w-8 h-8 rounded-lg bg-white hover:bg-slate-50 text-slate-800 font-extrabold text-sm flex items-center justify-center active:scale-90 transition border border-slate-200/80 shadow-xs" data-id="${item.id}">
               +
             </button>
           </div>
@@ -1068,27 +1095,28 @@ function renderHistoryView() {
   container.innerHTML = state.history.map(trip => {
     const isOver = trip.totalSpent > trip.budgetLimit;
     const badgeColor = isOver ? 'bg-rose-50 text-rose-700 border-rose-200' : 'bg-emerald-50 text-emerald-700 border-emerald-200';
+    const borderAccent = isOver ? 'border-l-rose-400' : 'border-l-emerald-500';
 
     return `
-      <div class="p-3.5 rounded-2xl bg-white border border-slate-200/90 hover:border-slate-300 shadow-sm transition flex flex-col space-y-2.5">
+      <div class="p-4 rounded-2xl bg-white border border-slate-200/90 ${borderAccent} border-l-[5px] hover:shadow-md shadow-[0_2px_10px_rgba(15,23,42,0.04)] transition flex flex-col space-y-3">
         <div class="flex items-start justify-between">
           <div>
             <div class="flex items-center gap-1.5">
-              <span class="text-xs font-bold text-slate-800">${trip.storeName}</span>
-              <span class="text-[9px] px-1.5 py-0.2 rounded font-semibold border ${badgeColor}">
+              <span class="text-sm font-extrabold text-slate-900">${trip.storeName}</span>
+              <span class="text-[9px] px-2 py-0.5 rounded-md font-bold border ${badgeColor}">
                 ${isOver ? 'Over Budget' : 'Aman'}
               </span>
             </div>
-            <p class="text-[10px] text-slate-500 mt-0.5">${trip.date} &bull; ${trip.time || ''} &bull; ${trip.itemCount} Item</p>
+            <p class="text-[11px] text-slate-500 mt-0.5 font-medium">${trip.date} &bull; ${trip.time || ''} &bull; ${trip.itemCount} Item</p>
           </div>
           <div class="text-right">
-            <span class="text-sm font-extrabold text-emerald-600 font-mono block">${formatRupiah(trip.totalSpent)}</span>
-            ${trip.totalSaved > 0 ? `<span class="text-[9px] text-amber-700 font-mono">Hemat: ${formatRupiah(trip.totalSaved)}</span>` : ''}
+            <span class="text-base font-extrabold text-emerald-700 font-mono block">${formatRupiah(trip.totalSpent)}</span>
+            ${trip.totalSaved > 0 ? `<span class="text-[10px] text-amber-700 font-bold font-mono">Hemat: ${formatRupiah(trip.totalSaved)}</span>` : ''}
           </div>
         </div>
 
-        <div class="flex items-center justify-between pt-1 border-t border-slate-100 text-xs">
-          <button class="btn-view-receipt text-[11px] font-semibold text-sky-600 hover:text-sky-700 flex items-center gap-1 active:scale-95 transition" data-id="${trip.id}">
+        <div class="flex items-center justify-between pt-2 border-t border-slate-100 text-xs">
+          <button class="btn-view-receipt text-[11px] font-bold text-sky-600 hover:text-sky-700 flex items-center gap-1 active:scale-95 transition" data-id="${trip.id}">
             <i data-lucide="receipt" class="w-3.5 h-3.5"></i>
             <span>Lihat Struk Digital</span>
           </button>
@@ -1408,9 +1436,9 @@ document.addEventListener('DOMContentLoaded', () => {
   document.querySelectorAll('.cat-pill').forEach(pill => {
     pill.addEventListener('click', () => {
       document.querySelectorAll('.cat-pill').forEach(p => {
-        p.className = 'cat-pill px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap bg-slate-100 text-slate-600 hover:text-slate-800 border border-slate-200/80 transition active:scale-95';
+        p.className = 'cat-pill px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap bg-white text-slate-700 hover:text-slate-900 border border-slate-200/90 shadow-xs transition active:scale-95';
       });
-      pill.className = 'cat-pill active px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap bg-emerald-500 text-white shadow-sm shadow-emerald-200 transition active:scale-95';
+      pill.className = 'cat-pill active px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap bg-emerald-500 text-white shadow-sm shadow-emerald-200 transition active:scale-95';
 
       state.activeCategoryFilter = pill.getAttribute('data-category');
       sounds.playPop();

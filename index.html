@@ -112,14 +112,14 @@
       display: flex;
       flex-direction: column;
       position: relative;
-      background-color: #fafbfc;
+      background-color: #f3f6f9;
     }
     @media (min-width: 640px) {
       body {
-        background: radial-gradient(circle at 50% 15%, #ecfdf5 0%, #f1f5f9 50%, #e2e8f0 100%);
+        background: radial-gradient(circle at 50% 15%, #e2e8f0 0%, #cbd5e1 50%, #94a3b8 100%);
       }
       .mobile-frame {
-        box-shadow: 0 20px 45px -15px rgba(100, 116, 139, 0.15), 0 0 0 1px rgba(226, 232, 240, 0.9);
+        box-shadow: 0 20px 45px -15px rgba(15, 23, 42, 0.15), 0 0 0 1px rgba(203, 213, 225, 0.8);
       }
     }
     /* Number stepper styling */
@@ -220,37 +220,37 @@
         
         <!-- Category Filter Pills (Horizontal Scroll Touch Friendly) -->
         <div class="flex items-center gap-1.5 overflow-x-auto scrollbar-none py-1 -mx-3.5 px-3.5">
-          <button class="cat-pill active px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap bg-emerald-500 text-white shadow-sm shadow-emerald-200 transition active:scale-95" data-category="ALL">
+          <button class="cat-pill active px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap bg-emerald-500 text-white shadow-sm shadow-emerald-200 transition active:scale-95" data-category="ALL">
             Semua (<span id="catCountAll">0</span>)
           </button>
-          <button class="cat-pill px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap bg-slate-100 text-slate-600 hover:text-slate-800 border border-slate-200/80 transition active:scale-95" data-category="Sembako">
+          <button class="cat-pill px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap bg-white text-slate-700 hover:text-slate-900 border border-slate-200/90 shadow-xs transition active:scale-95" data-category="Sembako">
             🌾 Sembako (<span id="catCountSembako">0</span>)
           </button>
-          <button class="cat-pill px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap bg-slate-100 text-slate-600 hover:text-slate-800 border border-slate-200/80 transition active:scale-95" data-category="Makanan Instan">
+          <button class="cat-pill px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap bg-white text-slate-700 hover:text-slate-900 border border-slate-200/90 shadow-xs transition active:scale-95" data-category="Makanan Instan">
             🍜 Instan (<span id="catCountInstan">0</span>)
           </button>
-          <button class="cat-pill px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap bg-slate-100 text-slate-600 hover:text-slate-800 border border-slate-200/80 transition active:scale-95" data-category="Daging & Sayur">
+          <button class="cat-pill px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap bg-white text-slate-700 hover:text-slate-900 border border-slate-200/90 shadow-xs transition active:scale-95" data-category="Daging & Sayur">
             🥩 Daging/Sayur (<span id="catCountFresh">0</span>)
           </button>
-          <button class="cat-pill px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap bg-slate-100 text-slate-600 hover:text-slate-800 border border-slate-200/80 transition active:scale-95" data-category="Toiletries">
+          <button class="cat-pill px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap bg-white text-slate-700 hover:text-slate-900 border border-slate-200/90 shadow-xs transition active:scale-95" data-category="Toiletries">
             🧼 Toiletries (<span id="catCountToiletries">0</span>)
           </button>
-          <button class="cat-pill px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap bg-slate-100 text-slate-600 hover:text-slate-800 border border-slate-200/80 transition active:scale-95" data-category="Bumbu & Minyak">
+          <button class="cat-pill px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap bg-white text-slate-700 hover:text-slate-900 border border-slate-200/90 shadow-xs transition active:scale-95" data-category="Bumbu & Minyak">
             🧂 Bumbu/Minyak (<span id="catCountBumbu">0</span>)
           </button>
-          <button class="cat-pill px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap bg-slate-100 text-slate-600 hover:text-slate-800 border border-slate-200/80 transition active:scale-95" data-category="Lainnya">
+          <button class="cat-pill px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap bg-white text-slate-700 hover:text-slate-900 border border-slate-200/90 shadow-xs transition active:scale-95" data-category="Lainnya">
             📦 Lainnya (<span id="catCountLainnya">0</span>)
           </button>
         </div>
 
-        <!-- Quick Summary Bar: Total Items & Total Saved from Discounts -->
-        <div class="flex items-center justify-between text-xs px-1 text-slate-500">
+        <!-- Quick Summary Bar: Floating Card with Stat Indicators -->
+        <div class="flex items-center justify-between text-xs px-3.5 py-2.5 rounded-2xl bg-white border border-slate-200/90 shadow-xs text-slate-500">
           <div class="flex items-center gap-1.5">
             <i data-lucide="package" class="w-3.5 h-3.5 text-slate-400"></i>
-            <span>Keranjang: <b class="text-slate-700 font-semibold" id="totalItemsCount">0 item</b></span>
+            <span>Keranjang: <b class="text-slate-800 font-bold" id="totalItemsCount">0 item</b></span>
           </div>
-          <div class="text-emerald-600 font-semibold flex items-center gap-1" id="totalSavingsTag">
-            <i data-lucide="tag" class="w-3.5 h-3.5 text-emerald-500"></i>
+          <div class="text-emerald-700 font-bold flex items-center gap-1" id="totalSavingsTag">
+            <i data-lucide="tag" class="w-3.5 h-3.5 text-emerald-600"></i>
             <span>Hemat Diskon: <span id="totalSavingsAmount" class="font-mono">Rp 0</span></span>
           </div>
         </div>
