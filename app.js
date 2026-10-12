@@ -1595,7 +1595,7 @@ function setupFirebaseUI() {
   const cloudSyncHeaderBtn = document.getElementById('cloudSyncHeaderBtn');
 
   // Set initial User ID
-  const initialUid = localStorage.getItem('sg_firebase_user_id') || 'user_demo';
+  const initialUid = localStorage.getItem('sg_firebase_user_id') || 'test_student_anak_rantau';
   if (firebaseUserIdInput) firebaseUserIdInput.value = initialUid;
 
   // Listen to status updates from firebase-service

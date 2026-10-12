@@ -39,7 +39,7 @@ class FirebaseSyncService {
   getOrCreateUserId() {
     let uid = localStorage.getItem('sg_firebase_user_id');
     if (!uid) {
-      uid = 'user_' + Math.random().toString(36).substring(2, 9);
+      uid = 'test_student_anak_rantau';
       localStorage.setItem('sg_firebase_user_id', uid);
     }
     return uid;
