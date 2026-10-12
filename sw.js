@@ -1,5 +1,5 @@
 // Service Worker for Smart Grocery & Budget Safety Tracker (PWA)
-const CACHE_NAME = 'smart-grocery-v2';
+const CACHE_NAME = 'smart-grocery-v3';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
@@ -30,8 +30,20 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
-  // Only handle GET requests
+  // Hanya proses method GET
   if (event.request.method !== 'GET') return;
+
+  const url = new URL(event.request.url);
+
+  // KRUSIAL: Jangan pernah mencegat request ke Firebase, Firestore, Google API, atau CDN eksternal
+  if (
+    url.hostname.includes('firebase') ||
+    url.hostname.includes('googleapis.com') ||
+    url.hostname.includes('gstatic.com') ||
+    url.hostname.includes('google.com')
+  ) {
+    return; // Langsung kirim lewat jaringan asli
+  }
 
   event.respondWith(
     caches.match(event.request).then((cachedResponse) => {

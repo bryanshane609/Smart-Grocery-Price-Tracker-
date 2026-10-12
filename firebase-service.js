@@ -6,6 +6,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { 
   getFirestore, 
+  initializeFirestore,
   doc, 
   setDoc, 
   getDoc, 
@@ -56,15 +57,38 @@ class FirebaseSyncService {
 
     try {
       this.app = initializeApp(firebaseConfig);
-      this.db = getFirestore(this.app);
+      
+      // Mengaktifkan auto-detect long polling agar stabil di GitHub Pages & jaringan sekolah/kampus
+      try {
+        this.db = initializeFirestore(this.app, {
+          experimentalAutoDetectLongPolling: true
+        });
+      } catch (e) {
+        this.db = getFirestore(this.app);
+      }
+
       this.isInitialized = true;
       this.updateStatus('connected', 'Firebase Terhubung ☁️');
       console.log('Firebase initialized successfully for user:', this.userId);
+
+      // Verifikasi koneksi awal ke Firestore
+      this.testConnection();
       return true;
     } catch (error) {
       console.warn('Firebase initialization error:', error);
-      this.updateStatus('error', 'Mode Lokal (Offline)');
+      this.handleFirestoreError(error);
       return false;
+    }
+  }
+
+  async testConnection() {
+    try {
+      const pingRef = doc(this.db, 'users', this.userId, 'settings', 'config');
+      await getDoc(pingRef);
+      this.updateStatus('connected', 'Firebase Terhubung ☁️');
+    } catch (err) {
+      console.warn('Firebase connection test warning:', err);
+      this.handleFirestoreError(err);
     }
   }
 
@@ -219,7 +243,9 @@ class FirebaseSyncService {
     const msg = err?.message || String(err);
     if (msg.includes('permission-denied') || msg.includes('Missing or insufficient permissions')) {
       this.updateStatus('error', 'Izin Ditolak (Cek Security Rules)');
-    } else if (msg.includes('unavailable') || msg.includes('network')) {
+    } else if (msg.includes('NOT_FOUND') || msg.includes('does not exist')) {
+      this.updateStatus('error', 'Database Belum Dibuat di Console');
+    } else if (msg.includes('unavailable') || msg.includes('network') || msg.includes('Failed to fetch')) {
       this.updateStatus('offline', 'Offline (Disimpan di HP)');
     } else {
       this.updateStatus('error', 'Gagal Sync Cloud');
