@@ -2061,6 +2061,146 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  // ---------------------------------------------------------------------------
+  // FIREBASE REALTIME CLOUD SYNC & STATUS LISTENERS
+  // ---------------------------------------------------------------------------
+  const cloudStatusDot = document.getElementById('cloudStatusDot');
+  const cloudStatusText = document.getElementById('cloudStatusText');
+  const cloudSyncHeaderBtn = document.getElementById('cloudSyncHeaderBtn');
+  const settingsFirebaseBadge = document.getElementById('settingsFirebaseBadge');
+  const settingsFirebaseDesc = document.getElementById('settingsFirebaseStatusDesc');
+
+  window.addEventListener('firebase-status-change', (e) => {
+    const { status, message } = e.detail || {};
+
+    // 1. Update Header Cloud Status Pill
+    if (cloudStatusDot && cloudStatusText) {
+      if (status === 'connected') {
+        cloudStatusDot.className = 'w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse';
+        cloudStatusText.textContent = 'ONLINE CLOUD';
+        cloudStatusText.className = 'text-emerald-600 dark:text-emerald-400 font-extrabold';
+      } else if (status === 'syncing') {
+        cloudStatusDot.className = 'w-1.5 h-1.5 rounded-full bg-sky-400 animate-ping';
+        cloudStatusText.textContent = 'SYNCING...';
+        cloudStatusText.className = 'text-sky-500 dark:text-sky-400 font-extrabold';
+      } else if (status === 'offline') {
+        cloudStatusDot.className = 'w-1.5 h-1.5 rounded-full bg-slate-400';
+        cloudStatusText.textContent = 'OFFLINE (LOKAL)';
+        cloudStatusText.className = 'text-slate-500 dark:text-slate-400 font-extrabold';
+      } else if (status === 'error') {
+        cloudStatusDot.className = 'w-1.5 h-1.5 rounded-full bg-amber-500';
+        cloudStatusText.textContent = 'MODE LOKAL';
+        cloudStatusText.className = 'text-amber-600 dark:text-amber-400 font-extrabold';
+      }
+    }
+
+    // 2. Update Settings Tab Cloud Badge
+    if (settingsFirebaseBadge) {
+      if (status === 'connected') {
+        settingsFirebaseBadge.className = 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30';
+        settingsFirebaseBadge.textContent = 'Terhubung ☁️';
+      } else if (status === 'syncing') {
+        settingsFirebaseBadge.className = 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-sky-500/20 text-sky-500 dark:text-sky-400 border border-sky-500/30 animate-pulse';
+        settingsFirebaseBadge.textContent = 'Menyinkronkan...';
+      } else if (status === 'offline') {
+        settingsFirebaseBadge.className = 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-500 dark:text-slate-400 border border-slate-300 dark:border-slate-600';
+        settingsFirebaseBadge.textContent = 'Offline (Penyimpanan Lokal)';
+      } else {
+        settingsFirebaseBadge.className = 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/30';
+        settingsFirebaseBadge.textContent = message || 'Mode Lokal';
+      }
+    }
+    if (settingsFirebaseDesc && message) {
+      settingsFirebaseDesc.textContent = message;
+    }
+  });
+
+  // Header quick sync button
+  cloudSyncHeaderBtn?.addEventListener('click', async () => {
+    if (window.FirebaseSync) {
+      sounds.playClick();
+      showToast('Menyinkronkan data dengan Cloud...', 'cloud');
+      const pulled = await window.FirebaseSync.pullAllSharedData();
+      if (pulled?.cart) {
+        state.cart = pulled.cart;
+        state.saveCart();
+        renderCartItems();
+      }
+      await window.FirebaseSync.syncCart(state.cart);
+      await window.FirebaseSync.syncSettings({ budgetLimit: state.budgetLimit, soundEnabled: state.soundEnabled });
+      showToast('Sinkronisasi cloud selesai!');
+    } else {
+      showToast('Modul Firebase sedang diinisialisasi...', 'clock');
+    }
+  });
+
+  // Settings Manual Push & Pull buttons
+  document.getElementById('btnManualPushCloud')?.addEventListener('click', async () => {
+    if (window.FirebaseSync) {
+      sounds.playClick();
+      showToast('Mengirim seluruh data lokal ke Cloud...', 'upload-cloud');
+      await window.FirebaseSync.syncCart(state.cart);
+      await window.FirebaseSync.syncSettings({ budgetLimit: state.budgetLimit, soundEnabled: state.soundEnabled });
+      await window.FirebaseSync.syncHistory(state.history);
+      showToast('Data berhasil dikirim ke Cloud!');
+    }
+  });
+
+  document.getElementById('btnManualPullCloud')?.addEventListener('click', async () => {
+    if (window.FirebaseSync) {
+      sounds.playClick();
+      showToast('Mengambil data terbaru dari Cloud...', 'download-cloud');
+      const data = await window.FirebaseSync.pullAllSharedData();
+      if (data) {
+        if (data.cart) { state.cart = data.cart; state.saveCart(); }
+        if (data.settings?.budgetLimit) {
+          state.budgetLimit = Number(data.settings.budgetLimit);
+          localStorage.setItem('sg_budget_limit', state.budgetLimit.toString());
+        }
+        if (data.history) { state.history = data.history; state.saveHistory(); }
+        renderCartItems();
+        renderGuardianAndEnvelopes();
+        showToast('Data Cloud berhasil dimuat ke perangkat!');
+      }
+    }
+  });
+
+  // ⚡ Realtime listener: Perangkat lain mengubah troli
+  window.addEventListener('cloud-cart-update', (e) => {
+    const remoteItems = e.detail?.items;
+    if (!Array.isArray(remoteItems)) return;
+    const currentJson = JSON.stringify(state.cart);
+    const remoteJson = JSON.stringify(remoteItems);
+    if (currentJson !== remoteJson) {
+      state.cart = remoteItems;
+      localStorage.setItem('sg_cart_items', remoteJson);
+      renderCartItems();
+      renderGuardianAndEnvelopes();
+    }
+  });
+
+  // ⚡ Realtime listener: Pengaturan batas anggaran dari cloud
+  window.addEventListener('cloud-settings-update', (e) => {
+    const remoteBudget = e.detail?.budgetLimit;
+    if (remoteBudget && remoteBudget !== state.budgetLimit) {
+      state.budgetLimit = Number(remoteBudget);
+      localStorage.setItem('sg_budget_limit', state.budgetLimit.toString());
+      renderGuardianAndEnvelopes();
+      const budgetInput = document.getElementById('budgetLimitInput');
+      if (budgetInput) budgetInput.value = state.budgetLimit;
+    }
+  });
+
+  // ⚡ Realtime listener: Riwayat transaksi dari cloud
+  window.addEventListener('cloud-history-update', (e) => {
+    const remoteTrips = e.detail?.trips;
+    if (Array.isArray(remoteTrips)) {
+      state.history = remoteTrips;
+      localStorage.setItem('sg_history_trips', JSON.stringify(remoteTrips));
+      renderHistoryView();
+    }
+  });
+
   // Category Pills
   document.querySelectorAll('.cat-pill').forEach(btn => {
     btn.onclick = () => {
