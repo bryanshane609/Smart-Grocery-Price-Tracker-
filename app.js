@@ -11,7 +11,7 @@
 // -----------------------------------------------------------------------------
 // 1. DATA PRESETS, BARCODE CATALOG, VOUCHERS & RETAILERS
 // -----------------------------------------------------------------------------
-const DEFAULT_BUDGET_LIMIT = 350000;
+const DEFAULT_BUDGET_LIMIT = 800000;
 
 // Database Voucher & Kupon Belanja
 const VOUCHER_DATABASE = {
@@ -518,6 +518,8 @@ function calculateCartTotals() {
   let itemSavingsTotal = 0;
 
   state.cart.forEach(item => {
+    // Reactive: Item yang tidak dicentang tidak dihitung ke total belanja berjalan
+    if (item.checked === false) return;
     const pricing = calculateItemPricing(item.price, item.qty, item.discount);
     subtotalNormal += pricing.normalRowTotal;
     itemsRowTotal += pricing.rowTotal;
@@ -598,13 +600,13 @@ function renderGuardianAndEnvelopes() {
   const heroBudgetStatusText = document.getElementById('heroBudgetStatusText');
   if (heroBudgetStatusPill && heroBudgetStatusText) {
     if (statusTier === 'safe') {
-      heroBudgetStatusPill.className = 'inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 font-mono text-[11px] font-extrabold tracking-wider shadow-xs';
+      heroBudgetStatusPill.className = 'inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 font-mono text-[11px] font-extrabold tracking-wider shadow-xs';
       heroBudgetStatusText.textContent = '• STATUS: AMAN';
     } else if (statusTier === 'warning') {
-      heroBudgetStatusPill.className = 'inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-400 font-mono text-[11px] font-extrabold tracking-wider shadow-xs';
+      heroBudgetStatusPill.className = 'inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-600 dark:text-amber-400 font-mono text-[11px] font-extrabold tracking-wider shadow-xs';
       heroBudgetStatusText.textContent = '• STATUS: WASPADA';
     } else {
-      heroBudgetStatusPill.className = 'inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-500/20 border border-rose-500/40 text-rose-300 font-mono text-[11px] font-extrabold tracking-wider shadow-xs animate-pulse';
+      heroBudgetStatusPill.className = 'inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-500/20 border border-rose-500/40 text-rose-600 dark:text-rose-400 font-mono text-[11px] font-extrabold tracking-wider shadow-xs animate-pulse';
       heroBudgetStatusText.textContent = totals.finalCartTotal > limit ? '• STATUS: OVER LIMIT' : '• STATUS: KRITIS';
     }
   }
@@ -632,19 +634,19 @@ function renderGuardianAndEnvelopes() {
   if (heroRemainingNumber) {
     if (remaining >= 0) {
       heroRemainingNumber.textContent = formatRupiah(remaining);
-      heroRemainingNumber.className = 'text-amber-400 font-mono font-bold ml-1';
+      heroRemainingNumber.className = 'text-amber-600 dark:text-amber-400 font-mono font-bold ml-1';
     } else {
       heroRemainingNumber.textContent = `Defisit ${formatRupiah(Math.abs(remaining))}`;
-      heroRemainingNumber.className = 'text-rose-400 font-mono font-bold ml-1';
+      heroRemainingNumber.className = 'text-rose-600 dark:text-rose-400 font-mono font-bold ml-1';
     }
   }
   if (heroRemainingSub) {
     if (remaining >= 0) {
       heroRemainingSub.textContent = `${Math.max(0, 100 - spentPct)}% Tersedia`;
-      heroRemainingSub.className = 'text-[10px] font-mono font-bold text-slate-400 bg-slate-800/90 border border-slate-700/60 px-2 py-0.5 rounded-lg';
+      heroRemainingSub.className = 'text-[10px] font-mono font-bold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-2 py-0.5 rounded-lg';
     } else {
       heroRemainingSub.textContent = 'Defisit Anggaran';
-      heroRemainingSub.className = 'text-[10px] font-mono font-bold text-rose-400 bg-rose-950/80 border border-rose-800/60 px-2 py-0.5 rounded-lg';
+      heroRemainingSub.className = 'text-[10px] font-mono font-bold text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/80 border border-rose-200 dark:border-rose-800/60 px-2 py-0.5 rounded-lg';
     }
   }
 
@@ -665,7 +667,7 @@ function renderGuardianAndEnvelopes() {
         block.className = 'seg-block h-2.5 sm:h-3 rounded-full bg-rose-500 shadow-[0_0_10px_rgba(244,63,94,0.6)] border border-rose-400 transition-all duration-300 animate-pulse';
       }
     } else {
-      block.className = 'seg-block h-2.5 sm:h-3 rounded-full bg-slate-800/90 border border-slate-700/50 shadow-none transition-all duration-300';
+      block.className = 'seg-block h-2.5 sm:h-3 rounded-full bg-slate-200 dark:bg-slate-700/60 border border-slate-300/40 dark:border-slate-600/30 shadow-none transition-all duration-300';
     }
   });
 
@@ -1008,6 +1010,7 @@ function renderCartItems() {
   filteredItems.forEach(item => {
     const pricing = calculateItemPricing(item.price, item.qty, item.discount);
     const isImpulse = item.category === 'Camilan' || item.category === 'Lainnya';
+    const isChecked = item.checked !== false;
 
     let discountBadgeHtml = '';
     if (pricing.hasDiscount) {
@@ -1019,23 +1022,28 @@ function renderCartItems() {
     }
 
     html += `
-      <div class="p-3.5 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700/80 shadow-xs flex flex-col space-y-2 transition-all">
+      <div class="p-3.5 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700/80 shadow-xs flex flex-col space-y-2 transition-all ${isChecked ? '' : 'opacity-60 bg-slate-50 dark:bg-slate-800/50'}">
         <div class="flex items-start justify-between">
-          <div class="space-y-0.5">
-            <div class="flex items-center gap-1.5">
-              <span class="text-[10px] px-2 py-0.5 rounded-md font-semibold bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300">${item.category}</span>
-              ${isImpulse ? '<span class="text-[9px] font-bold px-1.5 py-0.2 rounded bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300">Non-Esensial</span>' : '<span class="text-[9px] font-bold px-1.5 py-0.2 rounded bg-brand-50 text-brand-700 dark:bg-slate-700 dark:text-brand-400">Esensial</span>'}
-              <span class="text-[10px] text-slate-400 font-medium">@ ${item.store || 'Super Indo'}</span>
-            </div>
-            <h4 class="text-sm font-bold text-slate-900 dark:text-white leading-snug">${item.name}</h4>
-            <div class="text-[11px] text-slate-500 dark:text-slate-400 font-mono">
-              ${formatRupiah(pricing.finalUnitPrice)} / ${item.unit || 'pcs'}
-              ${pricing.hasDiscount ? `<span class="line-through text-slate-400 ml-1.5">${formatRupiah(item.price)}</span>` : ''}
+          <div class="flex items-start gap-2.5">
+            <button class="btn-toggle-check w-5 h-5 mt-0.5 rounded-md flex items-center justify-center transition active:scale-90 shrink-0 ${isChecked ? 'bg-brand-500 text-white shadow-xs' : 'border-2 border-slate-300 dark:border-slate-600 bg-transparent hover:border-brand-500'}" data-id="${item.id}" title="${isChecked ? 'Dicentang: Masuk total belanja' : 'Tidak Dicentang: Klik untuk memasukkan ke total'}">
+              ${isChecked ? '<i data-lucide="check" class="w-3.5 h-3.5 stroke-[3]"></i>' : ''}
+            </button>
+            <div class="space-y-0.5">
+              <div class="flex items-center gap-1.5 flex-wrap">
+                <span class="text-[10px] px-2 py-0.5 rounded-md font-semibold bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300">${item.category}</span>
+                ${isImpulse ? '<span class="text-[9px] font-bold px-1.5 py-0.2 rounded bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300">Non-Esensial</span>' : '<span class="text-[9px] font-bold px-1.5 py-0.2 rounded bg-brand-50 text-brand-700 dark:bg-slate-700 dark:text-brand-400">Esensial</span>'}
+                <span class="text-[10px] text-slate-400 font-medium">@ ${item.store || 'Super Indo'}</span>
+              </div>
+              <h4 class="text-sm font-bold text-slate-900 dark:text-white leading-snug ${isChecked ? '' : 'line-through text-slate-400 dark:text-slate-500'}">${item.name}</h4>
+              <div class="text-[11px] text-slate-500 dark:text-slate-400 font-mono">
+                ${formatRupiah(pricing.finalUnitPrice)} / ${item.unit || 'pcs'}
+                ${pricing.hasDiscount ? `<span class="line-through text-slate-400 ml-1.5">${formatRupiah(item.price)}</span>` : ''}
+              </div>
             </div>
           </div>
           
           <div class="text-right">
-            <div class="text-sm font-black font-mono text-slate-900 dark:text-white">${formatRupiah(pricing.rowTotal)}</div>
+            <div class="text-sm font-black font-mono ${isChecked ? 'text-slate-900 dark:text-white' : 'line-through text-slate-400 dark:text-slate-500'}">${formatRupiah(pricing.rowTotal)}</div>
             ${pricing.hasDiscount ? `<span class="text-[9px] font-bold text-brand-600 dark:text-brand-400">Hemat ${formatRupiah(pricing.rowSavings)}</span>` : ''}
           </div>
         </div>
@@ -1069,6 +1077,18 @@ function renderCartItems() {
 }
 
 function attachCartEventListeners() {
+  document.querySelectorAll('.btn-toggle-check').forEach(btn => {
+    btn.onclick = () => {
+      const id = btn.getAttribute('data-id');
+      const item = state.cart.find(i => i.id === id);
+      if (item) {
+        item.checked = item.checked === false ? true : false;
+        state.saveCart();
+        renderCartItems();
+        sounds.playClick();
+      }
+    };
+  });
   document.querySelectorAll('.btn-qty-minus').forEach(btn => {
     btn.onclick = () => {
       const id = btn.getAttribute('data-id');

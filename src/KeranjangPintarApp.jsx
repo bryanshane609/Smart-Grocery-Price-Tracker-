@@ -134,6 +134,9 @@ export default function KeranjangPintarApp() {
     let itemSavings = 0;
 
     cartItems.forEach(item => {
+      // Reactive: Item yang tidak dicentang tidak dihitung ke total belanja berjalan
+      if (item.checked === false) return;
+
       const normalRow = item.price * item.qty;
       subtotalNormal += normalRow;
 
@@ -255,58 +258,58 @@ export default function KeranjangPintarApp() {
     setCartItems(prev => prev.filter(i => i.id !== id));
   };
 
+  // Centang / Batal Centang Item (Reactive Checklist)
+  const toggleCheck = (id) => {
+    setCartItems(prev => prev.map(item =>
+      item.id === id ? { ...item, checked: item.checked === false ? true : false } : item
+    ));
+  };
+
   return (
-    <div className="min-h-screen bg-[#F8FAFC] text-slate-800 font-sans pb-16 antialiased">
+    <div className="min-h-screen bg-white dark:bg-[#1E293B] text-slate-800 dark:text-slate-100 font-sans pb-16 antialiased">
       {/* ===================================================================== */}
-      {/* 1. HEADER ATAS (TOP NAVIGATION - EXACT REFERENCE)                     */}
+      {/* 1. HEADER ATAS (SMART GROCERY GUARDIAN WITH STORE & DATE PICKER)      */}
       {/* ===================================================================== */}
-      <header className="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-slate-200/80 px-4 sm:px-8 py-3.5 transition-all">
+      <header className="sticky top-0 z-30 bg-white/95 dark:bg-[#1E293B]/95 backdrop-blur-md border-b border-slate-200/90 dark:border-slate-800 px-4 sm:px-8 py-3.5 transition-all">
         <div className="max-w-4xl mx-auto space-y-2.5">
-          {/* Baris 1: Logo & Judul, Card Anggaran Ringkas, Avatar */}
+          {/* Baris 1: Logo & Judul Smart Grocery GUARDIAN & Status ONLINE */}
           <div className="flex items-center justify-between">
-            {/* Logo Kotak Hitam + Kantong Belanja Kuning */}
-            <div className="flex items-center space-x-2.5">
-              <div className="w-10 h-10 rounded-2xl bg-black flex items-center justify-center text-amber-400 shadow-md shrink-0">
-                <ShoppingBag className="w-5 h-5" />
+            <div className="flex items-center space-x-3">
+              <div className="w-10 h-10 rounded-2xl bg-emerald-500 flex items-center justify-center text-white shadow-md shrink-0">
+                <ShieldCheck className="w-5 h-5" />
               </div>
-              <div className="flex items-center gap-1.5">
-                <h1 className="text-xl font-black tracking-tight text-slate-900 font-sans">
-                  KeranjangPintar
-                </h1>
-                <span className="text-[10px] font-black tracking-wider px-1.5 py-0.5 rounded-md bg-amber-400 text-slate-950 uppercase shadow-xs">
-                  PRO
-                </span>
+              <div className="leading-tight">
+                <div className="flex items-center gap-1.5">
+                  <h1 className="text-base font-extrabold tracking-tight text-slate-900 dark:text-white font-sans">
+                    Smart Grocery
+                  </h1>
+                  <span className="text-[9px] font-black tracking-wider px-1.5 py-0.5 rounded-md bg-emerald-50 text-emerald-700 dark:bg-slate-800 dark:text-emerald-400">
+                    GUARDIAN
+                  </span>
+                </div>
+                <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium line-clamp-1">
+                  Smart Household Financial Guardian & Real-Time Expense Protection
+                </p>
               </div>
             </div>
 
-            {/* Sisi Kanan: Card Anggaran Ringkas & Avatar */}
-            <div className="flex items-center space-x-2.5 sm:space-x-3">
-              {/* Card Anggaran Ringkas (Pill shape) */}
-              <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-50 border border-slate-200/90 shadow-xs">
-                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                <Wallet className="w-3.5 h-3.5 text-slate-400" />
-                <span className="font-mono text-xs font-bold text-slate-800">
-                  {`Rp ${Math.round(budgetLimit / 1000)}k`}
-                </span>
-              </div>
-
-              {/* Avatar Pengguna */}
-              <div className="w-8 h-8 rounded-full bg-slate-950 text-amber-400 font-bold font-mono text-xs flex items-center justify-center ring-2 ring-slate-200 shadow-sm">
-                B
-              </div>
+            {/* Status Badge: ONLINE */}
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 text-[10px] font-extrabold text-emerald-600 dark:text-emerald-400 shadow-xs">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+              <span>ONLINE</span>
             </div>
           </div>
 
-          {/* Baris 2: Sub-Header Info (Toko Selector, Picker Tanggal, Status ONLINE) */}
-          <div className="flex flex-wrap items-center justify-between gap-2 pt-1 border-t border-slate-100 text-xs">
-            <div className="flex items-center gap-2 flex-wrap">
+          {/* Baris 2: Sub-Header Info (Toko Selector & Picker Tanggal) */}
+          <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-100 dark:border-slate-800 text-xs">
+            <div className="flex items-center gap-2 flex-wrap flex-1">
               {/* Toko Selector */}
-              <div className="relative flex items-center">
+              <div className="relative flex items-center flex-1 max-w-xs">
                 <Store className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 pointer-events-none" />
                 <select
                   value={selectedStore}
                   onChange={(e) => setSelectedStore(e.target.value)}
-                  className="pl-7 pr-6 py-1 rounded-full bg-slate-100 border border-slate-200 text-[11px] font-bold text-slate-700 focus:outline-none focus:border-amber-400 transition cursor-pointer"
+                  className="w-full pl-7 pr-6 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-[11px] font-bold text-slate-700 dark:text-slate-200 focus:outline-none focus:border-emerald-500 transition cursor-pointer truncate"
                 >
                   <option value="Lotte Mart Grocery - Boulevard">Lotte Mart Grocery - Boulevard</option>
                   <option value="Indomaret Minimarket">Indomaret Minimarket</option>
@@ -318,21 +321,15 @@ export default function KeranjangPintarApp() {
               </div>
 
               {/* Picker Tanggal */}
-              <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-100 border border-slate-200 text-[11px] font-medium text-slate-600">
+              <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-[11px] font-medium text-slate-600 dark:text-slate-300">
                 <Calendar className="w-3.5 h-3.5 text-slate-400" />
                 <input
                   type="date"
                   value={selectedDate}
                   onChange={(e) => setSelectedDate(e.target.value)}
-                  className="bg-transparent border-none text-[11px] font-mono font-bold text-slate-700 focus:outline-none cursor-pointer"
+                  className="bg-transparent border-none text-[11px] font-mono font-bold text-slate-700 dark:text-slate-200 focus:outline-none cursor-pointer"
                 />
               </div>
-            </div>
-
-            {/* Status Badge: ONLINE */}
-            <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-50 border border-emerald-200 text-[10px] font-extrabold text-emerald-600 shadow-xs">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-              <span>ONLINE</span>
             </div>
           </div>
         </div>
@@ -343,16 +340,16 @@ export default function KeranjangPintarApp() {
       {/* ===================================================================== */}
       <main className="max-w-4xl mx-auto px-4 sm:px-8 pt-4 space-y-4">
         {/* ===================================================================== */}
-        {/* 2. KARTU UTAMA ANGGARAN (DARK CHARCOAL HERO CARD - EXACT REFERENCE)   */}
+        {/* 2. KARTU UTAMA ANGGARAN (SEAMLESS THEME INTEGRATED BUDGET CARD)       */}
         {/* ===================================================================== */}
         <motion.div
           initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
-          className="p-5 sm:p-6 rounded-3xl bg-[#0B0F19] border border-slate-800 shadow-2xl text-white relative overflow-hidden"
+          className="p-5 sm:p-6 rounded-3xl bg-slate-50 dark:bg-[#151f32]/95 border border-slate-200/90 dark:border-slate-700/70 shadow-sm text-slate-800 dark:text-slate-100 relative overflow-hidden transition-all duration-300"
         >
           {/* Subtle Glow Accents */}
-          <div className="absolute -top-16 -right-16 w-48 h-48 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
-          <div className="absolute -bottom-16 -left-16 w-48 h-48 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute -top-16 -right-16 w-48 h-48 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute -bottom-16 -left-16 w-48 h-48 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
 
           {/* Header Dalam Card: Pill Status (Kiri) & Badge Hemat (Kanan) */}
           <div className="flex items-center justify-between relative z-10">
@@ -360,19 +357,19 @@ export default function KeranjangPintarApp() {
             <div
               className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full font-mono text-[11px] font-extrabold tracking-wider ${
                 calculation.status === 'safe'
-                  ? 'bg-emerald-500/10 border border-emerald-500/30 text-emerald-400'
+                  ? 'bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400'
                   : calculation.status === 'warning'
-                  ? 'bg-amber-500/15 border border-amber-500/30 text-amber-400'
-                  : 'bg-rose-500/20 border border-rose-500/40 text-rose-300'
+                  ? 'bg-amber-500/10 border border-amber-500/30 text-amber-600 dark:text-amber-400'
+                  : 'bg-rose-500/15 border border-rose-500/30 text-rose-600 dark:text-rose-400 animate-pulse'
               }`}
             >
               <span
                 className={`w-2 h-2 rounded-full ${
                   calculation.status === 'safe'
-                    ? 'bg-emerald-400'
+                    ? 'bg-emerald-500'
                     : calculation.status === 'warning'
-                    ? 'bg-amber-400'
-                    : 'bg-rose-400 animate-pulse'
+                    ? 'bg-amber-500'
+                    : 'bg-rose-500 animate-pulse'
                 }`}
               />
               <span>
@@ -384,28 +381,28 @@ export default function KeranjangPintarApp() {
               </span>
             </div>
 
-            {/* Badge Oranye Hemat Rp */}
-            <div className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-400 font-mono text-[11px] font-extrabold shadow-sm">
-              <Flame className="w-3.5 h-3.5 text-amber-400" />
+            {/* Badge Hemat Rp */}
+            <div className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-600 dark:text-amber-400 font-mono text-[11px] font-extrabold shadow-xs">
+              <Flame className="w-3.5 h-3.5 text-amber-500" />
               <span>{`HEMAT RP ${Math.round(calculation.totalSavings).toLocaleString('id-ID')}`}</span>
             </div>
           </div>
 
           {/* Area Anggaran Utama */}
           <div className="mt-4 relative z-10">
-            <span className="text-[10px] sm:text-[11px] font-extrabold text-slate-400 uppercase tracking-widest block">
+            <span className="text-[10px] sm:text-[11px] font-extrabold text-slate-400 dark:text-slate-400 uppercase tracking-widest block">
               TOTAL BELANJA BERJALAN
             </span>
 
             <div className="flex items-baseline justify-between mt-1">
-              {/* Angka Besar: "Rp" Oranye + Angka Putih Tebal */}
+              {/* Angka Besar */}
               <div className="flex items-baseline">
-                <span className="text-amber-400 font-mono font-bold text-2xl sm:text-3xl mr-1.5">Rp</span>
+                <span className="text-amber-500 dark:text-amber-400 font-mono font-bold text-2xl sm:text-3xl mr-1.5">Rp</span>
                 <motion.span
                   key={calculation.finalTotal}
                   initial={{ scale: 0.95 }}
                   animate={{ scale: 1 }}
-                  className="text-white font-mono font-black text-4xl sm:text-5xl tracking-tight"
+                  className="text-slate-900 dark:text-white font-mono font-black text-4xl sm:text-5xl tracking-tight"
                 >
                   {calculation.finalTotal.toLocaleString('id-ID')}
                 </motion.span>
@@ -413,24 +410,24 @@ export default function KeranjangPintarApp() {
 
               {/* Sisi Kanan: Label Pemakaian & Cap % */}
               <div className="text-right">
-                <span className="text-[9px] sm:text-[10px] font-extrabold text-slate-400 uppercase tracking-widest block">
+                <span className="text-[9px] sm:text-[10px] font-extrabold text-slate-400 dark:text-slate-400 uppercase tracking-widest block">
                   PEMAKAIAN
                 </span>
-                <span className="font-mono text-xl sm:text-2xl font-black text-slate-100">
+                <span className="font-mono text-xl sm:text-2xl font-black text-slate-800 dark:text-slate-100">
                   {`${calculation.spentPct}% CAP`}
                 </span>
               </div>
             </div>
 
             {/* Badge Sisa Anggaran */}
-            <div className="mt-3.5 p-2.5 sm:p-3 rounded-2xl bg-slate-900/90 border border-slate-800 flex items-center justify-between">
-              <span className="text-xs font-semibold text-slate-300">
+            <div className="mt-3.5 p-2.5 sm:p-3 rounded-2xl bg-white dark:bg-slate-900/60 border border-slate-200/90 dark:border-slate-700/60 flex items-center justify-between">
+              <span className="text-xs font-semibold text-slate-600 dark:text-slate-300">
                 Sisa Aman:{' '}
-                <b className="text-amber-400 font-mono font-bold ml-1">
+                <b className="text-amber-600 dark:text-amber-400 font-mono font-bold ml-1">
                   {formatRupiah(calculation.remaining)}
                 </b>
               </span>
-              <span className="text-[10px] font-mono font-bold text-slate-400 bg-slate-800/90 border border-slate-700/60 px-2 py-0.5 rounded-lg">
+              <span className="text-[10px] font-mono font-bold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-2 py-0.5 rounded-lg">
                 {`${Math.max(0, 100 - calculation.spentPct)}% Tersedia`}
               </span>
             </div>
@@ -441,15 +438,15 @@ export default function KeranjangPintarApp() {
             <div className="grid grid-cols-10 gap-1 sm:gap-1.5">
               {[...Array(10)].map((_, idx) => {
                 const isActive = idx < calculation.activeSegments;
-                let bgClass = 'bg-slate-800/90 border-slate-700/50';
+                let bgClass = 'bg-slate-200 dark:bg-slate-700/60 border-slate-300/40 dark:border-slate-600/30';
 
                 if (isActive) {
                   if (calculation.status === 'safe') {
-                    bgClass = 'bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)] border-emerald-400';
+                    bgClass = 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.35)] border-emerald-400';
                   } else if (calculation.status === 'warning') {
-                    bgClass = 'bg-amber-400 shadow-[0_0_10px_rgba(245,158,11,0.5)] border-amber-300';
+                    bgClass = 'bg-amber-400 shadow-[0_0_8px_rgba(245,158,11,0.35)] border-amber-300';
                   } else {
-                    bgClass = 'bg-rose-500 shadow-[0_0_10px_rgba(244,63,94,0.6)] border-rose-400 animate-pulse';
+                    bgClass = 'bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.45)] border-rose-400 animate-pulse';
                   }
                 }
 
@@ -466,11 +463,11 @@ export default function KeranjangPintarApp() {
             </div>
 
             {/* Skala Bawah Progress Bar */}
-            <div className="flex items-center justify-between text-[10px] font-mono font-bold text-slate-500 pt-0.5">
+            <div className="flex items-center justify-between text-[10px] font-mono font-bold text-slate-400 dark:text-slate-500 pt-0.5">
               <span>Rp 0</span>
               <span>50%</span>
-              <span className="text-amber-400">80% Waspada</span>
-              <span className="text-slate-300">{`Max ${Math.round(budgetLimit / 1000)}k`}</span>
+              <span className="text-amber-500 dark:text-amber-400">80% Waspada</span>
+              <span className="text-slate-600 dark:text-slate-300">{`Max ${Math.round(budgetLimit / 1000)}k`}</span>
             </div>
           </div>
         </motion.div>
@@ -490,17 +487,17 @@ export default function KeranjangPintarApp() {
 
         {/* Banner Voucher Aktif */}
         {appliedVoucher && (
-          <div className="p-3 rounded-2xl bg-amber-50 border border-amber-200/80 flex items-center justify-between text-xs">
+          <div className="p-3 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200/80 dark:border-amber-900/60 flex items-center justify-between text-xs">
             <div className="flex items-center gap-2">
-              <Tag className="w-4 h-4 text-amber-600" />
+              <Tag className="w-4 h-4 text-amber-600 dark:text-amber-400" />
               <div>
-                <span className="font-mono font-bold text-slate-900">{appliedVoucher.code}</span>
-                <span className="text-slate-500 ml-1.5">• Potongan Langsung Rp10.000</span>
+                <span className="font-mono font-bold text-slate-900 dark:text-white">{appliedVoucher.code}</span>
+                <span className="text-slate-500 dark:text-slate-400 ml-1.5">• Potongan Langsung Rp10.000</span>
               </div>
             </div>
             <button
               onClick={() => setAppliedVoucher(null)}
-              className="text-[11px] font-bold text-amber-700 hover:text-rose-600"
+              className="text-[11px] font-bold text-amber-700 dark:text-amber-400 hover:text-rose-600"
             >
               Hapus
             </button>
@@ -515,16 +512,116 @@ export default function KeranjangPintarApp() {
             <h2 className="text-xs font-black text-slate-400 uppercase tracking-wider">
               Item Keranjang ({cartItems.length})
             </h2>
-            <span className="text-xs font-semibold text-slate-500">
-              Subtotal: <b className="font-mono text-slate-900">{formatRupiah(calculation.finalTotal)}</b>
+            <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
+              Subtotal: <b className="font-mono text-slate-900 dark:text-white">{formatRupiah(calculation.finalTotal)}</b>
             </span>
           </div>
 
           <AnimatePresence>
             {cartItems.map((item) => {
+              const isChecked = item.checked !== false;
+
               // Diskon calculation
               let discountedPrice = item.price;
               let discountBadge = null;
+
+              if (item.discount?.mode === 'single') {
+                discountedPrice = item.price * (1 - (item.discount.singlePercent || 0) / 100);
+                discountBadge = `Diskon ${item.discount.singlePercent}%`;
+              } else if (item.discount?.mode === 'tier') {
+                const step1 = item.price * (1 - (item.discount.tier1 || 0) / 100);
+                discountedPrice = step1 * (1 - (item.discount.tier2 || 0) / 100);
+                discountBadge = `Tier ${item.discount.tier1}% + ${item.discount.tier2}%`;
+              }
+
+              const rowTotal = Math.round(discountedPrice * item.qty);
+
+              return (
+                <motion.div
+                  key={item.id}
+                  layout
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  className={`p-3.5 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700/80 shadow-xs flex items-center justify-between gap-3 transition-all ${
+                    isChecked ? '' : 'opacity-60 bg-slate-50 dark:bg-slate-800/50'
+                  }`}
+                >
+                  <div className="flex items-start gap-2.5">
+                    <button
+                      type="button"
+                      onClick={() => toggleCheck(item.id)}
+                      className={`w-5 h-5 mt-0.5 rounded-md flex items-center justify-center transition active:scale-90 shrink-0 ${
+                        isChecked
+                          ? 'bg-emerald-500 text-white shadow-xs'
+                          : 'border-2 border-slate-300 dark:border-slate-600 bg-transparent hover:border-emerald-500'
+                      }`}
+                      title={isChecked ? 'Dicentang: Masuk total belanja' : 'Belum Dicentang: Klik untuk memasukkan ke total'}
+                    >
+                      {isChecked && <CheckCircle className="w-3.5 h-3.5" />}
+                    </button>
+
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <span className="text-[10px] px-2 py-0.5 rounded-md font-semibold bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300">
+                          {item.category}
+                        </span>
+                        {discountBadge && (
+                          <span className="text-[9px] font-black px-1.5 py-0.2 rounded bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300">
+                            {discountBadge}
+                          </span>
+                        )}
+                      </div>
+                      <h4 className={`text-xs font-bold text-slate-900 dark:text-white leading-snug ${isChecked ? '' : 'line-through text-slate-400 dark:text-slate-500'}`}>
+                        {item.name}
+                      </h4>
+                      <div className="flex items-center gap-2 text-[11px] text-slate-400 font-medium font-mono">
+                        <span>Satuan: {item.unit}</span>
+                        <span>•</span>
+                        <span className="font-bold text-slate-700 dark:text-slate-300">
+                          {formatRupiah(discountedPrice)}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Kuantitas Controls & Total */}
+                  <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-700 rounded-xl p-0.5">
+                      <button
+                        onClick={() => updateQty(item.id, -1)}
+                        className="w-6 h-6 rounded-lg bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 font-bold flex items-center justify-center text-xs shadow-xs active:scale-90"
+                      >
+                        -
+                      </button>
+                      <span className="font-mono font-bold text-xs px-2 text-slate-800 dark:text-slate-100">
+                        {item.qty}
+                      </span>
+                      <button
+                        onClick={() => updateQty(item.id, 1)}
+                        className="w-6 h-6 rounded-lg bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 font-bold flex items-center justify-center text-xs shadow-xs active:scale-90"
+                      >
+                        +
+                      </button>
+                    </div>
+
+                    <span className={`font-mono font-black text-xs w-20 text-right ${isChecked ? 'text-slate-900 dark:text-white' : 'line-through text-slate-400 dark:text-slate-500'}`}>
+                      {formatRupiah(rowTotal)}
+                    </span>
+
+                    <button
+                      onClick={() => removeItem(item.id)}
+                      className="p-1 rounded-lg text-slate-300 hover:text-rose-500 transition"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </motion.div>
+              );
+            })}
+          </AnimatePresence>
+        </div>
+      </main>
 
               if (item.discount?.mode === 'single') {
                 discountedPrice = item.price * (1 - (item.discount.singlePercent || 0) / 100);
