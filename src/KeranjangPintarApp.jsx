@@ -355,7 +355,7 @@ export default function KeranjangPintarApp() {
           <div className="flex items-center justify-between relative z-10">
             {/* Pill Status Aman / Waspada */}
             <div
-              className={`text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full border shadow-xs inline-flex items-center gap-1 ${
+              className={`text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full border shadow-xs inline-flex items-center gap-1.5 ${
                 calculation.status === 'safe'
                   ? 'bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border-emerald-300 dark:border-emerald-800'
                   : calculation.status === 'warning'
@@ -366,18 +366,18 @@ export default function KeranjangPintarApp() {
               <span
                 className={`w-1.5 h-1.5 rounded-full ${
                   calculation.status === 'safe'
-                    ? 'bg-[#10B981]'
+                    ? 'bg-emerald-500 animate-pulse'
                     : calculation.status === 'warning'
-                    ? 'bg-[#F59E0B]'
-                    : 'bg-[#EF4444] animate-pulse'
+                    ? 'bg-amber-500'
+                    : 'bg-rose-500 animate-pulse'
                 }`}
               />
               <span>
                 {calculation.status === 'safe'
-                  ? '• STATUS: AMAN'
+                  ? 'STATUS: AMAN'
                   : calculation.status === 'warning'
-                  ? '• STATUS: WASPADA'
-                  : '• STATUS: OVER LIMIT'}
+                  ? 'STATUS: WASPADA'
+                  : 'STATUS: OVER LIMIT'}
               </span>
             </div>
 
@@ -397,7 +397,7 @@ export default function KeranjangPintarApp() {
             <div className="flex items-baseline justify-between mt-1">
               {/* Angka Besar */}
               <div className="flex items-baseline">
-                <span className="text-[#F59E0B] font-mono font-bold text-2xl sm:text-3xl mr-1.5">Rp</span>
+                <span className="text-slate-500 dark:text-slate-400 font-mono font-bold text-2xl sm:text-3xl mr-1.5">Rp</span>
                 <motion.span
                   key={calculation.finalTotal}
                   initial={{ scale: 0.95 }}
@@ -425,25 +425,21 @@ export default function KeranjangPintarApp() {
               </div>
             </div>
 
-            {/* Badge Sisa Anggaran */}
+            {/* Badge Sisa Anggaran: Mengikuti standar Dashboard & Settings (Hijau Emerald jika >= 0) */}
             <div className="mt-3.5 p-2.5 sm:p-3 rounded-2xl bg-white dark:bg-slate-900/60 border border-slate-200/90 dark:border-slate-700/60 flex items-center justify-between">
               <span className="text-xs font-semibold text-slate-600 dark:text-slate-300">
                 Sisa Aman:{' '}
                 <b className={`font-mono font-bold ml-1 ${
-                  calculation.status === 'safe'
-                    ? 'text-[#10B981]'
-                    : calculation.status === 'warning'
-                    ? 'text-[#F59E0B]'
-                    : 'text-[#EF4444]'
+                  calculation.remaining >= 0
+                    ? 'text-emerald-600 dark:text-emerald-400'
+                    : 'text-rose-600 dark:text-rose-400'
                 }`}>
                   {calculation.remaining >= 0 ? formatRupiah(calculation.remaining) : `Defisit ${formatRupiah(Math.abs(calculation.remaining))}`}
                 </b>
               </span>
               <span className={`text-[10px] font-bold px-2 py-0.5 rounded-lg border ${
-                calculation.status === 'safe'
+                calculation.remaining >= 0
                   ? 'text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 border-emerald-200 dark:border-emerald-800/60'
-                  : calculation.status === 'warning'
-                  ? 'text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/60 border-amber-200 dark:border-amber-800/60'
                   : 'text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/80 border-rose-200 dark:border-rose-800/60'
               }`}>
                 {calculation.remaining >= 0 ? `${Math.max(0, 100 - calculation.spentPct)}% Sisa` : 'Defisit Anggaran'}

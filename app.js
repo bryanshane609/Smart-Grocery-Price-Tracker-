@@ -597,17 +597,21 @@ function renderGuardianAndEnvelopes() {
 
   // Hero Card Status Pill
   const heroBudgetStatusPill = document.getElementById('heroBudgetStatusPill');
+  const heroBudgetStatusDot = document.getElementById('heroBudgetStatusDot');
   const heroBudgetStatusText = document.getElementById('heroBudgetStatusText');
   if (heroBudgetStatusPill && heroBudgetStatusText) {
     if (statusTier === 'safe') {
-      heroBudgetStatusPill.className = 'text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800 shadow-xs inline-flex items-center gap-1';
-      heroBudgetStatusText.textContent = '• STATUS: AMAN';
+      heroBudgetStatusPill.className = 'text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800 shadow-xs inline-flex items-center gap-1.5';
+      if (heroBudgetStatusDot) heroBudgetStatusDot.className = 'w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse';
+      heroBudgetStatusText.textContent = 'STATUS: AMAN';
     } else if (statusTier === 'warning') {
-      heroBudgetStatusPill.className = 'text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border border-amber-300 dark:border-amber-800 shadow-xs inline-flex items-center gap-1';
-      heroBudgetStatusText.textContent = '• STATUS: WASPADA';
+      heroBudgetStatusPill.className = 'text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border border-amber-300 dark:border-amber-800 shadow-xs inline-flex items-center gap-1.5';
+      if (heroBudgetStatusDot) heroBudgetStatusDot.className = 'w-1.5 h-1.5 rounded-full bg-amber-500';
+      heroBudgetStatusText.textContent = 'STATUS: WASPADA';
     } else {
-      heroBudgetStatusPill.className = 'text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-rose-100 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 border border-rose-300 dark:border-rose-800 shadow-xs inline-flex items-center gap-1 animate-pulse';
-      heroBudgetStatusText.textContent = totals.finalCartTotal > limit ? '• STATUS: OVER LIMIT' : '• STATUS: KRITIS';
+      heroBudgetStatusPill.className = 'text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-rose-100 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 border border-rose-300 dark:border-rose-800 shadow-xs inline-flex items-center gap-1.5 animate-pulse';
+      if (heroBudgetStatusDot) heroBudgetStatusDot.className = 'w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse';
+      heroBudgetStatusText.textContent = totals.finalCartTotal > limit ? 'STATUS: OVER LIMIT' : 'STATUS: KRITIS';
     }
   }
 
@@ -636,33 +640,22 @@ function renderGuardianAndEnvelopes() {
     }
   }
 
+  // Sisa Aman: Selalu mengikuti standar warna Dashboard / Settings (Hijau Emerald jika masih ada sisa dana, Merah jika Defisit)
   const heroRemainingNumber = document.getElementById('heroRemainingNumber');
   const heroRemainingSub = document.getElementById('heroRemainingSub');
   if (heroRemainingNumber) {
     if (remaining >= 0) {
       heroRemainingNumber.textContent = formatRupiah(remaining);
-      if (statusTier === 'safe') {
-        heroRemainingNumber.className = 'text-[#10B981] font-mono font-bold ml-1';
-      } else if (statusTier === 'warning') {
-        heroRemainingNumber.className = 'text-[#F59E0B] font-mono font-bold ml-1';
-      } else {
-        heroRemainingNumber.className = 'text-[#EF4444] font-mono font-bold ml-1';
-      }
+      heroRemainingNumber.className = 'text-emerald-600 dark:text-emerald-400 font-mono font-bold ml-1';
     } else {
       heroRemainingNumber.textContent = `Defisit ${formatRupiah(Math.abs(remaining))}`;
-      heroRemainingNumber.className = 'text-[#EF4444] font-mono font-bold ml-1';
+      heroRemainingNumber.className = 'text-rose-600 dark:text-rose-400 font-mono font-bold ml-1';
     }
   }
   if (heroRemainingSub) {
     if (remaining >= 0) {
       heroRemainingSub.textContent = `${Math.max(0, 100 - spentPct)}% Sisa`;
-      if (statusTier === 'safe') {
-        heroRemainingSub.className = 'text-[10px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800/60 px-2 py-0.5 rounded-lg';
-      } else if (statusTier === 'warning') {
-        heroRemainingSub.className = 'text-[10px] font-bold text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/60 border border-amber-200 dark:border-amber-800/60 px-2 py-0.5 rounded-lg';
-      } else {
-        heroRemainingSub.className = 'text-[10px] font-bold text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/80 border border-rose-200 dark:border-rose-800/60 px-2 py-0.5 rounded-lg';
-      }
+      heroRemainingSub.className = 'text-[10px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800/60 px-2 py-0.5 rounded-lg';
     } else {
       heroRemainingSub.textContent = 'Defisit Anggaran';
       heroRemainingSub.className = 'text-[10px] font-bold text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/80 border border-rose-200 dark:border-rose-800/60 px-2 py-0.5 rounded-lg';
@@ -1951,6 +1944,8 @@ document.addEventListener('DOMContentLoaded', () => {
         btn.classList.add('border-slate-200', 'dark:border-slate-700');
       }
     });
+
+    renderGuardianAndEnvelopes();
   };
   applyColorTheme(state.colorTheme);
 
