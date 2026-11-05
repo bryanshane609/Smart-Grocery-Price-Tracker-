@@ -1,78 +1,130 @@
 /**
  * =============================================================================
- * SMART GROCERY & BUDGET SAFETY TRACKER (PWA & BENTO GRID)
- * Full-Stack JavaScript Application Engine
- * Fitur Lengkap: AI OCR Receipt, Dynamic Budget Safety, Emergency Freeze,
- * Local Deals Radar, Smart Pantry & Zero-Waste, Gamified XP & Badges.
+ * SMART GROCERY & HOUSEHOLD FINANCIAL GUARDIAN
+ * Advanced Full-Stack JavaScript Engine
+ * Fitur: Native Camera Barcode/OCR Scanner, Strict Emergency Freeze Hard-Lock,
+ * Multi-Tier Envelope Budgeting, Burn Rate AI Velocity, Real-World Store Radar,
+ * Custom Grocery Item Builder, dan Settings Terpusat.
  * =============================================================================
  */
 
 // -----------------------------------------------------------------------------
-// 1. DATA PRESETS & SEED CONSTANTS
+// 1. DATA PRESETS, BARCODE CATALOG & REAL-WORLD RETAILERS
 // -----------------------------------------------------------------------------
-const DEFAULT_BUDGET_LIMIT = 800000; // Rp 800.000 pagu bulanan standar anak rantau
+const DEFAULT_BUDGET_LIMIT = 800000;
 
-const PRESET_BENCHMARK_ITEMS = {
-  "beras ramos 5kg": { name: "Beras Ramos 5kg", category: "Sembako", unit: "pack", price: 72000 },
-  "indomie goreng": { name: "Indomie Goreng", category: "Makanan Instan", unit: "bungkus", price: 3100 },
-  "indomie kuah ayam bawang": { name: "Indomie Kuah Ayam Bawang", category: "Makanan Instan", unit: "bungkus", price: 3000 },
-  "minyak goreng sania 2l": { name: "Minyak Goreng Sania 2L", category: "Bumbu & Minyak", unit: "liter", price: 34500 },
-  "telur ayam 1kg": { name: "Telur Ayam 1kg", category: "Daging & Sayur", unit: "kg", price: 28000 },
-  "sabun lifebuoy total 10 400ml": { name: "Sabun Lifebuoy Total 10 400ml", category: "Toiletries", unit: "botol", price: 19500 },
-  "susu uht ultra milk 1l": { name: "Susu UHT Ultra Milk 1L", category: "Minuman", unit: "liter", price: 18500 },
-  "deterjen rinso 750g": { name: "Deterjen Rinso 750g", category: "Toiletries", unit: "pack", price: 21000 },
-  "dada ayam fillet 500g": { name: "Dada Ayam Fillet 500g", category: "Daging & Sayur", unit: "pack", price: 29000 },
-  "sayur sawi & wortel mix": { name: "Sayur Sawi & Wortel Mix", category: "Daging & Sayur", unit: "pack", price: 8000 },
-  "biskuit roma kelapa 300g": { name: "Biskuit Roma Kelapa 300g", category: "Camilan", unit: "pack", price: 11000 }
+// Database Barcode Produk Ritel Nyata (EAN-13 / UPC)
+const BARCODE_CATALOG = {
+  "8998866200213": { name: "Indomie Goreng Spesial", category: "Makanan Instan", unit: "bungkus", price: 3100, isEssential: true },
+  "8998866200220": { name: "Indomie Kuah Kari Ayam", category: "Makanan Instan", unit: "bungkus", price: 3100, isEssential: true },
+  "8992775211142": { name: "Minyak Goreng Sania 2L", category: "Bumbu & Minyak", unit: "liter", price: 33500, isEssential: true },
+  "8992753211119": { name: "Beras Ramos Premium 5kg", category: "Sembako", unit: "pack", price: 74000, isEssential: true },
+  "8999999052028": { name: "Susu UHT Ultra Milk Full Cream 1L", category: "Minuman", unit: "liter", price: 18500, isEssential: true },
+  "8999999041237": { name: "Biskuit Roma Kelapa 300g", category: "Camilan", unit: "pack", price: 11000, isEssential: false },
+  "8992613171120": { name: "Sabun Lifebuoy Total 10 400ml", category: "Toiletries", unit: "botol", price: 19500, isEssential: true },
+  "8991389221145": { name: "Deterjen Rinso Molto 750g", category: "Toiletries", unit: "pack", price: 21500, isEssential: true },
+  "8996001410111": { name: "Telur Ayam Negeri 1kg", category: "Daging & Sayur", unit: "kg", price: 28500, isEssential: true }
 };
 
-const RETAILER_MULTIPLIERS = {
-  "Indomaret": 1.0,
-  "Alfamart": 1.02,
-  "Hypermart": 0.96,
-  "Pasar Tradisional": 0.88
-};
+// Database Toko Fisik Nyata di Dunia Nyata
+const REAL_WORLD_STORES = [
+  {
+    id: "pasar_tradisional",
+    name: "Pasar Tradisional / Pasar Jaya",
+    type: "Pasar Rakyat",
+    defaultDistanceMeters: 850,
+    multiplier: 0.88,
+    badge: "Harga Paling Murah",
+    address: "Jl. Pasar Lama No. 14"
+  },
+  {
+    id: "super_indo",
+    name: "Super Indo Supermarket",
+    type: "Supermarket Segar",
+    defaultDistanceMeters: 1200,
+    multiplier: 0.94,
+    badge: "Spesialis Makanan Segar",
+    address: "Mall Village GF Floor"
+  },
+  {
+    id: "hypermart",
+    name: "Hypermart",
+    type: "Hypermarket",
+    defaultDistanceMeters: 2800,
+    multiplier: 0.96,
+    badge: "Lengkap Bulanan",
+    address: "Central Town Square"
+  },
+  {
+    id: "indomaret",
+    name: "Indomaret Minimarket",
+    type: "Minimarket Terdekat",
+    defaultDistanceMeters: 250,
+    multiplier: 1.00,
+    badge: "Paling Dekat",
+    address: "Jl. Pemuda No. 4B"
+  },
+  {
+    id: "alfamart",
+    name: "Alfamart",
+    type: "Minimarket",
+    defaultDistanceMeters: 400,
+    multiplier: 1.02,
+    badge: "Banyak Promo Poin",
+    address: "Jl. Melati Raya No. 19"
+  },
+  {
+    id: "lotte_mart",
+    name: "Lotte Mart Wholesale",
+    type: "Grosir Ritel",
+    defaultDistanceMeters: 4100,
+    multiplier: 0.95,
+    badge: "Cocok Grosir",
+    address: "Boulevard Raya Kav. 8"
+  }
+];
 
 // -----------------------------------------------------------------------------
-// 2. STATE MANAGER (LOCALSTORAGE + FIREBASE SYNCHRONIZATION)
+// 2. STATE MANAGER
 // -----------------------------------------------------------------------------
 class AppState {
   constructor() {
     this.budgetLimit = Number(localStorage.getItem('sg_budget_limit')) || DEFAULT_BUDGET_LIMIT;
     this.cart = this.loadData('sg_cart_items', this.getInitialSampleCart());
     this.history = this.loadData('sg_history_trips', []);
-    this.benchmarks = this.loadData('sg_benchmark_prices', PRESET_BENCHMARK_ITEMS);
     this.pantry = this.loadData('sg_pantry_items', this.getInitialPantryItems());
     this.isFrozen = localStorage.getItem('sg_emergency_freeze') === 'true';
     this.activeCategoryFilter = 'ALL';
     this.soundEnabled = localStorage.getItem('sg_sound_enabled') !== 'false';
-    this.isDarkMode = localStorage.getItem('sg_theme') === 'dark';
+    this.theme = localStorage.getItem('sg_theme') || 'system';
     this.isBentoMode = localStorage.getItem('sg_layout_mode') === 'bento';
-    this.xp = Number(localStorage.getItem('sg_user_xp')) || 620;
-    this.level = Math.floor(this.xp / 200) + 1;
-    this.stagedOcrItems = [];
-    this.pendingImpulseItem = null;
+    this.userCoords = null;
+    this.scannerStream = null;
+    this.scannerMode = 'barcode'; // 'barcode' | 'ocr'
+    this.scannerDetector = null;
   }
 
   getInitialSampleCart() {
     return [
       {
         id: 'cart_' + Date.now() + '_1',
-        name: "Beras Ramos 5kg",
+        name: "Beras Ramos Premium 5kg",
         category: "Sembako",
         unit: "pack",
         qty: 1,
         price: 74000,
-        discount: { mode: 'none', singlePercent: 0, tier1: 0, tier2: 0, nominalAmount: 0 }
+        store: "Super Indo",
+        isEssential: true
       },
       {
         id: 'cart_' + Date.now() + '_2',
-        name: "Indomie Goreng",
+        name: "Indomie Goreng Spesial",
         category: "Makanan Instan",
         unit: "bungkus",
         qty: 10,
         price: 3100,
-        discount: { mode: 'single', singlePercent: 10, tier1: 0, tier2: 0, nominalAmount: 0 }
+        store: "Indomaret",
+        isEssential: true
       },
       {
         id: 'cart_' + Date.now() + '_3',
@@ -81,7 +133,8 @@ class AppState {
         unit: "liter",
         qty: 1,
         price: 33500,
-        discount: { mode: 'none', singlePercent: 0, tier1: 0, tier2: 0, nominalAmount: 0 }
+        store: "Alfamart",
+        isEssential: true
       }
     ];
   }
@@ -107,16 +160,6 @@ class AppState {
         purchasedDate: new Date(Date.now() - 3 * 86400000).toISOString().split('T')[0],
         daysLeft: 2,
         isConsumed: false
-      },
-      {
-        id: 'pantry_3',
-        name: 'Telur Ayam 1kg',
-        category: 'Daging & Sayur',
-        unit: 'kg',
-        qty: 1,
-        purchasedDate: new Date(Date.now() - 5 * 86400000).toISOString().split('T')[0],
-        daysLeft: 9,
-        isConsumed: false
       }
     ];
   }
@@ -126,7 +169,6 @@ class AppState {
       const data = localStorage.getItem(key);
       return data ? JSON.parse(data) : fallback;
     } catch (e) {
-      console.warn(`Gagal memuat ${key}:`, e);
       return fallback;
     }
   }
@@ -141,25 +183,12 @@ class AppState {
     if (window.FirebaseSync) window.FirebaseSync.syncHistory(this.history);
   }
 
-  saveBenchmarks() {
-    localStorage.setItem('sg_benchmark_prices', JSON.stringify(this.benchmarks));
-    if (window.FirebaseSync) window.FirebaseSync.syncBenchmarks(this.benchmarks);
-  }
-
   savePantry() {
     localStorage.setItem('sg_pantry_items', JSON.stringify(this.pantry));
   }
 
   saveFreezeState() {
     localStorage.setItem('sg_emergency_freeze', this.isFrozen.toString());
-  }
-
-  addXp(amount, reason = '') {
-    this.xp += amount;
-    this.level = Math.floor(this.xp / 200) + 1;
-    localStorage.setItem('sg_user_xp', this.xp.toString());
-    showToast(`+${amount} XP! ${reason}`, 'sparkles');
-    renderGamification();
   }
 }
 
@@ -189,7 +218,7 @@ class SoundEngine {
     osc.type = 'sine';
     osc.frequency.setValueAtTime(800, this.ctx.currentTime);
     osc.frequency.exponentialRampToValueAtTime(400, this.ctx.currentTime + 0.05);
-    gain.gain.setValueAtTime(0.12, this.ctx.currentTime);
+    gain.gain.setValueAtTime(0.1, this.ctx.currentTime);
     gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.05);
     osc.connect(gain);
     gain.connect(this.ctx.destination);
@@ -197,23 +226,20 @@ class SoundEngine {
     osc.stop(this.ctx.currentTime + 0.05);
   }
 
-  playSuccess() {
+  playBarcodeBeep() {
     if (!state.soundEnabled) return;
     this.init();
     if (!this.ctx) return;
-    const now = this.ctx.currentTime;
-    [523.25, 659.25, 783.99].forEach((freq, idx) => {
-      const osc = this.ctx.createOscillator();
-      const gain = this.ctx.createGain();
-      osc.type = 'triangle';
-      osc.frequency.setValueAtTime(freq, now + idx * 0.08);
-      gain.gain.setValueAtTime(0.15, now + idx * 0.08);
-      gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.08 + 0.2);
-      osc.connect(gain);
-      gain.connect(this.ctx.destination);
-      osc.start(now + idx * 0.08);
-      osc.stop(now + idx * 0.08 + 0.2);
-    });
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+    osc.type = 'square';
+    osc.frequency.setValueAtTime(1760, this.ctx.currentTime); // High pitch supermarket beep
+    gain.gain.setValueAtTime(0.15, this.ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.12);
+    osc.connect(gain);
+    gain.connect(this.ctx.destination);
+    osc.start();
+    osc.stop(this.ctx.currentTime + 0.12);
   }
 
   playAlarm() {
@@ -225,7 +251,7 @@ class SoundEngine {
     const gain = this.ctx.createGain();
     osc.type = 'sawtooth';
     osc.frequency.setValueAtTime(440, now);
-    osc.frequency.setValueAtTime(350, now + 0.15);
+    osc.frequency.setValueAtTime(320, now + 0.15);
     gain.gain.setValueAtTime(0.2, now);
     gain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
     osc.connect(gain);
@@ -237,75 +263,7 @@ class SoundEngine {
 
 const sounds = new SoundEngine();
 
-// -----------------------------------------------------------------------------
-// 4. BUSINESS LOGIC & CALCULATION HELPERS
-// -----------------------------------------------------------------------------
-function calculateItemPricing(rawPrice, qty, discount) {
-  const price = Number(rawPrice) || 0;
-  const quantity = Math.max(1, Number(qty) || 1);
-  const disc = discount || { mode: 'none', singlePercent: 0, tier1: 0, tier2: 0, nominalAmount: 0 };
-
-  let finalUnitPrice = price;
-  let unitSavings = 0;
-  let explanation = '';
-
-  if (disc.mode === 'single') {
-    const p = Math.min(100, Math.max(0, Number(disc.singlePercent) || 0));
-    unitSavings = price * (p / 100);
-    finalUnitPrice = Math.max(0, price - unitSavings);
-    explanation = `Diskon ${p}% (-Rp ${Math.round(unitSavings).toLocaleString('id-ID')}/unit)`;
-  } else if (disc.mode === 'tier') {
-    const t1 = Math.min(100, Math.max(0, Number(disc.tier1) || 0));
-    const t2 = Math.min(100, Math.max(0, Number(disc.tier2) || 0));
-    const priceAfterT1 = price * (1 - t1 / 100);
-    finalUnitPrice = Math.max(0, priceAfterT1 * (1 - t2 / 100));
-    unitSavings = price - finalUnitPrice;
-    const effectivePercent = price > 0 ? Math.round((unitSavings / price) * 100) : 0;
-    explanation = `Diskon Tier ${t1}% + ${t2}% = Efektif ${effectivePercent}% (Hemat Rp ${Math.round(unitSavings).toLocaleString('id-ID')}/unit)`;
-  } else if (disc.mode === 'nominal') {
-    const nom = Math.max(0, Number(disc.nominalAmount) || 0);
-    finalUnitPrice = Math.max(0, price - nom);
-    unitSavings = Math.min(price, nom);
-    explanation = `Potongan langsung Rp ${Math.round(unitSavings).toLocaleString('id-ID')}/unit`;
-  }
-
-  const roundedUnitPrice = Math.round(finalUnitPrice);
-  const rowTotal = roundedUnitPrice * quantity;
-  const rowSavings = Math.round(unitSavings) * quantity;
-
-  return {
-    rawPrice: price,
-    qty: quantity,
-    finalUnitPrice: roundedUnitPrice,
-    rowTotal,
-    rowSavings,
-    explanation,
-    hasDiscount: unitSavings > 0
-  };
-}
-
-function comparePriceWithBenchmark(productName, currentUnitPrice) {
-  const key = (productName || '').toLowerCase().trim();
-  const benchmark = state.benchmarks[key];
-
-  if (!benchmark || !benchmark.price) {
-    return { status: 'new', diffNominal: 0, diffPercent: 0, refPrice: null, text: 'Produk Baru' };
-  }
-
-  const diffNominal = currentUnitPrice - benchmark.price;
-  const diffPercent = benchmark.price > 0 ? Math.round((diffNominal / benchmark.price) * 100) : 0;
-
-  if (diffNominal > 0) {
-    return { status: 'higher', diffNominal, diffPercent, refPrice: benchmark.price, text: `Lebih mahal Rp ${diffNominal.toLocaleString('id-ID')} (+${diffPercent}%)` };
-  } else if (diffNominal < 0) {
-    const absNominal = Math.abs(diffNominal);
-    const absPercent = Math.abs(diffPercent);
-    return { status: 'lower', diffNominal, diffPercent, refPrice: benchmark.price, text: `Lebih murah Rp ${absNominal.toLocaleString('id-ID')} (-${absPercent}%)` };
-  } else {
-    return { status: 'equal', diffNominal: 0, diffPercent: 0, refPrice: benchmark.price, text: 'Harga Stabil' };
-  }
-}
-
+// Helper: Format Rupiah
 function formatRupiah(num) {
   return 'Rp ' + Number(num || 0).toLocaleString('id-ID');
 }
@@ -332,107 +290,194 @@ function showToast(msg, iconType = 'check-circle') {
 }
 
 // -----------------------------------------------------------------------------
-// 5. BUDGET SAFETY NET & EMERGENCY FREEZE ENGINE
+// 4. FINANCIAL GUARDIAN, ENVELOPE BUDGETING & BURN RATE CALCULATOR
 // -----------------------------------------------------------------------------
-function renderBudgetSafety() {
+function calculateCartTotals() {
   let cartTotal = 0;
-  let totalSavings = 0;
+  state.cart.forEach(item => {
+    const qty = Number(item.qty) || 1;
+    const price = Number(item.price) || 0;
+    cartTotal += qty * price;
+  });
+  return cartTotal;
+}
+
+function renderGuardianAndEnvelopes() {
+  const cartTotal = calculateCartTotals();
+  const limit = state.budgetLimit;
+  const remaining = limit - cartTotal;
+
+  // 1. Update Header Quick Bar
+  const cartTotalHeader = document.getElementById('cartTotalHeader');
+  const budgetRemainingHeader = document.getElementById('budgetRemainingHeader');
+  const freezeMiniIndicator = document.getElementById('freezeMiniIndicator');
+
+  if (cartTotalHeader) cartTotalHeader.textContent = formatRupiah(cartTotal);
+  if (budgetRemainingHeader) {
+    budgetRemainingHeader.textContent = formatRupiah(remaining);
+    budgetRemainingHeader.className = remaining < 0 
+      ? 'font-mono font-bold text-rose-500' 
+      : 'font-mono font-bold text-emerald-600 dark:text-emerald-400';
+  }
+
+  if (freezeMiniIndicator) {
+    freezeMiniIndicator.className = state.isFrozen 
+      ? 'w-2.5 h-2.5 rounded-full bg-rose-500 animate-pulse' 
+      : 'w-2.5 h-2.5 rounded-full bg-emerald-500';
+  }
+
+  // 2. Strict Freeze Card Status
+  const freezeCard = document.getElementById('guardianFreezeCard');
+  const freezeBadge = document.getElementById('freezeBadgeIconContainer');
+  const freezeTitle = document.getElementById('freezeCardTitle');
+  const freezeDesc = document.getElementById('freezeCardDesc');
+  const freezeNote = document.getElementById('freezeStatusNote');
+  const freezeToggle = document.getElementById('emergencyFreezeToggle');
+  const navDot = document.getElementById('navGuardianDot');
+
+  if (freezeToggle) freezeToggle.checked = state.isFrozen;
+
+  if (state.isFrozen) {
+    if (freezeCard) freezeCard.className = 'p-4 rounded-3xl bg-rose-50/80 dark:bg-rose-950/30 border-2 border-rose-500 transition-all duration-300';
+    if (freezeBadge) freezeBadge.className = 'w-10 h-10 rounded-2xl bg-rose-500 text-white flex items-center justify-center animate-pulse';
+    if (freezeTitle) freezeTitle.textContent = 'EMERGENCY FREEZE: AKTIF';
+    if (freezeDesc) freezeDesc.textContent = 'Hard Budget Lock mencegah belanja impulsif & over-budget';
+    if (freezeNote) {
+      freezeNote.className = 'mt-3 p-2.5 rounded-xl bg-rose-100 dark:bg-rose-900/40 text-[11px] text-rose-800 dark:text-rose-200 flex items-center gap-2';
+      freezeNote.innerHTML = '<i data-lucide="lock" class="w-4 h-4 shrink-0"></i> <span>Proteksi Maksimal: Belanja camilan & item non-esensial diblokir dari keranjang.</span>';
+    }
+    if (navDot) navDot.classList.remove('hidden');
+  } else {
+    if (freezeCard) freezeCard.className = 'p-4 rounded-3xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 transition-all duration-300';
+    if (freezeBadge) freezeBadge.className = 'w-10 h-10 rounded-2xl bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-slate-600 dark:text-slate-300';
+    if (freezeTitle) freezeTitle.textContent = 'Emergency Freeze Protection';
+    if (freezeDesc) freezeDesc.textContent = 'Kunci hard-cap pengeluaran non-esensial';
+    if (freezeNote) {
+      freezeNote.className = 'mt-3 p-2.5 rounded-xl bg-slate-100 dark:bg-slate-900/60 text-[11px] text-slate-600 dark:text-slate-300 flex items-center gap-2';
+      freezeNote.innerHTML = '<i data-lucide="info" class="w-4 h-4 text-slate-400 shrink-0"></i> <span>Mode Standar: Semua kategori barang dapat ditambahkan ke keranjang belanja.</span>';
+    }
+    if (navDot) navDot.classList.add('hidden');
+  }
+
+  // 3. Multi-Tier Envelope Calculations (4 Pos Alokasi)
+  const envCaps = {
+    'Sembako': Math.round(limit * 0.45),
+    'Protein': Math.round(limit * 0.30),
+    'Toiletries': Math.round(limit * 0.15),
+    'Camilan': Math.round(limit * 0.10)
+  };
+
+  const envSpend = { 'Sembako': 0, 'Protein': 0, 'Toiletries': 0, 'Camilan': 0 };
 
   state.cart.forEach(item => {
-    const pricing = calculateItemPricing(item.price, item.qty, item.discount);
-    cartTotal += pricing.rowTotal;
-    totalSavings += pricing.rowSavings;
+    const itemTotal = (item.qty || 1) * (item.price || 0);
+    if (item.category === 'Sembako' || item.category === 'Bumbu & Minyak') {
+      envSpend['Sembako'] += itemTotal;
+    } else if (item.category === 'Daging & Sayur' || item.category === 'Makanan Instan') {
+      envSpend['Protein'] += itemTotal;
+    } else if (item.category === 'Toiletries') {
+      envSpend['Toiletries'] += itemTotal;
+    } else {
+      envSpend['Camilan'] += itemTotal;
+    }
   });
 
-  const cartTotalHeader = document.getElementById('cartTotalHeader');
-  const budgetLimitHeader = document.getElementById('budgetLimitHeader');
-  const budgetProgressBar = document.getElementById('budgetProgressBar');
-  const budgetSafetyBadge = document.getElementById('budgetSafetyBadge');
-  const budgetSafetyText = document.getElementById('budgetSafetyText');
-  const budgetRemainingText = document.getElementById('budgetRemainingText');
-  const overBudgetBanner = document.getElementById('overBudgetBanner');
-  const overBudgetDiffText = document.getElementById('overBudgetDiffText');
-  const totalSavingsAmount = document.getElementById('totalSavingsAmount');
-  const totalItemsCount = document.getElementById('totalItemsCount');
-  const navCartBadge = document.getElementById('navCartBadge');
+  // Update Envelope Elements
+  const updateEnvRow = (catKey, spendElId, barElId, segElId) => {
+    const spend = envSpend[catKey];
+    const cap = envCaps[catKey];
+    const pct = cap > 0 ? Math.min(100, Math.round((spend / cap) * 100)) : 0;
 
-  if (cartTotalHeader) cartTotalHeader.innerHTML = `<span class="text-xs text-slate-400 font-sans">Rp</span> ${cartTotal.toLocaleString('id-ID')}`;
-  if (budgetLimitHeader) budgetLimitHeader.textContent = formatRupiah(state.budgetLimit);
-  if (totalSavingsAmount) totalSavingsAmount.textContent = formatRupiah(totalSavings);
-  if (totalItemsCount) totalItemsCount.textContent = `${state.cart.length} item`;
-  if (navCartBadge) navCartBadge.textContent = state.cart.length.toString();
+    const spendEl = document.getElementById(spendElId);
+    const barEl = document.getElementById(barElId);
+    const segEl = document.getElementById(segElId);
 
-  const limit = state.budgetLimit > 0 ? state.budgetLimit : 1;
-  const ratio = cartTotal / limit;
-  const percent = Math.min(100, Math.round(ratio * 100));
-  const remaining = state.budgetLimit - cartTotal;
+    if (spendEl) spendEl.textContent = `${formatRupiah(spend)} / ${formatRupiah(cap)}`;
+    if (barEl) {
+      barEl.style.width = `${pct}%`;
+      if (pct >= 100) barEl.className = 'bg-rose-500 h-full rounded-full';
+    }
+    if (segEl) segEl.style.width = `${pct / 4}%`;
+  };
 
-  if (budgetProgressBar) {
-    budgetProgressBar.style.width = `${percent}%`;
-    budgetProgressBar.className = 'h-full rounded-full transition-all duration-500 shadow-sm ';
+  updateEnvRow('Sembako', 'envSpendSembako', 'envBarSembako', 'envSegSembako');
+  updateEnvRow('Protein', 'envSpendProtein', 'envBarProtein', 'envSegProtein');
+  updateEnvRow('Toiletries', 'envSpendToiletries', 'envBarToiletries', 'envSegToiletries');
+  updateEnvRow('Camilan', 'envSpendSnack', 'envBarSnack', 'envSegSnack');
 
-    if (ratio >= 1.0) {
-      budgetProgressBar.className += 'bg-rose-500 animate-pulse';
-    } else if (ratio >= 0.90) {
-      budgetProgressBar.className += 'bg-rose-500';
-    } else if (ratio >= 0.70) {
-      budgetProgressBar.className += 'bg-amber-500';
+  // 4. Burn Rate Analysis & AI Spending Velocity
+  const now = new Date();
+  const currentDay = now.getDate();
+  const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+  const remainingDays = Math.max(1, daysInMonth - currentDay);
+
+  const safeDailyAllowance = remaining > 0 ? Math.round(remaining / remainingDays) : 0;
+  const currentDailyRate = Math.round(cartTotal / Math.max(1, currentDay));
+
+  const healthScoreEl = document.getElementById('healthScoreDisplay');
+  const healthWordEl = document.getElementById('healthStatusWord');
+  const burnRateEl = document.getElementById('burnRateText');
+  const velocityBanner = document.getElementById('spendingVelocityBanner');
+  const velocityText = document.getElementById('velocityWarningText');
+
+  let healthScore = 100;
+  if (cartTotal > limit) {
+    healthScore = 10;
+  } else {
+    const spentRatio = cartTotal / limit;
+    const daysRatio = currentDay / daysInMonth;
+    if (spentRatio > daysRatio + 0.2) {
+      healthScore = Math.max(30, Math.round(100 - (spentRatio - daysRatio) * 100));
     } else {
-      budgetProgressBar.className += 'bg-emerald-500';
+      healthScore = Math.round(100 - spentRatio * 30);
     }
   }
 
-  if (budgetRemainingText) {
-    budgetRemainingText.textContent = formatRupiah(remaining);
-    if (remaining < 0) {
-      budgetRemainingText.className = 'font-bold font-mono text-rose-500 ml-1';
+  if (healthScoreEl) healthScoreEl.textContent = `${healthScore}/100`;
+  if (healthWordEl) {
+    if (healthScore >= 80) {
+      healthWordEl.textContent = 'Sangat Sehat';
+      healthWordEl.className = 'text-xs font-semibold text-emerald-400';
+    } else if (healthScore >= 60) {
+      healthWordEl.textContent = 'Kondisi Waspada';
+      healthWordEl.className = 'text-xs font-semibold text-amber-400';
     } else {
-      budgetRemainingText.className = 'font-bold font-mono text-emerald-600 dark:text-emerald-400 ml-1';
+      healthWordEl.textContent = 'Kritis / Over-Budget';
+      healthWordEl.className = 'text-xs font-semibold text-rose-400';
     }
   }
 
-  if (budgetSafetyBadge && budgetSafetyText) {
-    if (ratio >= 1.0) {
-      budgetSafetyBadge.className = 'inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full font-bold text-[10px] bg-rose-100 dark:bg-rose-950 text-rose-700 dark:text-rose-300 border border-rose-300 dark:border-rose-800';
-      budgetSafetyText.textContent = `OVER BUDGET (${Math.round(ratio * 100)}%)`;
-      if (overBudgetBanner) overBudgetBanner.classList.remove('hidden');
-      if (overBudgetDiffText) overBudgetDiffText.textContent = `Melebihi pagu sebesar Rp ${Math.abs(remaining).toLocaleString('id-ID')}. Belanja non-esensial ditahan!`;
-    } else if (ratio >= 0.90) {
-      budgetSafetyBadge.className = 'inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full font-bold text-[10px] bg-rose-100 dark:bg-rose-950 text-rose-700 dark:text-rose-300 border border-rose-300 dark:border-rose-800';
-      budgetSafetyText.textContent = `Kritis (${percent}%)`;
-      if (overBudgetBanner) overBudgetBanner.classList.add('hidden');
-    } else if (ratio >= 0.70) {
-      budgetSafetyBadge.className = 'inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full font-bold text-[10px] bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-300 border border-amber-300 dark:border-amber-800';
-      budgetSafetyText.textContent = `Waspada (${percent}%)`;
-      if (overBudgetBanner) overBudgetBanner.classList.add('hidden');
-    } else {
-      budgetSafetyBadge.className = 'inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full font-bold text-[10px] bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800';
-      budgetSafetyText.textContent = `Aman (${percent}%)`;
-      if (overBudgetBanner) overBudgetBanner.classList.add('hidden');
-    }
+  if (burnRateEl) {
+    burnRateEl.innerHTML = `Jatah aman belanja harian: <b>${formatRupiah(safeDailyAllowance)}/hari</b> untuk ${remainingDays} hari ke depan.`;
   }
 
-  // Update Emergency Freeze visual toggle
-  const freezeToggle = document.getElementById('emergencyFreezeToggle');
-  const freezeIconBadge = document.getElementById('freezeIconBadge');
-  if (freezeToggle) freezeToggle.checked = state.isFrozen;
-  if (freezeIconBadge) {
-    if (state.isFrozen) {
-      freezeIconBadge.className = 'w-6 h-6 rounded-lg bg-rose-500 text-white flex items-center justify-center animate-pulse';
+  if (velocityBanner && velocityText) {
+    if (cartTotal > limit) {
+      velocityBanner.className = 'mt-4 p-3 rounded-2xl bg-rose-500/20 border border-rose-500/40 text-rose-200 text-xs flex items-start gap-2';
+      velocityText.innerHTML = `<b>Peringatan Kritis:</b> Pengeluaran telah melampaui pagu! Defisit sebesar ${formatRupiah(Math.abs(remaining))}. Kunci pengeluaran segera!`;
+    } else if (currentDailyRate > safeDailyAllowance * 1.5 && currentDay < 20) {
+      velocityBanner.className = 'mt-4 p-3 rounded-2xl bg-amber-500/15 border border-amber-500/30 text-amber-200 text-xs flex items-start gap-2';
+      velocityText.innerHTML = `<b>AI Spending Velocity Alert:</b> Kecepatan belanja Anda (${formatRupiah(currentDailyRate)}/hari) melampaui jatah aman harian (${formatRupiah(safeDailyAllowance)}/hari). Jika berlanjut, pagu akan habis lebih awal!`;
     } else {
-      freezeIconBadge.className = 'w-6 h-6 rounded-lg bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-slate-600 dark:text-slate-300';
+      velocityBanner.className = 'mt-4 p-3 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-200 text-xs flex items-start gap-2';
+      velocityText.innerHTML = `<b>Proyeksi Keuangan AI:</b> Pengeluaran Anda berada dalam kurva aman. Saldo belanja diproyeksikan mencukupi hingga akhir bulan.`;
     }
   }
 }
 
 // -----------------------------------------------------------------------------
-// 6. RENDER SHOPPING TROLLEY (TAB 1)
+// 5. TROLI BELANJA (TAB 1) & STRICT EMERGENCY FREEZE VALIDATION
 // -----------------------------------------------------------------------------
 function renderCartItems() {
   const container = document.getElementById('cartItemList');
   const emptyView = document.getElementById('emptyCartView');
   const actionFooter = document.getElementById('cartActionFooter');
+  const totalItemsCount = document.getElementById('totalItemsCount');
+  const navCartBadge = document.getElementById('navCartBadge');
   if (!container) return;
+
+  if (totalItemsCount) totalItemsCount.textContent = `${state.cart.length} item`;
+  if (navCartBadge) navCartBadge.textContent = state.cart.length.toString();
 
   const filteredItems = state.cart.filter(item => {
     if (state.activeCategoryFilter === 'ALL') return true;
@@ -443,7 +488,7 @@ function renderCartItems() {
     container.innerHTML = '';
     if (emptyView) emptyView.classList.remove('hidden');
     if (actionFooter) actionFooter.classList.add('hidden');
-    updateCategoryCounters();
+    renderGuardianAndEnvelopes();
     return;
   }
 
@@ -452,20 +497,9 @@ function renderCartItems() {
 
   let html = '';
   filteredItems.forEach(item => {
-    const pricing = calculateItemPricing(item.price, item.qty, item.discount);
-    const comp = comparePriceWithBenchmark(item.name, pricing.finalUnitPrice);
-
-    let compBadgeHtml = '';
-    if (comp.status === 'higher') {
-      compBadgeHtml = `<span class="inline-flex items-center gap-0.5 text-[10px] font-bold text-rose-600 dark:text-rose-400">↑ ${comp.text}</span>`;
-    } else if (comp.status === 'lower') {
-      compBadgeHtml = `<span class="inline-flex items-center gap-0.5 text-[10px] font-bold text-emerald-600 dark:text-emerald-400">↓ ${comp.text}</span>`;
-    } else if (comp.status === 'equal') {
-      compBadgeHtml = `<span class="text-[10px] font-semibold text-slate-500">= Stabil</span>`;
-    } else {
-      compBadgeHtml = `<span class="text-[10px] font-semibold text-sky-600">✨ Produk Baru</span>`;
-    }
-
+    const qty = Number(item.qty) || 1;
+    const price = Number(item.price) || 0;
+    const rowTotal = qty * price;
     const isImpulse = item.category === 'Camilan' || item.category === 'Lainnya';
 
     html += `
@@ -473,35 +507,33 @@ function renderCartItems() {
         <div class="flex items-start justify-between">
           <div class="space-y-0.5">
             <div class="flex items-center gap-1.5">
-              <span class="text-xs px-2 py-0.5 rounded-md font-semibold bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 text-[10px]">${item.category}</span>
-              ${isImpulse ? '<span class="text-[9px] font-bold px-1.5 py-0.2 rounded bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300">Non-Esensial</span>' : ''}
-              ${compBadgeHtml}
+              <span class="text-[10px] px-2 py-0.5 rounded-md font-semibold bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300">${item.category}</span>
+              ${isImpulse ? '<span class="text-[9px] font-bold px-1.5 py-0.2 rounded bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300">Non-Esensial</span>' : '<span class="text-[9px] font-bold px-1.5 py-0.2 rounded bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">Esensial</span>'}
+              <span class="text-[10px] text-slate-400 font-medium">@ ${item.store || 'Toko Terdekat'}</span>
             </div>
             <h4 class="text-sm font-bold text-slate-900 dark:text-white leading-snug">${item.name}</h4>
             <div class="text-[11px] text-slate-500 dark:text-slate-400 font-mono">
-              @ ${formatRupiah(pricing.finalUnitPrice)} / ${item.unit}
-              ${pricing.hasDiscount ? `<span class="line-through text-slate-400 ml-1">${formatRupiah(item.price)}</span>` : ''}
+              ${formatRupiah(price)} / ${item.unit || 'pcs'}
             </div>
           </div>
           
           <div class="text-right">
-            <div class="text-sm font-black font-mono text-slate-900 dark:text-white">${formatRupiah(pricing.rowTotal)}</div>
-            ${pricing.hasDiscount ? `<div class="text-[9px] font-bold text-emerald-600 dark:text-emerald-400">Hemat ${formatRupiah(pricing.rowSavings)}</div>` : ''}
+            <div class="text-sm font-black font-mono text-slate-900 dark:text-white">${formatRupiah(rowTotal)}</div>
           </div>
         </div>
 
         <div class="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-slate-700/60">
           <div class="flex items-center gap-1.5">
-            <button class="btn-item-qty-minus w-7 h-7 rounded-lg bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 text-slate-700 dark:text-slate-200 font-bold text-xs flex items-center justify-center active:scale-95 transition" data-id="${item.id}">-</button>
-            <span class="px-2 text-xs font-bold font-mono text-slate-800 dark:text-slate-100">${item.qty} ${item.unit}</span>
-            <button class="btn-item-qty-plus w-7 h-7 rounded-lg bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 text-slate-700 dark:text-slate-200 font-bold text-xs flex items-center justify-center active:scale-95 transition" data-id="${item.id}">+</button>
+            <button class="btn-qty-minus w-7 h-7 rounded-lg bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 text-slate-700 dark:text-slate-200 font-bold text-xs flex items-center justify-center active:scale-95 transition" data-id="${item.id}">-</button>
+            <span class="px-2 text-xs font-bold font-mono text-slate-800 dark:text-slate-100">${qty} ${item.unit || 'pcs'}</span>
+            <button class="btn-qty-plus w-7 h-7 rounded-lg bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 text-slate-700 dark:text-slate-200 font-bold text-xs flex items-center justify-center active:scale-95 transition" data-id="${item.id}">+</button>
           </div>
 
           <div class="flex items-center gap-1.5">
-            <button class="btn-item-edit p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-700 transition" data-id="${item.id}" title="Edit Item">
+            <button class="btn-edit-item p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-700 transition" data-id="${item.id}" title="Edit Item">
               <i data-lucide="edit-3" class="w-4 h-4"></i>
             </button>
-            <button class="btn-item-delete p-1.5 rounded-lg text-rose-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition" data-id="${item.id}" title="Hapus Item">
+            <button class="btn-delete-item p-1.5 rounded-lg text-rose-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition" data-id="${item.id}" title="Hapus Item">
               <i data-lucide="trash-2" class="w-4 h-4"></i>
             </button>
           </div>
@@ -511,13 +543,13 @@ function renderCartItems() {
   });
 
   container.innerHTML = html;
-  updateCategoryCounters();
-  attachCartItemListeners();
+  attachCartEventListeners();
+  renderGuardianAndEnvelopes();
   lucide.createIcons();
 }
 
-function attachCartItemListeners() {
-  document.querySelectorAll('.btn-item-qty-minus').forEach(btn => {
+function attachCartEventListeners() {
+  document.querySelectorAll('.btn-qty-minus').forEach(btn => {
     btn.onclick = () => {
       const id = btn.getAttribute('data-id');
       const item = state.cart.find(i => i.id === id);
@@ -528,182 +560,439 @@ function attachCartItemListeners() {
           state.cart = state.cart.filter(i => i.id !== id);
         }
         state.saveCart();
-        renderBudgetSafety();
         renderCartItems();
         sounds.playClick();
       }
     };
   });
 
-  document.querySelectorAll('.btn-item-qty-plus').forEach(btn => {
+  document.querySelectorAll('.btn-qty-plus').forEach(btn => {
     btn.onclick = () => {
       const id = btn.getAttribute('data-id');
       const item = state.cart.find(i => i.id === id);
       if (item) {
+        // Strict Emergency Freeze Check on quantity increment
+        const nextTotal = calculateCartTotals() + item.price;
+        if (state.isFrozen && nextTotal > state.budgetLimit) {
+          showStrictFreezeModal('Kuantitas tidak dapat ditambah karena total akan melebihi pagu hard-cap!');
+          sounds.playAlarm();
+          return;
+        }
+
         item.qty += 1;
         state.saveCart();
-        renderBudgetSafety();
         renderCartItems();
         sounds.playClick();
       }
     };
   });
 
-  document.querySelectorAll('.btn-item-delete').forEach(btn => {
+  document.querySelectorAll('.btn-delete-item').forEach(btn => {
     btn.onclick = () => {
       const id = btn.getAttribute('data-id');
       state.cart = state.cart.filter(i => i.id !== id);
       state.saveCart();
-      renderBudgetSafety();
       renderCartItems();
       sounds.playClick();
-      showToast('Item dihapus dari troli');
+      showToast('Item berhasil dihapus');
     };
   });
 
-  document.querySelectorAll('.btn-item-edit').forEach(btn => {
+  document.querySelectorAll('.btn-edit-item').forEach(btn => {
     btn.onclick = () => {
       const id = btn.getAttribute('data-id');
       const item = state.cart.find(i => i.id === id);
-      if (item) openItemModalForEdit(item);
+      if (item) openCustomItemModalForEdit(item);
     };
   });
 }
 
-function updateCategoryCounters() {
-  const counts = { ALL: state.cart.length, Sembako: 0, 'Makanan Instan': 0, 'Daging & Sayur': 0, Toiletries: 0, 'Bumbu & Minyak': 0, Camilan: 0, Lainnya: 0 };
-  state.cart.forEach(item => {
-    if (counts[item.category] !== undefined) counts[item.category]++;
-    else counts.Lainnya++;
-  });
+// -----------------------------------------------------------------------------
+// 6. STRICT EMERGENCY FREEZE ENFORCEMENT & BARRIER
+// -----------------------------------------------------------------------------
+function showStrictFreezeModal(reasonMessage) {
+  const modal = document.getElementById('strictFreezeModal');
+  const msgEl = document.getElementById('strictFreezeMessage');
+  const limitEl = document.getElementById('freezeModalLimit');
+  const spendEl = document.getElementById('freezeModalSpend');
 
-  const catCountAll = document.getElementById('catCountAll');
-  const catCountSembako = document.getElementById('catCountSembako');
-  const catCountInstan = document.getElementById('catCountInstan');
-  const catCountFresh = document.getElementById('catCountFresh');
-  const catCountToiletries = document.getElementById('catCountToiletries');
-  const catCountBumbu = document.getElementById('catCountBumbu');
-  const catCountCamilan = document.getElementById('catCountCamilan');
-  const catCountLainnya = document.getElementById('catCountLainnya');
+  if (msgEl && reasonMessage) msgEl.textContent = reasonMessage;
+  if (limitEl) limitEl.textContent = formatRupiah(state.budgetLimit);
+  if (spendEl) spendEl.textContent = formatRupiah(calculateCartTotals());
 
-  if (catCountAll) catCountAll.textContent = counts.ALL;
-  if (catCountSembako) catCountSembako.textContent = counts.Sembako;
-  if (catCountInstan) catCountInstan.textContent = counts['Makanan Instan'];
-  if (catCountFresh) catCountFresh.textContent = counts['Daging & Sayur'];
-  if (catCountToiletries) catCountToiletries.textContent = counts.Toiletries;
-  if (catCountBumbu) catCountBumbu.textContent = counts['Bumbu & Minyak'];
-  if (catCountCamilan) catCountCamilan.textContent = counts.Camilan;
-  if (catCountLainnya) catCountLainnya.textContent = counts.Lainnya;
+  if (modal) modal.classList.remove('hidden');
+}
+
+function validateAndAddItemToCart(itemData) {
+  const isImpulse = itemData.category === 'Camilan' || itemData.category === 'Lainnya';
+  const cartTotal = calculateCartTotals();
+  const addedTotal = (itemData.qty || 1) * (itemData.price || 0);
+  const projectedTotal = cartTotal + addedTotal;
+
+  // STRICT VALIDATION 1: Emergency Freeze Active & Item is Non-Essential
+  if (state.isFrozen && isImpulse) {
+    showStrictFreezeModal('Sistem menolak transaksi ini karena kategori "Camilan / Non-Esensial" diblokir mutlak saat Emergency Freeze aktif.');
+    sounds.playAlarm();
+    return false;
+  }
+
+  // STRICT VALIDATION 2: Emergency Freeze Active & Over-Budget Hard Limit
+  if (state.isFrozen && projectedTotal > state.budgetLimit) {
+    showStrictFreezeModal(`Total transaksi (${formatRupiah(projectedTotal)}) melampaui pagu bulanan (${formatRupiah(state.budgetLimit)}). Hard Budget Cap aktif!`);
+    sounds.playAlarm();
+    return false;
+  }
+
+  // Commit item
+  if (itemData.id) {
+    const existing = state.cart.find(i => i.id === itemData.id);
+    if (existing) {
+      existing.name = itemData.name;
+      existing.category = itemData.category;
+      existing.unit = itemData.unit;
+      existing.qty = itemData.qty;
+      existing.price = itemData.price;
+      existing.store = itemData.store;
+    }
+  } else {
+    state.cart.push({
+      id: 'cart_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6),
+      name: itemData.name,
+      category: itemData.category,
+      unit: itemData.unit,
+      qty: itemData.qty,
+      price: itemData.price,
+      store: itemData.store || 'Super Indo',
+      isEssential: !isImpulse
+    });
+  }
+
+  state.saveCart();
+  renderCartItems();
+  sounds.playClick();
+  showToast(itemData.id ? 'Item diperbarui' : 'Barang masuk ke troli');
+  return true;
 }
 
 // -----------------------------------------------------------------------------
-// 7. PRICE COMPARISON & LOCAL DEALS RADAR (TAB 2)
+// 7. REAL-WORLD SUPERMARKET & STORE RADAR (TAB 3)
 // -----------------------------------------------------------------------------
-function renderRadarComparison() {
-  const container = document.getElementById('retailerBarsContainer');
-  const tableContainer = document.getElementById('radarItemTable');
+function renderRealWorldRadar() {
+  const container = document.getElementById('realWorldStoresList');
   const winnerName = document.getElementById('radarWinnerName');
   const winnerSavings = document.getElementById('radarWinnerSavings');
   if (!container) return;
 
-  const retailers = ['Indomaret', 'Alfamart', 'Hypermart', 'Pasar Tradisional'];
-  const totals = { 'Indomaret': 0, 'Alfamart': 0, 'Hypermart': 0, 'Pasar Tradisional': 0 };
+  const cartTotal = calculateCartTotals();
 
-  state.cart.forEach(item => {
-    const qty = item.qty || 1;
-    const basePrice = item.price || 15000;
-    retailers.forEach(r => {
-      const mult = RETAILER_MULTIPLIERS[r] || 1.0;
-      totals[r] += Math.round(basePrice * mult * qty);
+  // Calculate totals per store
+  const storeEvaluations = REAL_WORLD_STORES.map(store => {
+    let storeTotal = 0;
+    state.cart.forEach(item => {
+      const baseItemPrice = item.price || 15000;
+      const qty = item.qty || 1;
+      storeTotal += Math.round(baseItemPrice * store.multiplier) * qty;
     });
+
+    return {
+      ...store,
+      computedTotal: storeTotal
+    };
   });
 
-  // Determine cheapest and highest
-  let cheapestRetailer = 'Pasar Tradisional';
-  let minAmount = totals[cheapestRetailer] || 0;
-  let maxAmount = totals[cheapestRetailer] || 0;
+  // Sort by lowest price
+  storeEvaluations.sort((a, b) => a.computedTotal - b.computedTotal);
 
-  retailers.forEach(r => {
-    if (totals[r] < minAmount) {
-      minAmount = totals[r];
-      cheapestRetailer = r;
-    }
-    if (totals[r] > maxAmount) {
-      maxAmount = totals[r];
-    }
-  });
+  const cheapest = storeEvaluations[0];
+  const mostExpensive = storeEvaluations[storeEvaluations.length - 1];
+  const diffSavings = mostExpensive.computedTotal - cheapest.computedTotal;
 
-  const diffSavings = maxAmount - minAmount;
-
-  if (winnerName) winnerName.textContent = cheapestRetailer;
+  if (winnerName) winnerName.textContent = cheapest.name;
   if (winnerSavings) {
     if (state.cart.length > 0) {
-      winnerSavings.textContent = `Pilihan paling hemat! Anda berpotensi menghemat ${formatRupiah(diffSavings)} dibanding tempat lain.`;
+      winnerSavings.textContent = `Pilihan paling hemat! Total belanja ${formatRupiah(cheapest.computedTotal)}, hemat hingga ${formatRupiah(diffSavings)} dibanding ritel lain!`;
     } else {
-      winnerSavings.textContent = 'Tambahkan item ke troli untuk melihat kalkulasi komparasi seketika.';
+      winnerSavings.textContent = 'Tambahkan item ke keranjang belanja untuk memetakan perbandingan harga toko nyata.';
     }
   }
 
-  // Render multi-bars
-  let barsHtml = '';
-  retailers.forEach(r => {
-    const amount = totals[r];
-    const isWinner = r === cheapestRetailer && state.cart.length > 0;
-    const pct = maxAmount > 0 ? Math.round((amount / maxAmount) * 100) : 50;
+  let html = '';
+  storeEvaluations.forEach((store, idx) => {
+    const isWinner = idx === 0 && state.cart.length > 0;
+    const distanceText = store.defaultDistanceMeters >= 1000 
+      ? `${(store.defaultDistanceMeters / 1000).toFixed(1)} km` 
+      : `${store.defaultDistanceMeters} m`;
 
-    barsHtml += `
-      <div>
-        <div class="flex justify-between font-bold text-[11px] mb-1">
-          <span class="flex items-center gap-1.5">
-            ${isWinner ? '👑 ' : ''}${r}
-            ${isWinner ? '<span class="text-[9px] bg-white text-emerald-800 px-1.5 py-0.2 rounded-full">Termurah</span>' : ''}
-          </span>
-          <span class="font-mono">${formatRupiah(amount)}</span>
+    html += `
+      <div class="p-3.5 rounded-2xl bg-white dark:bg-slate-800 border ${isWinner ? 'border-emerald-500 ring-2 ring-emerald-500/20' : 'border-slate-200 dark:border-slate-700/80'} shadow-xs flex items-center justify-between">
+        <div class="space-y-0.5">
+          <div class="flex items-center gap-1.5">
+            <span class="text-[10px] font-bold px-2 py-0.5 rounded-full ${isWinner ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300' : 'bg-slate-100 dark:bg-slate-700 text-slate-500'}">
+              ${store.badge}
+            </span>
+            <span class="text-[10px] text-slate-400 flex items-center gap-0.5">
+              <i data-lucide="map-pin" class="w-3 h-3 text-emerald-500"></i> ${distanceText}
+            </span>
+          </div>
+          <h4 class="text-xs font-bold text-slate-900 dark:text-white">${store.name}</h4>
+          <p class="text-[10px] text-slate-400">${store.address} &bull; ${store.type}</p>
         </div>
-        <div class="w-full bg-white/20 h-2 rounded-full overflow-hidden">
-          <div class="${isWinner ? 'bg-white' : 'bg-emerald-200/60'} h-full rounded-full transition-all duration-500" style="width: ${pct}%"></div>
+
+        <div class="text-right">
+          <span class="text-sm font-black font-mono ${isWinner ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-800 dark:text-slate-200'}">
+            ${formatRupiah(store.computedTotal)}
+          </span>
+          <span class="block text-[9px] text-slate-400 mt-0.5">Estimasi Total</span>
         </div>
       </div>
     `;
   });
-  container.innerHTML = barsHtml;
 
-  // Render item breakdown table
-  if (tableContainer) {
-    if (state.cart.length === 0) {
-      tableContainer.innerHTML = '<p class="text-slate-400 text-center py-4">Troli kosong. Masukkan barang terlebih dahulu.</p>';
-      return;
-    }
+  container.innerHTML = html;
+  lucide.createIcons();
+}
 
-    let tableHtml = '';
-    state.cart.forEach(item => {
-      const pIndo = Math.round(item.price * RETAILER_MULTIPLIERS['Indomaret']);
-      const pAlfa = Math.round(item.price * RETAILER_MULTIPLIERS['Alfamart']);
-      const pHyper = Math.round(item.price * RETAILER_MULTIPLIERS['Hypermart']);
-      const pPasar = Math.round(item.price * RETAILER_MULTIPLIERS['Pasar Tradisional']);
-
-      tableHtml += `
-        <div class="p-2.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center justify-between">
-          <div>
-            <h5 class="font-bold text-xs text-slate-800 dark:text-slate-200">${item.name} (${item.qty} ${item.unit})</h5>
-            <div class="text-[10px] text-slate-400 flex gap-2 mt-0.5">
-              <span>Indo: ${formatRupiah(pIndo)}</span>
-              <span>Alfa: ${formatRupiah(pAlfa)}</span>
-            </div>
-          </div>
-          <div class="text-right">
-            <span class="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold block">Pasar: ${formatRupiah(pPasar)}</span>
-            <span class="text-[9px] text-slate-400">Hyper: ${formatRupiah(pHyper)}</span>
-          </div>
-        </div>
-      `;
-    });
-    tableContainer.innerHTML = tableHtml;
+function handleDetectLocation() {
+  if (navigator.geolocation) {
+    showToast('Mendeteksi GPS lokasi Anda...', 'navigation');
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        state.userCoords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+        showToast('Lokasi GPS berhasil diperbarui!', 'check-circle');
+        renderRealWorldRadar();
+      },
+      () => {
+        showToast('Izin GPS tidak diberikan, menggunakan radius standar.', 'alert-triangle');
+      }
+    );
+  } else {
+    showToast('Browser Anda tidak mendukung Geolocation', 'alert-triangle');
   }
 }
 
 // -----------------------------------------------------------------------------
-// 8. SMART PANTRY & ZERO-WASTE TRACKER (TAB 3)
+// 8. ENHANCED SMART RECEIPT & BARCODE SCANNER (NATIVE CAMERA ACCESS)
+// -----------------------------------------------------------------------------
+async function openNativeCameraScanner(mode = 'barcode') {
+  const modal = document.getElementById('cameraScannerModal');
+  const title = document.getElementById('scannerModeTitle');
+  const video = document.getElementById('scannerVideo');
+  const btnBarcode = document.getElementById('scanModeBarcodeBtn');
+  const btnOcr = document.getElementById('scanModeOcrBtn');
+
+  state.scannerMode = mode;
+  if (modal) modal.classList.remove('hidden');
+
+  if (title) title.textContent = mode === 'barcode' ? 'Live Barcode Pemindai' : 'Pemindai Struk Belanja (OCR)';
+
+  if (btnBarcode && btnOcr) {
+    if (mode === 'barcode') {
+      btnBarcode.className = 'py-2 rounded-xl bg-emerald-500 shadow-sm transition';
+      btnOcr.className = 'py-2 rounded-xl text-slate-300 hover:text-white transition';
+    } else {
+      btnBarcode.className = 'py-2 rounded-xl text-slate-300 hover:text-white transition';
+      btnOcr.className = 'py-2 rounded-xl bg-emerald-500 shadow-sm transition';
+    }
+  }
+
+  // Request Native Camera Stream
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } },
+      audio: false
+    });
+    state.scannerStream = stream;
+    if (video) {
+      video.srcObject = stream;
+      video.play();
+    }
+
+    startBarcodeDetectionLoop();
+  } catch (err) {
+    console.warn('Camera access error:', err);
+    showToast('Kamera tidak dapat diakses. Gunakan opsi unggah foto/contoh.', 'camera-off');
+  }
+}
+
+function stopNativeCameraScanner() {
+  const modal = document.getElementById('cameraScannerModal');
+  const video = document.getElementById('scannerVideo');
+
+  if (state.scannerStream) {
+    state.scannerStream.getTracks().forEach(t => t.stop());
+    state.scannerStream = null;
+  }
+  if (video) video.srcObject = null;
+  if (modal) modal.classList.add('hidden');
+}
+
+function startBarcodeDetectionLoop() {
+  if (!('BarcodeDetector' in window)) {
+    console.log('BarcodeDetector API native belum aktif pada peramban ini. Simulasi aktif.');
+    return;
+  }
+
+  if (!state.scannerDetector) {
+    try {
+      state.scannerDetector = new BarcodeDetector({
+        formats: ['ean_13', 'ean_8', 'qr_code', 'code_128', 'upc_a']
+      });
+    } catch (e) {
+      console.warn('BarcodeDetector format not supported', e);
+    }
+  }
+
+  const video = document.getElementById('scannerVideo');
+  const interval = setInterval(async () => {
+    if (!state.scannerStream || !video || video.readyState !== 4) return;
+    if (state.scannerMode !== 'barcode') {
+      clearInterval(interval);
+      return;
+    }
+
+    try {
+      if (state.scannerDetector) {
+        const barcodes = await state.scannerDetector.detect(video);
+        if (barcodes.length > 0) {
+          const rawVal = barcodes[0].rawValue;
+          handleDetectedBarcode(rawVal);
+          clearInterval(interval);
+        }
+      }
+    } catch (e) {
+      // Loop
+    }
+  }, 400);
+}
+
+function handleDetectedBarcode(barcodeString) {
+  sounds.playBarcodeBeep();
+
+  const product = BARCODE_CATALOG[barcodeString] || {
+    name: `Produk Ritel (${barcodeString.substring(0, 8)})`,
+    category: "Sembako",
+    unit: "pcs",
+    price: 15000,
+    store: "Indomaret",
+    isEssential: true
+  };
+
+  const statusBadge = document.getElementById('scannerStatusBadge');
+  if (statusBadge) {
+    statusBadge.innerHTML = `<span class="text-emerald-400 font-bold">✓ Terdeteksi:</span> ${product.name} (${formatRupiah(product.price)})`;
+  }
+
+  setTimeout(() => {
+    stopNativeCameraScanner();
+    const success = validateAndAddItemToCart({
+      name: product.name,
+      category: product.category,
+      unit: product.unit,
+      qty: 1,
+      price: product.price,
+      store: product.store || "Indomaret"
+    });
+    if (success) {
+      showToast(`Barcode ${product.name} berhasil dicatat!`, 'check-circle');
+    }
+  }, 700);
+}
+
+function triggerQuickSampleScan() {
+  if (state.scannerMode === 'barcode') {
+    // Pick random barcode
+    const barcodes = Object.keys(BARCODE_CATALOG);
+    const chosen = barcodes[Math.floor(Math.random() * barcodes.length)];
+    handleDetectedBarcode(chosen);
+  } else {
+    // Mode OCR
+    sounds.playBarcodeBeep();
+    stopNativeCameraScanner();
+    // Insert mock extracted receipt
+    const mockItems = [
+      { name: "Beras Ramos Premium 5kg", category: "Sembako", unit: "pack", qty: 1, price: 74000, store: "Indomaret" },
+      { name: "Telur Ayam Negeri 1kg", category: "Daging & Sayur", unit: "kg", qty: 1, price: 28500, store: "Indomaret" },
+      { name: "Minyak Goreng Sania 2L", category: "Bumbu & Minyak", unit: "liter", qty: 1, price: 33500, store: "Indomaret" }
+    ];
+
+    mockItems.forEach(item => validateAndAddItemToCart(item));
+    showToast('Struk berhasil diekstrak via AI OCR!', 'camera');
+  }
+}
+
+// -----------------------------------------------------------------------------
+// 9. CUSTOM GROCERY ITEM BUILDER MODAL
+// -----------------------------------------------------------------------------
+function openCustomItemModalForNew() {
+  const form = document.getElementById('customItemForm');
+  if (form) form.reset();
+  const idEl = document.getElementById('customEditId');
+  if (idEl) idEl.value = '';
+  const title = document.getElementById('customItemModalTitle');
+  if (title) title.textContent = 'Tambah Barang Belanja Bebas';
+
+  updateCustomPreview();
+  const modal = document.getElementById('customItemModal');
+  if (modal) modal.classList.remove('hidden');
+}
+
+function openCustomItemModalForEdit(item) {
+  const modal = document.getElementById('customItemModal');
+  const idEl = document.getElementById('customEditId');
+  const nameEl = document.getElementById('customInputName');
+  const catEl = document.getElementById('customInputCategory');
+  const unitEl = document.getElementById('customInputUnit');
+  const qtyEl = document.getElementById('customInputQty');
+  const priceEl = document.getElementById('customInputPrice');
+  const storeEl = document.getElementById('customInputStore');
+  const title = document.getElementById('customItemModalTitle');
+
+  if (idEl) idEl.value = item.id;
+  if (nameEl) nameEl.value = item.name;
+  if (catEl) catEl.value = item.category;
+  if (unitEl) unitEl.value = item.unit || 'pcs';
+  if (qtyEl) qtyEl.value = item.qty || 1;
+  if (priceEl) priceEl.value = item.price || 0;
+  if (storeEl) storeEl.value = item.store || 'Super Indo';
+  if (title) title.textContent = 'Edit Barang Belanja';
+
+  updateCustomPreview();
+  if (modal) modal.classList.remove('hidden');
+}
+
+function updateCustomPreview() {
+  const qty = Number(document.getElementById('customInputQty')?.value) || 1;
+  const price = Number(document.getElementById('customInputPrice')?.value) || 0;
+  const calcEl = document.getElementById('customCalcPreview');
+  const totalEl = document.getElementById('customTotalPreview');
+
+  if (calcEl) calcEl.textContent = `${qty} × ${formatRupiah(price)}`;
+  if (totalEl) totalEl.textContent = formatRupiah(qty * price);
+}
+
+function handleSaveCustomItem() {
+  const id = document.getElementById('customEditId')?.value;
+  const name = document.getElementById('customInputName')?.value.trim();
+  const category = document.getElementById('customInputCategory')?.value;
+  const unit = document.getElementById('customInputUnit')?.value;
+  const qty = Number(document.getElementById('customInputQty')?.value) || 1;
+  const price = Number(document.getElementById('customInputPrice')?.value) || 0;
+  const store = document.getElementById('customInputStore')?.value;
+
+  if (!name || price <= 0) {
+    showToast('Mohon masukkan nama produk dan harga valid!', 'alert-triangle');
+    return;
+  }
+
+  const success = validateAndAddItemToCart({ id, name, category, unit, qty, price, store });
+  if (success) {
+    const modal = document.getElementById('customItemModal');
+    if (modal) modal.classList.add('hidden');
+  }
+}
+
+// -----------------------------------------------------------------------------
+// 10. SMART PANTRY & ZERO-WASTE
 // -----------------------------------------------------------------------------
 function renderPantryStock() {
   const container = document.getElementById('pantryStockList');
@@ -725,14 +1014,13 @@ function renderPantryStock() {
   }
 
   if (emptyView) emptyView.classList.add('hidden');
+  const critical = unconsumed.filter(p => p.daysLeft !== undefined && p.daysLeft <= 2);
 
-  const criticalItems = unconsumed.filter(p => p.daysLeft !== undefined && p.daysLeft <= 2);
-
-  if (criticalItems.length > 0) {
+  if (critical.length > 0) {
     if (alertBox) alertBox.classList.remove('hidden');
     if (navAlertBadge) navAlertBadge.classList.remove('hidden');
-    if (alertTitle) alertTitle.textContent = `${criticalItems.length} Bahan Mendekati Batas Kedaluwarsa!`;
-    if (alertDesc) alertDesc.textContent = `${criticalItems.map(c => c.name).join(', ')} perlu diolah segera. Gunakan tombol 'Saran Resep AI'!`;
+    if (alertTitle) alertTitle.textContent = `${critical.length} Bahan Mendekati Batas Kedaluwarsa!`;
+    if (alertDesc) alertDesc.textContent = `${critical.map(c => c.name).join(', ')} perlu diolah segera agar tidak mubazir.`;
   } else {
     if (alertBox) alertBox.classList.add('hidden');
     if (navAlertBadge) navAlertBadge.classList.add('hidden');
@@ -740,24 +1028,17 @@ function renderPantryStock() {
 
   let html = '';
   unconsumed.forEach(item => {
-    let freshnessBadge = '';
-    if (item.daysLeft <= 1) {
-      freshnessBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 dark:bg-rose-950 text-rose-700 dark:text-rose-300 border border-rose-300">Basi Besok!</span>`;
-    } else if (item.daysLeft <= 3) {
-      freshnessBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-300 border border-amber-300">${item.daysLeft} Hari Lagi</span>`;
-    } else {
-      freshnessBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 border border-emerald-300">${item.daysLeft} Hari</span>`;
-    }
+    let freshness = `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${item.daysLeft <= 1 ? 'bg-rose-100 text-rose-700' : 'bg-amber-100 text-amber-700'}">${item.daysLeft} Hari Lagi</span>`;
 
     html += `
       <div class="p-3.5 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700/80 shadow-xs flex items-center justify-between">
         <div>
           <div class="flex items-center gap-1.5 mb-1">
             <span class="text-[10px] px-1.5 py-0.2 rounded bg-slate-100 dark:bg-slate-700 text-slate-500 font-semibold">${item.category}</span>
-            ${freshnessBadge}
+            ${freshness}
           </div>
           <h4 class="text-xs font-bold text-slate-800 dark:text-slate-100">${item.name}</h4>
-          <p class="text-[10px] text-slate-400 mt-0.5">Tersimpan: ${item.qty} ${item.unit} &bull; Beli: ${item.purchasedDate}</p>
+          <p class="text-[10px] text-slate-400 mt-0.5">Tersimpan: ${item.qty} ${item.unit} &bull; Tanggal Beli: ${item.purchasedDate}</p>
         </div>
 
         <button class="btn-consume-pantry px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-700 hover:bg-emerald-500 hover:text-white text-slate-700 dark:text-slate-200 text-xs font-bold active:scale-95 transition" data-id="${item.id}">
@@ -776,278 +1057,28 @@ function renderPantryStock() {
       if (item) {
         item.isConsumed = true;
         state.savePantry();
-        state.addXp(30, 'Bahan dapur sukses diolah zero-waste!');
         renderPantryStock();
-        sounds.playSuccess();
+        sounds.playClick();
+        showToast('Bahan berhasil diolah zero-waste!');
       }
     };
   });
 }
 
-function showRecipeSuggestionModal() {
-  const modal = document.getElementById('recipeModalBackdrop');
-  const title = document.getElementById('recipeModalTitle');
-  const utilizedContainer = document.getElementById('recipeUtilizedItems');
-  const stepsContainer = document.getElementById('recipeStepsList');
-  if (!modal) return;
-
-  const critical = state.pantry.filter(p => !p.isConsumed && p.daysLeft <= 3);
-  const sampleRecipes = [
-    {
-      title: "Tumis Kilat Ayam Sayur Zero-Waste",
-      items: ["Dada Ayam Fillet", "Sayur Sawi & Wortel", "Bumbu Minyak"],
-      steps: [
-        "Potong dadu dada ayam dan cuci bersih sayur sawi & wortel.",
-        "Panaskan wajan dengan 1 sdm minyak goreng sania.",
-        "Tumis irisan bawang putih hingga harum, masukkan potongan ayam hingga matang.",
-        "Masukkan sawi dan wortel, beri sedikit kecap manis dan sejumput garam.",
-        "Aduk cepat selama 3 menit. Sajikan hangat agar nutrisi terjaga maksimal!"
-      ]
-    },
-    {
-      title: "Orak-Arik Telur & Sayur Gurih",
-      items: ["Telur Ayam", "Sawi Hijau", "Bumbu Dapur"],
-      steps: [
-        "Kocok lepas 2 butir telur dengan sejumput garam dan lada.",
-        "Tumis bawang merah & cabai rawit sebentar.",
-        "Masukkan irisan sayur sawi, lalu tuangkan kocokan telur.",
-        "Orak-arik hingga telur matang lembut. Siap dinikmati dengan nasi hangat!"
-      ]
-    }
-  ];
-
-  const recipe = sampleRecipes[0];
-  if (title) title.textContent = recipe.title;
-
-  if (utilizedContainer) {
-    utilizedContainer.innerHTML = recipe.items.map(i => `
-      <span class="px-2 py-1 rounded-lg bg-amber-100 dark:bg-amber-900/60 text-amber-800 dark:text-amber-200 text-[10px] font-bold">
-        ✓ ${i}
-      </span>
-    `).join('');
-  }
-
-  if (stepsContainer) {
-    stepsContainer.innerHTML = recipe.steps.map(s => `<li>${s}</li>`).join('');
-  }
-
-  modal.classList.remove('hidden');
-}
-
 // -----------------------------------------------------------------------------
-// 9. GAMIFIKASI & ACHIEVEMENT BADGES (TAB 4)
-// -----------------------------------------------------------------------------
-function renderGamification() {
-  const xpEl = document.getElementById('userXpTotal');
-  const levelTitle = document.getElementById('userLevelTitle');
-  if (xpEl) xpEl.textContent = state.xp.toString();
-  if (levelTitle) levelTitle.textContent = `Budget Master Lv. ${state.level}`;
-
-  const impulseBadge = document.getElementById('badgeImpulseShield');
-  const impulseStatus = document.getElementById('impulseBadgeStatus');
-  if (state.isFrozen && impulseBadge && impulseStatus) {
-    impulseBadge.classList.remove('opacity-80');
-    impulseBadge.classList.add('border-emerald-400');
-    impulseStatus.textContent = 'Terbuka';
-    impulseStatus.className = 'text-[10px] font-bold text-emerald-600 bg-emerald-100 dark:bg-emerald-950 px-2 py-0.5 rounded-full';
-  }
-}
-
-// -----------------------------------------------------------------------------
-// 10. AI OCR RECEIPT SCANNER ENGINE (MODAL 1)
-// -----------------------------------------------------------------------------
-function openOcrModal() {
-  const modal = document.getElementById('ocrModalBackdrop');
-  const uploadZone = document.getElementById('ocrUploadZone');
-  const scanningState = document.getElementById('ocrScanningState');
-  const resultContainer = document.getElementById('ocrResultContainer');
-
-  if (uploadZone) uploadZone.classList.remove('hidden');
-  if (scanningState) scanningState.classList.add('hidden');
-  if (resultContainer) resultContainer.classList.add('hidden');
-  if (modal) modal.classList.remove('hidden');
-}
-
-function runOcrProcessing(sampleType = 'indomaret') {
-  const uploadZone = document.getElementById('ocrUploadZone');
-  const scanningState = document.getElementById('ocrScanningState');
-  const resultContainer = document.getElementById('ocrResultContainer');
-  const merchantEl = document.getElementById('ocrMerchantDetected');
-  const totalEl = document.getElementById('ocrTotalDetected');
-  const listEl = document.getElementById('ocrExtractedItemsList');
-
-  if (uploadZone) uploadZone.classList.add('hidden');
-  if (scanningState) scanningState.classList.remove('hidden');
-  if (resultContainer) resultContainer.classList.add('hidden');
-
-  sounds.playClick();
-
-  // Simulate AI OCR Multimodal Processing latency
-  setTimeout(() => {
-    let merchant = 'Indomaret Point';
-    let sampleItems = [];
-
-    if (sampleType === 'alfamart') {
-      merchant = 'Alfamart Cendrawasih';
-      sampleItems = [
-        { name: 'Minyak Goreng Sania 2L', category: 'Bumbu & Minyak', unit: 'liter', qty: 1, price: 33500, isEssential: true },
-        { name: 'Deterjen Rinso 750g', category: 'Toiletries', unit: 'pack', qty: 1, price: 21000, isEssential: true },
-        { name: 'Chiki Balls Keju 55g', category: 'Camilan', unit: 'bungkus', qty: 2, price: 8500, isEssential: false }
-      ];
-    } else if (sampleType === 'shopee') {
-      merchant = 'Shopee Supermarket Official';
-      sampleItems = [
-        { name: 'Beras Ramos 5kg', category: 'Sembako', unit: 'pack', qty: 1, price: 73000, isEssential: true },
-        { name: 'Susu UHT Ultra Milk 1L', category: 'Minuman', unit: 'liter', qty: 2, price: 18500, isEssential: true },
-        { name: 'Oreo Vanilla 120g', category: 'Camilan', unit: 'pack', qty: 1, price: 11500, isEssential: false }
-      ];
-    } else {
-      merchant = 'Indomaret Sudirman';
-      sampleItems = [
-        { name: 'Beras Ramos 5kg', category: 'Sembako', unit: 'pack', qty: 1, price: 74000, isEssential: true },
-        { name: 'Telur Ayam 1kg', category: 'Daging & Sayur', unit: 'kg', qty: 1, price: 28500, isEssential: true },
-        { name: 'Indomie Goreng', category: 'Makanan Instan', unit: 'bungkus', qty: 5, price: 3100, isEssential: true },
-        { name: 'Biskuit Roma Kelapa 300g', category: 'Camilan', unit: 'pack', qty: 1, price: 11000, isEssential: false }
-      ];
-    }
-
-    state.stagedOcrItems = sampleItems;
-    const overallTotal = sampleItems.reduce((acc, item) => acc + item.price * item.qty, 0);
-
-    if (merchantEl) merchantEl.textContent = merchant;
-    if (totalEl) totalEl.textContent = formatRupiah(overallTotal);
-
-    if (listEl) {
-      listEl.innerHTML = sampleItems.map(item => `
-        <div class="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 flex items-center justify-between text-xs">
-          <div>
-            <div class="flex items-center gap-1.5">
-              <span class="font-bold text-slate-800 dark:text-slate-200">${item.name}</span>
-              ${item.isEssential ? '<span class="text-[9px] px-1.5 py-0.2 rounded bg-emerald-100 text-emerald-800 dark:bg-emerald-950 font-bold">Esensial</span>' : '<span class="text-[9px] px-1.5 py-0.2 rounded bg-amber-100 text-amber-800 dark:bg-amber-950 font-bold">Camilan</span>'}
-            </div>
-            <span class="text-[10px] text-slate-400 font-mono">${item.qty} ${item.unit} &bull; ${item.category}</span>
-          </div>
-          <span class="font-bold font-mono text-slate-900 dark:text-white">${formatRupiah(item.price * item.qty)}</span>
-        </div>
-      `).join('');
-    }
-
-    if (scanningState) scanningState.classList.add('hidden');
-    if (resultContainer) resultContainer.classList.remove('hidden');
-    sounds.playSuccess();
-  }, 1400);
-}
-
-function applyStagedOcrToCart() {
-  if (state.stagedOcrItems.length === 0) return;
-
-  state.stagedOcrItems.forEach(item => {
-    state.cart.push({
-      id: 'cart_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6),
-      name: item.name,
-      category: item.category,
-      unit: item.unit,
-      qty: item.qty,
-      price: item.price,
-      discount: { mode: 'none', singlePercent: 0, tier1: 0, tier2: 0, nominalAmount: 0 }
-    });
-  });
-
-  state.saveCart();
-  state.addXp(50, 'Berhasil scan struk belanja dengan AI OCR!');
-  renderBudgetSafety();
-  renderCartItems();
-
-  const ocrModal = document.getElementById('ocrModalBackdrop');
-  if (ocrModal) ocrModal.classList.add('hidden');
-  showToast('Item dari struk berhasil masuk ke troli!');
-}
-
-// -----------------------------------------------------------------------------
-// 11. CHECKOUT TRIP & TRANSFER TO VIRTUAL PANTRY
-// -----------------------------------------------------------------------------
-function checkoutTrip() {
-  if (state.cart.length === 0) return;
-
-  let totalTrip = 0;
-  let totalSavings = 0;
-
-  state.cart.forEach(item => {
-    const p = calculateItemPricing(item.price, item.qty, item.discount);
-    totalTrip += p.rowTotal;
-    totalSavings += p.rowSavings;
-
-    // Update Benchmark catalog price
-    const key = item.name.toLowerCase().trim();
-    state.benchmarks[key] = {
-      name: item.name,
-      category: item.category,
-      unit: item.unit,
-      price: p.finalUnitPrice
-    };
-
-    // Auto Transfer to Virtual Pantry with Default Expiry Matrix
-    let expiryDays = 14;
-    if (item.category === 'Daging & Sayur') expiryDays = 3;
-    else if (item.category === 'Makanan Instan') expiryDays = 180;
-    else if (item.category === 'Minuman') expiryDays = 7;
-    else if (item.category === 'Sembako') expiryDays = 90;
-    else if (item.category === 'Toiletries') expiryDays = 365;
-
-    state.pantry.push({
-      id: 'pantry_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6),
-      name: item.name,
-      category: item.category,
-      unit: item.unit,
-      qty: item.qty,
-      purchasedDate: new Date().toISOString().split('T')[0],
-      daysLeft: expiryDays,
-      isConsumed: false
-    });
-  });
-
-  const tripRecord = {
-    id: 'trip_' + Date.now(),
-    date: new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }),
-    itemCount: state.cart.length,
-    totalAmount: totalTrip,
-    totalSavings,
-    items: [...state.cart]
-  };
-
-  state.history.unshift(tripRecord);
-  state.cart = [];
-  state.saveCart();
-  state.saveHistory();
-  state.saveBenchmarks();
-  state.savePantry();
-
-  state.addXp(100, 'Belanja bulanan selesai & stok masuk ke virtual pantry!');
-  sounds.playSuccess();
-  renderBudgetSafety();
-  renderCartItems();
-  renderPantryStock();
-  renderHistoryView();
-  showToast('Belanja selesai & dicatat ke Pantry!', 'check-circle');
-}
-
-// -----------------------------------------------------------------------------
-// 12. RIWAYAT BELANJA (TAB 5)
+// 11. RIWAYAT BELANJA
 // -----------------------------------------------------------------------------
 function renderHistoryView() {
   const container = document.getElementById('historyListContainer');
   const emptyView = document.getElementById('emptyHistoryView');
   const countEl = document.getElementById('historyTripCount');
   const spendEl = document.getElementById('historyTotalSpend');
-  const benchCountEl = document.getElementById('historyBenchmarkCount');
   if (!container) return;
 
   if (countEl) countEl.textContent = `${state.history.length} Transaksi`;
-
   let totalSpend = 0;
   state.history.forEach(t => totalSpend += t.totalAmount);
   if (spendEl) spendEl.textContent = formatRupiah(totalSpend);
-  if (benchCountEl) benchCountEl.textContent = `${Object.keys(state.benchmarks).length} Produk`;
 
   if (state.history.length === 0) {
     container.innerHTML = '';
@@ -1056,7 +1087,6 @@ function renderHistoryView() {
   }
 
   if (emptyView) emptyView.classList.add('hidden');
-
   let html = '';
   state.history.forEach(trip => {
     html += `
@@ -1064,291 +1094,135 @@ function renderHistoryView() {
         <div>
           <span class="text-[10px] font-bold text-slate-400 block">${trip.date}</span>
           <h4 class="text-xs font-bold text-slate-900 dark:text-white mt-0.5">${trip.itemCount} Macam Produk</h4>
-          ${trip.totalSavings > 0 ? `<span class="text-[10px] text-emerald-600 font-bold">Hemat ${formatRupiah(trip.totalSavings)}</span>` : ''}
         </div>
         <div class="text-right">
           <span class="text-sm font-black font-mono text-slate-900 dark:text-white block">${formatRupiah(trip.totalAmount)}</span>
-          <button class="btn-view-receipt text-[11px] font-bold text-emerald-600 dark:text-emerald-400 underline mt-1" data-id="${trip.id}">
-            Lihat Struk
-          </button>
         </div>
       </div>
     `;
   });
-
-  container.innerHTML = html;
-
-  document.querySelectorAll('.btn-view-receipt').forEach(btn => {
-    btn.onclick = () => {
-      const id = btn.getAttribute('data-id');
-      const trip = state.history.find(t => t.id === id);
-      if (trip) openReceiptModal(trip);
-    };
-  });
-}
-
-function openReceiptModal(trip) {
-  const modal = document.getElementById('receiptModalBackdrop');
-  const content = document.getElementById('receiptContent');
-  if (!modal || !content) return;
-
-  let itemsHtml = (trip.items || []).map(i => `
-    <div class="flex justify-between py-1 border-b border-dashed border-slate-200 dark:border-slate-700">
-      <span>${i.name} (x${i.qty})</span>
-      <span class="font-mono font-bold">${formatRupiah(i.price * i.qty)}</span>
-    </div>
-  `).join('');
-
-  content.innerHTML = `
-    <div class="p-3 bg-slate-50 dark:bg-slate-800 rounded-xl space-y-1 font-mono text-center">
-      <h4 class="font-bold text-sm">SMART GROCERY STORE</h4>
-      <p class="text-[10px] text-slate-400">${trip.date}</p>
-    </div>
-    <div class="space-y-1 my-2">
-      ${itemsHtml}
-    </div>
-    <div class="pt-2 border-t border-slate-200 dark:border-slate-700 flex justify-between font-bold text-sm">
-      <span>TOTAL</span>
-      <span class="font-mono text-emerald-600">${formatRupiah(trip.totalAmount)}</span>
-    </div>
-  `;
-
-  modal.classList.remove('hidden');
-}
-
-// -----------------------------------------------------------------------------
-// 13. PENGATURAN ANGGARAN & KATALOG BENCHMARK (TAB 6)
-// -----------------------------------------------------------------------------
-function renderBenchmarkCatalog(searchQuery = '') {
-  const container = document.getElementById('benchmarkListPreview');
-  const countEl = document.getElementById('benchmarkItemCount');
-  if (!container) return;
-
-  const entries = Object.values(state.benchmarks);
-  if (countEl) countEl.textContent = `${entries.length} Produk`;
-
-  const q = searchQuery.toLowerCase().trim();
-  const filtered = entries.filter(e => e.name.toLowerCase().includes(q) || e.category.toLowerCase().includes(q));
-
-  if (filtered.length === 0) {
-    container.innerHTML = '<p class="text-xs text-slate-400 text-center py-3">Tidak ada patokan harga yang cocok.</p>';
-    return;
-  }
-
-  let html = '';
-  filtered.forEach(item => {
-    html += `
-      <div class="p-2 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-between text-xs">
-        <div>
-          <span class="font-bold text-slate-800 dark:text-slate-200">${item.name}</span>
-          <span class="text-[10px] text-slate-400 block">${item.category} &bull; /${item.unit}</span>
-        </div>
-        <span class="font-mono font-bold text-slate-900 dark:text-white">${formatRupiah(item.price)}</span>
-      </div>
-    `;
-  });
-
   container.innerHTML = html;
 }
 
-// -----------------------------------------------------------------------------
-// 14. MODAL INPUT ITEM & INTERCEPTOR EMERGENCY FREEZE
-// -----------------------------------------------------------------------------
-function openItemModalForNew() {
-  const form = document.getElementById('itemForm');
-  if (form) form.reset();
-  const editId = document.getElementById('editItemId');
-  if (editId) editId.value = '';
-  const title = document.getElementById('modalTitle');
-  if (title) title.textContent = 'Tambah Item Belanja';
-  const saveBtn = document.getElementById('saveBtnText');
-  if (saveBtn) saveBtn.textContent = 'Simpan ke Troli';
+function checkoutTrip() {
+  if (state.cart.length === 0) return;
 
-  updateModalPricePreview();
-  const modal = document.getElementById('itemModalBackdrop');
-  if (modal) modal.classList.remove('hidden');
-}
+  const total = calculateCartTotals();
 
-function openItemModalForEdit(item) {
-  const modal = document.getElementById('itemModalBackdrop');
-  const editId = document.getElementById('editItemId');
-  const inputName = document.getElementById('inputItemName');
-  const inputCat = document.getElementById('inputItemCategory');
-  const inputUnit = document.getElementById('inputItemUnit');
-  const inputQty = document.getElementById('inputItemQty');
-  const inputPrice = document.getElementById('inputItemPrice');
-  const title = document.getElementById('modalTitle');
-  const saveBtn = document.getElementById('saveBtnText');
+  // Transfer items to virtual pantry
+  state.cart.forEach(item => {
+    let days = 7;
+    if (item.category === 'Daging & Sayur') days = 3;
+    else if (item.category === 'Sembako') days = 90;
+    else if (item.category === 'Makanan Instan') days = 180;
 
-  if (editId) editId.value = item.id;
-  if (inputName) inputName.value = item.name;
-  if (inputCat) inputCat.value = item.category;
-  if (inputUnit) inputUnit.value = item.unit;
-  if (inputQty) inputQty.value = item.qty;
-  if (inputPrice) inputPrice.value = item.price;
-  if (title) title.textContent = 'Edit Item Belanja';
-  if (saveBtn) saveBtn.textContent = 'Perbarui Item';
-
-  updateModalPricePreview();
-  if (modal) modal.classList.remove('hidden');
-}
-
-function updateModalPricePreview() {
-  const inputPrice = document.getElementById('inputItemPrice');
-  const inputQty = document.getElementById('inputItemQty');
-  const inputName = document.getElementById('inputItemName');
-  const calcDetail = document.getElementById('formCalculationDetail');
-  const finalTotal = document.getElementById('formFinalRowTotal');
-  const savingBadge = document.getElementById('formSavingBadge');
-
-  const price = Number(inputPrice?.value) || 0;
-  const qty = Number(inputQty?.value) || 1;
-  const pricing = calculateItemPricing(price, qty, { mode: 'none' });
-
-  if (calcDetail) calcDetail.textContent = `${qty} × ${formatRupiah(pricing.finalUnitPrice)}`;
-  if (finalTotal) finalTotal.textContent = formatRupiah(pricing.rowTotal);
-  if (savingBadge) savingBadge.textContent = `Hemat: ${formatRupiah(pricing.rowSavings)}`;
-
-  // Comparator preview vs benchmark
-  const comp = comparePriceWithBenchmark(inputName?.value, pricing.finalUnitPrice);
-  const compText = document.getElementById('compText');
-  const compRef = document.getElementById('compRefPrice');
-  const compIcon = document.getElementById('compIcon');
-
-  if (compText) compText.textContent = comp.text;
-  if (compRef) compRef.textContent = comp.refPrice ? `Bln Lalu: ${formatRupiah(comp.refPrice)}` : 'Bln Lalu: -';
-  if (compIcon) {
-    if (comp.status === 'higher') {
-      compIcon.textContent = '↑';
-      compIcon.className = 'w-5 h-5 rounded-md flex items-center justify-center text-xs font-bold bg-rose-100 text-rose-600';
-    } else if (comp.status === 'lower') {
-      compIcon.textContent = '↓';
-      compIcon.className = 'w-5 h-5 rounded-md flex items-center justify-center text-xs font-bold bg-emerald-100 text-emerald-600';
-    } else {
-      compIcon.textContent = '=';
-      compIcon.className = 'w-5 h-5 rounded-md flex items-center justify-center text-xs font-bold bg-slate-200 text-slate-600';
-    }
-  }
-}
-
-function handleSaveItemForm() {
-  const editId = document.getElementById('editItemId')?.value;
-  const name = document.getElementById('inputItemName')?.value.trim();
-  const category = document.getElementById('inputItemCategory')?.value;
-  const unit = document.getElementById('inputItemUnit')?.value;
-  const qty = Number(document.getElementById('inputItemQty')?.value) || 1;
-  const price = Number(document.getElementById('inputItemPrice')?.value) || 0;
-
-  if (!name || price <= 0) {
-    showToast('Mohon masukkan nama produk dan harga valid!', 'alert-triangle');
-    return;
-  }
-
-  const isImpulse = category === 'Camilan' || category === 'Lainnya';
-
-  // EMERGENCY FREEZE INTERCEPTOR: Tahan belanja non-esensial!
-  if (state.isFrozen && isImpulse) {
-    state.pendingImpulseItem = { editId, name, category, unit, qty, price };
-    const freezeModal = document.getElementById('freezeAlertModalBackdrop');
-    if (freezeModal) freezeModal.classList.remove('hidden');
-    sounds.playAlarm();
-    return;
-  }
-
-  commitItemToCart({ editId, name, category, unit, qty, price });
-}
-
-function commitItemToCart(itemData) {
-  const { editId, name, category, unit, qty, price } = itemData;
-
-  if (editId) {
-    const existing = state.cart.find(i => i.id === editId);
-    if (existing) {
-      existing.name = name;
-      existing.category = category;
-      existing.unit = unit;
-      existing.qty = qty;
-      existing.price = price;
-    }
-  } else {
-    state.cart.push({
-      id: 'cart_' + Date.now(),
-      name,
-      category,
-      unit,
-      qty,
-      price,
-      discount: { mode: 'none', singlePercent: 0, tier1: 0, tier2: 0, nominalAmount: 0 }
+    state.pantry.push({
+      id: 'pantry_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6),
+      name: item.name,
+      category: item.category,
+      unit: item.unit || 'pcs',
+      qty: item.qty || 1,
+      purchasedDate: new Date().toISOString().split('T')[0],
+      daysLeft: days,
+      isConsumed: false
     });
-  }
+  });
 
+  state.history.unshift({
+    id: 'trip_' + Date.now(),
+    date: new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }),
+    itemCount: state.cart.length,
+    totalAmount: total,
+    items: [...state.cart]
+  });
+
+  state.cart = [];
   state.saveCart();
-  renderBudgetSafety();
-  renderCartItems();
-  sounds.playClick();
+  state.saveHistory();
+  state.savePantry();
 
-  const modal = document.getElementById('itemModalBackdrop');
-  if (modal) modal.classList.add('hidden');
-  showToast(editId ? 'Item berhasil diperbarui' : 'Item ditambahkan ke troli');
+  renderCartItems();
+  renderPantryStock();
+  renderHistoryView();
+  sounds.playClick();
+  showToast('Belanja selesai & stok masuk ke Virtual Pantry!');
 }
 
 // -----------------------------------------------------------------------------
-// 15. INITIALIZATION & EVENT LISTENERS
+// 12. INITIALIZATION & EVENT LISTENERS
 // -----------------------------------------------------------------------------
 document.addEventListener('DOMContentLoaded', () => {
   // Apply Saved Theme
-  if (state.isDarkMode) {
-    document.documentElement.classList.add('dark');
-  } else {
-    document.documentElement.classList.remove('dark');
-  }
-
-  // Apply Saved Layout (Mobile vs Bento)
-  const mainContainer = document.getElementById('mainContainer');
-  if (mainContainer) {
-    if (state.isBentoMode) {
-      mainContainer.classList.remove('mode-mobile');
-      mainContainer.classList.add('mode-bento');
+  const applyTheme = (themeName) => {
+    state.theme = themeName;
+    localStorage.setItem('sg_theme', themeName);
+    if (themeName === 'dark' || (themeName === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+      document.documentElement.classList.add('dark');
     } else {
-      mainContainer.classList.remove('mode-bento');
-      mainContainer.classList.add('mode-mobile');
+      document.documentElement.classList.remove('dark');
     }
-  }
+  };
+  applyTheme(state.theme);
+
+  // Apply Layout
+  const mainContainer = document.getElementById('mainContainer');
+  const layoutModeText = document.getElementById('layoutModeText');
+  const applyLayout = (isBento) => {
+    state.isBentoMode = isBento;
+    localStorage.setItem('sg_layout_mode', isBento ? 'bento' : 'mobile');
+    if (mainContainer) {
+      if (isBento) {
+        mainContainer.classList.remove('mode-mobile');
+        mainContainer.classList.add('mode-bento');
+        if (layoutModeText) layoutModeText.textContent = 'Bento Grid (1200px)';
+      } else {
+        mainContainer.classList.remove('mode-bento');
+        mainContainer.classList.add('mode-mobile');
+        if (layoutModeText) layoutModeText.textContent = 'Smartphone (440px)';
+      }
+    }
+  };
+  applyLayout(state.isBentoMode);
 
   // Initial Renders
-  renderBudgetSafety();
   renderCartItems();
-  renderRadarComparison();
+  renderGuardianAndEnvelopes();
+  renderRealWorldRadar();
   renderPantryStock();
-  renderGamification();
   renderHistoryView();
-  renderBenchmarkCatalog();
 
   // Navigation Tabs Switching
+  const switchTab = (targetId) => {
+    document.querySelectorAll('.tab-content').forEach(tc => tc.classList.add('hidden'));
+    const activeSection = document.getElementById(targetId);
+    if (activeSection) activeSection.classList.remove('hidden');
+
+    document.querySelectorAll('.nav-tab-btn').forEach(btn => {
+      const match = btn.getAttribute('data-target') === targetId;
+      btn.className = match
+        ? 'nav-tab-btn flex-1 flex flex-col items-center py-1 rounded-xl text-emerald-600 dark:text-emerald-400 font-bold active:scale-95 transition'
+        : 'nav-tab-btn flex-1 flex flex-col items-center py-1 rounded-xl text-slate-400 hover:text-slate-600 active:scale-95 transition';
+    });
+
+    if (targetId === 'tab-radar') renderRealWorldRadar();
+    if (targetId === 'tab-pantry') renderPantryStock();
+    if (targetId === 'tab-guardian') renderGuardianAndEnvelopes();
+    if (targetId === 'tab-riwayat') renderHistoryView();
+
+    sounds.playClick();
+    lucide.createIcons();
+  };
+
   document.querySelectorAll('.nav-tab-btn').forEach(btn => {
-    btn.onclick = () => {
-      const target = btn.getAttribute('data-target');
-      document.querySelectorAll('.tab-content').forEach(tc => tc.classList.add('hidden'));
-      const activeSection = document.getElementById(target);
-      if (activeSection) activeSection.classList.remove('hidden');
-
-      document.querySelectorAll('.nav-tab-btn').forEach(b => {
-        b.className = 'nav-tab-btn flex-1 flex flex-col items-center py-1 rounded-xl text-slate-400 hover:text-slate-600 active:scale-95 transition';
-      });
-      btn.className = 'nav-tab-btn flex-1 flex flex-col items-center py-1 rounded-xl text-emerald-600 dark:text-emerald-400 font-bold active:scale-95 transition';
-
-      if (target === 'tab-radar') renderRadarComparison();
-      if (target === 'tab-pantry') renderPantryStock();
-      if (target === 'tab-gamifikasi') renderGamification();
-      if (target === 'tab-riwayat') renderHistoryView();
-      if (target === 'tab-anggaran') renderBenchmarkCatalog();
-
-      sounds.playClick();
-      lucide.createIcons();
-    };
+    btn.onclick = () => switchTab(btn.getAttribute('data-target'));
   });
 
-  // Category Filter Pills
+  // Header Settings Button
+  document.getElementById('headerSettingsBtn')?.addEventListener('click', () => {
+    switchTab('tab-settings');
+  });
+
+  // Category Pills
   document.querySelectorAll('.cat-pill').forEach(btn => {
     btn.onclick = () => {
       document.querySelectorAll('.cat-pill').forEach(b => {
@@ -1361,210 +1235,114 @@ document.addEventListener('DOMContentLoaded', () => {
     };
   });
 
-  // Emergency Freeze Toggle Listener
+  // Emergency Freeze Switch Toggle
   const freezeToggle = document.getElementById('emergencyFreezeToggle');
   if (freezeToggle) {
     freezeToggle.onchange = (e) => {
       state.isFrozen = e.target.checked;
       state.saveFreezeState();
-      renderBudgetSafety();
-      renderGamification();
+      renderGuardianAndEnvelopes();
       if (state.isFrozen) {
-        state.addXp(20, 'Emergency Freeze diaktifkan! Pengeluaran dikunci.');
         sounds.playAlarm();
+        showToast('Emergency Freeze AKTIF! Hard Budget Lock diberlakukan.', 'lock');
       } else {
-        showToast('Emergency Freeze dinonaktifkan');
         sounds.playClick();
+        showToast('Emergency Freeze dinonaktifkan.');
       }
     };
   }
 
-  // Theme Toggle (Dark / Light)
-  const toggleThemeBtn = document.getElementById('toggleThemeBtn');
-  if (toggleThemeBtn) {
-    toggleThemeBtn.onclick = () => {
-      state.isDarkMode = !state.isDarkMode;
-      localStorage.setItem('sg_theme', state.isDarkMode ? 'dark' : 'light');
-      if (state.isDarkMode) {
-        document.documentElement.classList.add('dark');
-      } else {
-        document.documentElement.classList.remove('dark');
-      }
+  // Dismiss Strict Freeze Modal
+  document.getElementById('dismissStrictFreezeBtn')?.addEventListener('click', () => {
+    document.getElementById('strictFreezeModal')?.classList.add('hidden');
+  });
+
+  // Scanner Triggers
+  document.getElementById('quickLaunchScannerBtn')?.addEventListener('click', () => openNativeCameraScanner('barcode'));
+  document.getElementById('emptyScanBtn')?.addEventListener('click', () => openNativeCameraScanner('barcode'));
+  document.getElementById('openCameraBarcodeBtn')?.addEventListener('click', () => openNativeCameraScanner('barcode'));
+  document.getElementById('openCameraOcrBtn')?.addEventListener('click', () => openNativeCameraScanner('ocr'));
+  document.getElementById('closeCameraScannerBtn')?.addEventListener('click', stopNativeCameraScanner);
+
+  document.getElementById('scanModeBarcodeBtn')?.addEventListener('click', () => {
+    state.scannerMode = 'barcode';
+    openNativeCameraScanner('barcode');
+  });
+  document.getElementById('scanModeOcrBtn')?.addEventListener('click', () => {
+    state.scannerMode = 'ocr';
+    openNativeCameraScanner('ocr');
+  });
+
+  document.getElementById('scannerSampleBtn')?.addEventListener('click', triggerQuickSampleScan);
+  document.getElementById('scannerUploadInput')?.addEventListener('change', () => triggerQuickSampleScan());
+
+  // Custom Item Modal Triggers
+  document.getElementById('quickAddCustomBtn')?.addEventListener('click', openCustomItemModalForNew);
+  document.getElementById('emptyAddBtn')?.addEventListener('click', openCustomItemModalForNew);
+  document.getElementById('closeCustomItemBtn')?.addEventListener('click', () => {
+    document.getElementById('customItemModal')?.classList.add('hidden');
+  });
+  document.getElementById('cancelCustomItemBtn')?.addEventListener('click', () => {
+    document.getElementById('customItemModal')?.classList.add('hidden');
+  });
+  document.getElementById('saveCustomItemBtn')?.addEventListener('click', handleSaveCustomItem);
+
+  ['customInputQty', 'customInputPrice'].forEach(id => {
+    document.getElementById(id)?.addEventListener('input', updateCustomPreview);
+  });
+
+  // Geolocation Radar
+  document.getElementById('detectLocationBtn')?.addEventListener('click', handleDetectLocation);
+
+  // Settings Actions: Theme choices
+  document.querySelectorAll('.theme-choice-btn').forEach(btn => {
+    btn.onclick = () => {
+      applyTheme(btn.getAttribute('data-theme'));
       sounds.playClick();
-      showToast(state.isDarkMode ? 'Mode Gelap Aktif' : 'Mode Terang Aktif');
+      showToast(`Tema diterapkan: ${btn.getAttribute('data-theme')}`);
     };
-  }
+  });
 
-  // Layout View Switcher (Mobile App 440px vs Desktop Bento Grid 1200px)
-  const toggleLayoutBtn = document.getElementById('toggleLayoutBtn');
-  if (toggleLayoutBtn) {
-    toggleLayoutBtn.onclick = () => {
-      state.isBentoMode = !state.isBentoMode;
-      localStorage.setItem('sg_layout_mode', state.isBentoMode ? 'bento' : 'mobile');
-      if (mainContainer) {
-        if (state.isBentoMode) {
-          mainContainer.classList.remove('mode-mobile');
-          mainContainer.classList.add('mode-bento');
-        } else {
-          mainContainer.classList.remove('mode-bento');
-          mainContainer.classList.add('mode-mobile');
-        }
-      }
-      sounds.playClick();
-      showToast(state.isBentoMode ? 'Mode Bento Grid Aktif' : 'Mode Smartphone Aktif');
-    };
-  }
+  // Settings Actions: Layout Toggle
+  document.getElementById('toggleLayoutSettingsBtn')?.addEventListener('click', () => {
+    applyLayout(!state.isBentoMode);
+    sounds.playClick();
+    showToast(state.isBentoMode ? 'Mode Bento Grid Aktif' : 'Mode Smartphone Aktif');
+  });
 
-  // Audio Toggle
-  const toggleSoundBtn = document.getElementById('toggleSoundBtn');
-  if (toggleSoundBtn) {
-    toggleSoundBtn.onclick = () => {
-      state.soundEnabled = !state.soundEnabled;
+  // Settings Actions: Sound Toggle
+  const soundCheckbox = document.getElementById('soundToggleCheckbox');
+  if (soundCheckbox) {
+    soundCheckbox.checked = state.soundEnabled;
+    soundCheckbox.onchange = (e) => {
+      state.soundEnabled = e.target.checked;
       localStorage.setItem('sg_sound_enabled', state.soundEnabled.toString());
       sounds.playClick();
       showToast(state.soundEnabled ? 'Efek Suara Aktif' : 'Efek Suara Dibisukan');
     };
   }
 
-  // AI OCR Triggers
-  document.getElementById('topOcrBtn')?.addEventListener('click', openOcrModal);
-  document.getElementById('fabScanBtn')?.addEventListener('click', openOcrModal);
-  document.getElementById('emptyScanBtn')?.addEventListener('click', openOcrModal);
-  document.getElementById('closeOcrBtn')?.addEventListener('click', () => {
-    document.getElementById('ocrModalBackdrop')?.classList.add('hidden');
-  });
-
-  document.querySelectorAll('.preset-ocr-btn').forEach(btn => {
-    btn.onclick = () => runOcrProcessing(btn.getAttribute('data-sample'));
-  });
-
-  document.getElementById('receiptFileInput')?.addEventListener('change', () => {
-    runOcrProcessing('indomaret');
-  });
-
-  document.getElementById('applyOcrToCartBtn')?.addEventListener('click', applyStagedOcrToCart);
-
-  // Manual Add Item Triggers
-  document.getElementById('openAddModalBtn')?.addEventListener('click', openItemModalForNew);
-  document.getElementById('emptyAddBtn')?.addEventListener('click', openItemModalForNew);
-  document.getElementById('closeModalBtn')?.addEventListener('click', () => {
-    document.getElementById('itemModalBackdrop')?.classList.add('hidden');
-  });
-  document.getElementById('cancelModalBtn')?.addEventListener('click', () => {
-    document.getElementById('itemModalBackdrop')?.classList.add('hidden');
-  });
-  document.getElementById('saveItemBtn')?.addEventListener('click', handleSaveItemForm);
-
-  // Modal Price Realtime Updates
-  ['inputItemPrice', 'inputItemQty', 'inputItemName'].forEach(id => {
-    document.getElementById(id)?.addEventListener('input', updateModalPricePreview);
-  });
-
-  // Stepper Qty Buttons in Modal
-  document.getElementById('btnQtyMinus')?.addEventListener('click', () => {
-    const input = document.getElementById('inputItemQty');
-    if (input && Number(input.value) > 1) {
-      input.value = Number(input.value) - 1;
-      updateModalPricePreview();
-    }
-  });
-
-  document.getElementById('btnQtyPlus')?.addEventListener('click', () => {
-    const input = document.getElementById('inputItemQty');
-    if (input) {
-      input.value = Number(input.value) + 1;
-      updateModalPricePreview();
-    }
-  });
-
-  document.querySelectorAll('.qty-preset').forEach(btn => {
-    btn.onclick = () => {
-      const add = Number(btn.getAttribute('data-add')) || 1;
-      const input = document.getElementById('inputItemQty');
-      if (input) {
-        input.value = Number(input.value) + add;
-        updateModalPricePreview();
-      }
-    };
-  });
-
-  // Emergency Freeze Barrier Buttons
-  document.getElementById('cancelImpulseBtn')?.addEventListener('click', () => {
-    document.getElementById('freezeAlertModalBackdrop')?.classList.add('hidden');
-    state.pendingImpulseItem = null;
-    state.addXp(30, 'Hebat! Anda sukses menahan belanja impulsif.');
-    sounds.playSuccess();
-  });
-
-  document.getElementById('forceAddImpulseBtn')?.addEventListener('click', () => {
-    document.getElementById('freezeAlertModalBackdrop')?.classList.add('hidden');
-    if (state.pendingImpulseItem) {
-      commitItemToCart(state.pendingImpulseItem);
-      state.pendingImpulseItem = null;
-    }
-  });
-
-  // Zero-Waste Recipe Modal Triggers
-  document.getElementById('suggestRecipeBtn')?.addEventListener('click', showRecipeSuggestionModal);
-  document.getElementById('closeRecipeBtn')?.addEventListener('click', () => {
-    document.getElementById('recipeModalBackdrop')?.classList.add('hidden');
-  });
-  document.getElementById('dismissRecipeBtn')?.addEventListener('click', () => {
-    document.getElementById('recipeModalBackdrop')?.classList.add('hidden');
-  });
-
-  // Trip Checkout Trigger
-  document.getElementById('checkoutTripBtn')?.addEventListener('click', checkoutTrip);
-
-  document.getElementById('clearCartBtn')?.addEventListener('click', () => {
-    if (confirm('Kosongkan semua barang dari troli belanja?')) {
-      state.cart = [];
-      state.saveCart();
-      renderBudgetSafety();
-      renderCartItems();
-      showToast('Troli dikosongkan');
-    }
-  });
-
-  // Save Budget Settings
+  // Settings Actions: Save Budget Limit
   document.getElementById('saveBudgetLimitBtn')?.addEventListener('click', () => {
     const val = Number(document.getElementById('budgetLimitInput')?.value);
     if (val >= 50000) {
       state.budgetLimit = val;
       localStorage.setItem('sg_budget_limit', val.toString());
-      renderBudgetSafety();
-      sounds.playSuccess();
+      renderGuardianAndEnvelopes();
+      sounds.playClick();
       showToast('Pagu anggaran berhasil disimpan!');
     }
   });
 
-  document.querySelectorAll('.budget-preset-btn').forEach(btn => {
-    btn.onclick = () => {
-      const amt = Number(btn.getAttribute('data-amount'));
-      const input = document.getElementById('budgetLimitInput');
-      if (input && amt) input.value = amt;
-    };
-  });
+  // Checkout Trip
+  document.getElementById('checkoutTripBtn')?.addEventListener('click', checkoutTrip);
 
-  // Benchmark Search
-  document.getElementById('benchmarkSearchInput')?.addEventListener('input', (e) => {
-    renderBenchmarkCatalog(e.target.value);
-  });
-
-  // Receipts Modal Close
-  document.getElementById('closeReceiptBtn')?.addEventListener('click', () => {
-    document.getElementById('receiptModalBackdrop')?.classList.add('hidden');
-  });
-  document.getElementById('dismissReceiptBtn')?.addEventListener('click', () => {
-    document.getElementById('receiptModalBackdrop')?.classList.add('hidden');
-  });
-
-  document.getElementById('copyReceiptTextBtn')?.addEventListener('click', () => {
-    const content = document.getElementById('receiptContent')?.innerText;
-    if (content) {
-      navigator.clipboard.writeText(content).then(() => {
-        showToast('Struk berhasil disalin ke WhatsApp!', 'copy');
-      });
+  document.getElementById('clearCartBtn')?.addEventListener('click', () => {
+    if (confirm('Kosongkan semua barang dari keranjang belanja?')) {
+      state.cart = [];
+      state.saveCart();
+      renderCartItems();
+      showToast('Keranjang dikosongkan');
     }
   });
 

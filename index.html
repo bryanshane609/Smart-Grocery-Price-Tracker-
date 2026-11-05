@@ -5,7 +5,7 @@
   <meta charset="UTF-8">
   <meta name="viewport"
     content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>Smart Grocery & Budget Safety Tracker</title>
+  <title>Smart Grocery - Household Financial Guardian & Expense Protection</title>
 
   <!-- PWA Meta Tags -->
   <meta name="theme-color" content="#10b981">
@@ -15,7 +15,7 @@
   <meta name="application-name" content="SmartGrocery">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="description"
-    content="Smart Grocery & Budget Safety Tracker - Platform FinTech Rumah Tangga, Anti-Impulsif, dan Pantry Cerdas">
+    content="Smart Household Financial Guardian & Real-Time Expense Protection - Pengendali Anggaran Rumah Tangga, Kamera Barcode/OCR, dan Radar Ritel Dunia Nyata">
 
   <!-- Favicon & Icons -->
   <link rel="icon" type="image/svg+xml" href="./icons/icon.svg">
@@ -49,6 +49,13 @@
               600: '#059669',
               700: '#047857'
             },
+            danger: {
+              50: '#fef2f2',
+              100: '#fee2e2',
+              500: '#ef4444',
+              600: '#dc2626',
+              700: '#b91c1c'
+            },
             dark: {
               bg: '#0F172A',
               card: '#1E293B',
@@ -59,20 +66,20 @@
           animation: {
             'pulse-danger': 'dangerPulse 1.5s infinite ease-in-out',
             'slide-up': 'slideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1)',
-            'scan-laser': 'scanLaser 2s infinite ease-in-out'
+            'scan-laser': 'scanLaser 1.8s infinite ease-in-out'
           },
           keyframes: {
             dangerPulse: {
-              '0%, 100%': { boxShadow: '0 0 0 0 rgba(248, 113, 113, 0.45)', borderColor: '#f87171' },
-              '50%': { boxShadow: '0 0 0 8px rgba(248, 113, 113, 0)', borderColor: '#ef4444' }
+              '0%, 100%': { boxShadow: '0 0 0 0 rgba(239, 68, 68, 0.45)', borderColor: '#f87171' },
+              '50%': { boxShadow: '0 0 0 8px rgba(239, 68, 68, 0)', borderColor: '#ef4444' }
             },
             slideUp: {
               '0%': { transform: 'translateY(100%)', opacity: '0' },
               '100%': { transform: 'translateY(0)', opacity: '1' }
             },
             scanLaser: {
-              '0%, 100%': { top: '0%' },
-              '50%': { top: '95%' }
+              '0%, 100%': { top: '5%' },
+              '50%': { top: '92%' }
             }
           }
         }
@@ -115,6 +122,17 @@
       box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.15);
     }
 
+    /* Video Scanner Camera Styles */
+    #scannerVideo {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .reticle-box {
+      box-shadow: 0 0 0 9999px rgba(15, 23, 42, 0.65);
+    }
+
     input[type=number]::-webkit-inner-spin-button,
     input[type=number]::-webkit-outer-spin-button {
       -webkit-appearance: none;
@@ -130,125 +148,66 @@
   <div id="mainContainer" class="app-viewport mode-mobile w-full min-h-screen sm:min-h-[92vh] bg-white dark:bg-[#1E293B] flex flex-col relative overflow-hidden transition-all duration-300 pb-24">
 
     <!-- ========================================================================= -->
-    <!-- TOP HEADER: App Title, Theme & Emergency Freeze Switch                     -->
+    <!-- TOP HEADER: CLEAN, UNCLUTTERED, PROFESSIONAL                             -->
     <!-- ========================================================================= -->
     <header class="sticky top-0 z-30 bg-white/95 dark:bg-[#1E293B]/95 backdrop-blur-md border-b border-slate-200/90 dark:border-slate-800 px-4 pt-3.5 pb-3 transition-colors">
       <div class="flex items-center justify-between">
-        <div class="flex items-center space-x-2.5">
-          <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-emerald-500 via-teal-500 to-emerald-600 flex items-center justify-center shadow-md shadow-emerald-500/20 text-white">
-            <i data-lucide="shopping-cart" class="w-5 h-5"></i>
+        <div class="flex items-center space-x-3">
+          <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-emerald-500 via-teal-500 to-emerald-600 flex items-center justify-center shadow-md shadow-emerald-500/20 text-white shrink-0">
+            <i data-lucide="shield-check" class="w-5 h-5"></i>
           </div>
-          <div>
+          <div class="leading-tight">
             <div class="flex items-center gap-1.5">
-              <h1 class="text-base font-extrabold tracking-tight text-slate-900 dark:text-white leading-tight">Smart Grocery</h1>
-              <span class="text-[9px] font-extrabold px-1.5 py-0.5 rounded-md bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">PRO</span>
+              <h1 class="text-base font-extrabold tracking-tight text-slate-900 dark:text-white">Smart Grocery</h1>
+              <span class="text-[9px] font-black tracking-wider px-1.5 py-0.5 rounded-md bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">GUARDIAN</span>
             </div>
-            <p class="text-[11px] text-slate-500 dark:text-slate-400 font-medium">FinTech Dapur & Budget Safety</p>
+            <!-- Istilah Baru Sesuai Permintaan SRS -->
+            <p class="text-[10px] text-slate-500 dark:text-slate-400 font-medium line-clamp-1">
+              Smart Household Financial Guardian & Real-Time Expense Protection
+            </p>
           </div>
         </div>
 
-        <!-- Quick Top Controls: Bento Toggle, OCR Scan, Theme, Sound -->
-        <div class="flex items-center space-x-1.5">
-          <!-- AI Receipt Scanner Trigger Button -->
-          <button id="topOcrBtn" class="px-2.5 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold shadow-sm flex items-center gap-1.5 active:scale-95 transition" title="Scan Struk (AI OCR)">
-            <i data-lucide="camera" class="w-3.5 h-3.5"></i>
-            <span class="hidden sm:inline text-[11px]">Scan Struk</span>
-          </button>
-
-          <!-- Bento / Mobile View Switcher -->
-          <button id="toggleLayoutBtn" class="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:text-slate-900 border border-slate-200 dark:border-slate-700 active:scale-95 transition" title="Beralih Layout (Mobile / Bento Grid)">
-            <i data-lucide="layout-grid" id="layoutIcon" class="w-4 h-4"></i>
-          </button>
-
-          <!-- Dark Mode Toggle -->
-          <button id="toggleThemeBtn" class="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:text-slate-900 border border-slate-200 dark:border-slate-700 active:scale-95 transition" title="Mode Terang / Gelap">
-            <i data-lucide="moon" id="themeIcon" class="w-4 h-4"></i>
-          </button>
-
-          <!-- Sound Feedback Toggle -->
-          <button id="toggleSoundBtn" class="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:text-slate-900 border border-slate-200 dark:border-slate-700 active:scale-95 transition" title="Suara Sentuhan">
-            <i data-lucide="volume-2" id="soundIcon" class="w-4 h-4"></i>
-          </button>
-        </div>
+        <!-- Single Minimalist Settings Trigger Button -->
+        <button id="headerSettingsBtn" class="p-2.5 rounded-2xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 hover:text-slate-900 border border-slate-200 dark:border-slate-700 active:scale-95 transition flex items-center justify-center shrink-0" title="Buka Pengaturan & Scanner">
+          <i data-lucide="settings" class="w-4 h-4"></i>
+        </button>
       </div>
 
-      <!-- ========================================================================= -->
-      <!-- DYNAMIC BUDGET SAFETY NET & EMERGENCY FREEZE CONTROLLER WIDGET           -->
-      <!-- ========================================================================= -->
-      <div id="budgetSafetyWidget" class="mt-3 p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/80 shadow-xs transition-all duration-300">
-        <!-- Top Metrics Row -->
-        <div class="flex items-end justify-between mb-2">
-          <div>
-            <div class="text-[10px] uppercase font-bold tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1">
-              <i data-lucide="shield-alert" class="w-3.5 h-3.5 text-emerald-500" id="safetyStatusIcon"></i>
-              <span>Total Troli Berjalan</span>
-            </div>
-            <div class="text-xl font-black text-slate-900 dark:text-white font-mono tracking-tight flex items-baseline gap-1" id="cartTotalHeader">
-              <span class="text-xs text-slate-400 font-sans">Rp</span> 0
-            </div>
-          </div>
-          <div class="text-right">
-            <div class="text-[10px] uppercase font-semibold text-slate-500 dark:text-slate-400">Pagu Anggaran</div>
-            <div class="text-xs font-bold text-slate-700 dark:text-slate-200 font-mono" id="budgetLimitHeader">
-              Rp 800.000
-            </div>
-          </div>
+      <!-- Realtime Active Budget Bar (Sticky at Top) -->
+      <div id="topBudgetQuickBar" class="mt-2.5 pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs">
+        <div class="flex items-center gap-2">
+          <div id="freezeMiniIndicator" class="w-2.5 h-2.5 rounded-full bg-emerald-500"></div>
+          <span class="text-[11px] text-slate-500 dark:text-slate-400">Troli: <b id="cartTotalHeader" class="text-slate-900 dark:text-white font-mono font-bold">Rp 0</b></span>
         </div>
-
-        <!-- Progress Bar Indicator -->
-        <div class="relative w-full h-3 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden p-0.5">
-          <div id="budgetProgressBar" class="h-full rounded-full transition-all duration-500 bg-emerald-500 shadow-sm" style="width: 0%"></div>
-        </div>
-
-        <!-- Realtime Status & Sisa Anggaran -->
-        <div class="flex items-center justify-between mt-2.5 pt-2 border-t border-slate-200/70 dark:border-slate-700/60 text-xs">
-          <div id="budgetSafetyBadge" class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full font-bold text-[10px] bg-emerald-100 dark:bg-emerald-950/70 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800">
-            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-            <span id="budgetSafetyText">Aman (0%)</span>
-          </div>
-          <div class="text-slate-600 dark:text-slate-300 font-medium">
-            <span class="text-slate-400 text-[10px]">Sisa:</span>
-            <span id="budgetRemainingText" class="font-bold font-mono text-emerald-600 dark:text-emerald-400 ml-1">Rp 800.000</span>
-          </div>
-        </div>
-
-        <!-- EMERGENCY FREEZE MASTER TOGGLE ROW -->
-        <div class="mt-2.5 pt-2 border-t border-slate-200/70 dark:border-slate-700/60 flex items-center justify-between">
-          <div class="flex items-center gap-2">
-            <div id="freezeIconBadge" class="w-6 h-6 rounded-lg bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-slate-600 dark:text-slate-300">
-              <i data-lucide="lock" class="w-3.5 h-3.5"></i>
-            </div>
-            <div>
-              <span class="text-xs font-bold text-slate-800 dark:text-slate-200 block leading-tight">Emergency Freeze</span>
-              <span class="text-[10px] text-slate-500 dark:text-slate-400">Kunci anggaran dari belanja impulsif</span>
-            </div>
-          </div>
-
-          <label class="relative inline-flex items-center cursor-pointer">
-            <input type="checkbox" id="emergencyFreezeToggle" class="sr-only peer">
-            <div class="w-11 h-6 bg-slate-300 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-rose-600"></div>
-          </label>
-        </div>
-
-        <!-- DANGER BANNER (Visible on Critical / Overbudget) -->
-        <div id="overBudgetBanner" class="hidden mt-2.5 p-2.5 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900 text-rose-800 dark:text-rose-200 text-xs flex items-center gap-2">
-          <i data-lucide="alert-triangle" class="w-4 h-4 text-rose-600 dark:text-rose-400 shrink-0 animate-bounce"></i>
-          <div class="leading-tight">
-            <span class="font-bold block">PERINGATAN SAFETY CAP!</span>
-            <span id="overBudgetDiffText" class="text-[11px]">Troli telah melampaui limit bulanan. Batasi belanja non-esensial!</span>
-          </div>
+        <div class="flex items-center gap-1 text-[11px]">
+          <span class="text-slate-400">Sisa Pagu:</span>
+          <span id="budgetRemainingHeader" class="font-mono font-bold text-emerald-600 dark:text-emerald-400">Rp 800.000</span>
         </div>
       </div>
     </header>
 
     <!-- ========================================================================= -->
-    <!-- MAIN CONTENT VIEWS                                                        -->
+    <!-- MAIN CONTENT VIEWS (Bento Grid Ready)                                     -->
     <!-- ========================================================================= -->
     <main class="flex-1 px-3.5 pt-3">
 
-      <!-- TAB 1: TROLI BELANJA (Active Shopping Cart) -->
+      <!-- TAB 1: TROLI BELANJA (Active Shopping & Custom Item Builder) -->
       <section id="tab-belanja" class="tab-content space-y-3">
-        <!-- Horizontal Category Filter Pills -->
+        
+        <!-- Action Quick Bar: Add Custom Item & Launch Camera Scanner -->
+        <div class="grid grid-cols-2 gap-2">
+          <button id="quickAddCustomBtn" class="py-2.5 px-3 rounded-2xl bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold shadow-sm shadow-emerald-500/20 active:scale-95 transition flex items-center justify-center gap-1.5">
+            <i data-lucide="plus-circle" class="w-4 h-4"></i>
+            <span>+ Tambah Item Bebas</span>
+          </button>
+          <button id="quickLaunchScannerBtn" class="py-2.5 px-3 rounded-2xl bg-slate-900 dark:bg-slate-800 hover:bg-slate-800 text-white text-xs font-bold border border-slate-700 active:scale-95 transition flex items-center justify-center gap-1.5 shadow-sm">
+            <i data-lucide="scan" class="w-4 h-4 text-emerald-400"></i>
+            <span>Buka Kamera Scan</span>
+          </button>
+        </div>
+
+        <!-- Category Filter Pills -->
         <div class="flex items-center gap-1.5 overflow-x-auto scrollbar-none py-1 -mx-3.5 px-3.5">
           <button class="cat-pill active px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap bg-emerald-500 text-white shadow-xs transition active:scale-95" data-category="ALL">
             Semua (<span id="catCountAll">0</span>)
@@ -256,17 +215,14 @@
           <button class="cat-pill px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:text-slate-900 border border-slate-200 dark:border-slate-700 transition active:scale-95" data-category="Sembako">
             🌾 Sembako (<span id="catCountSembako">0</span>)
           </button>
-          <button class="cat-pill px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:text-slate-900 border border-slate-200 dark:border-slate-700 transition active:scale-95" data-category="Makanan Instan">
-            🍜 Instan (<span id="catCountInstan">0</span>)
-          </button>
           <button class="cat-pill px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:text-slate-900 border border-slate-200 dark:border-slate-700 transition active:scale-95" data-category="Daging & Sayur">
             🥩 Daging/Sayur (<span id="catCountFresh">0</span>)
           </button>
+          <button class="cat-pill px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:text-slate-900 border border-slate-200 dark:border-slate-700 transition active:scale-95" data-category="Makanan Instan">
+            🍜 Instan (<span id="catCountInstan">0</span>)
+          </button>
           <button class="cat-pill px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:text-slate-900 border border-slate-200 dark:border-slate-700 transition active:scale-95" data-category="Toiletries">
             🧼 Toiletries (<span id="catCountToiletries">0</span>)
-          </button>
-          <button class="cat-pill px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:text-slate-900 border border-slate-200 dark:border-slate-700 transition active:scale-95" data-category="Bumbu & Minyak">
-            🧂 Bumbu/Minyak (<span id="catCountBumbu">0</span>)
           </button>
           <button class="cat-pill px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:text-slate-900 border border-slate-200 dark:border-slate-700 transition active:scale-95" data-category="Camilan">
             🍪 Camilan (<span id="catCountCamilan">0</span>)
@@ -300,16 +256,16 @@
           </div>
           <h3 class="text-sm font-bold text-slate-700 dark:text-slate-200">Troli Belanja Masih Kosong</h3>
           <p class="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-[260px] mx-auto">
-            Scan struk belanja fisik Anda dengan AI OCR atau tambah item secara manual.
+            Scan barcode produk langsung dengan kamera atau masukkan barang belanjaan kustom Anda.
           </p>
           <div class="mt-4 flex flex-col gap-2 max-w-[220px] mx-auto">
-            <button id="emptyScanBtn" class="px-4 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold shadow-md shadow-emerald-500/20 active:scale-95 transition flex items-center justify-center gap-2">
-              <i data-lucide="camera" class="w-4 h-4"></i>
-              <span>Scan Struk Belanja</span>
+            <button id="emptyScanBtn" class="px-4 py-2.5 rounded-xl bg-slate-900 dark:bg-slate-800 hover:bg-slate-800 text-white text-xs font-bold border border-slate-700 active:scale-95 transition flex items-center justify-center gap-2">
+              <i data-lucide="camera" class="w-4 h-4 text-emerald-400"></i>
+              <span>Buka Kamera Pemindai</span>
             </button>
-            <button id="emptyAddBtn" class="px-4 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-200 text-xs font-bold border border-slate-200 dark:border-slate-700 active:scale-95 transition flex items-center justify-center gap-1.5">
+            <button id="emptyAddBtn" class="px-4 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold active:scale-95 transition flex items-center justify-center gap-1.5">
               <i data-lucide="plus-circle" class="w-4 h-4"></i>
-              <span>+ Input Manual</span>
+              <span>+ Input Barang Bebas</span>
             </button>
           </div>
         </div>
@@ -329,45 +285,188 @@
         </div>
       </section>
 
-      <!-- TAB 2: PRICE RADAR & LOCAL DEALS (Komparator 4 Ritel) -->
-      <section id="tab-radar" class="tab-content hidden space-y-4">
+      <!-- TAB 2: FINANCIAL GUARDIAN & MULTI-TIER ENVELOPE BUDGETING -->
+      <section id="tab-guardian" class="tab-content hidden space-y-4">
         <div>
           <h2 class="text-sm font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
-            <i data-lucide="radar" class="w-4 h-4 text-emerald-500"></i>
-            <span>Price Comparison & Local Deals Radar</span>
+            <i data-lucide="shield-alert" class="w-4 h-4 text-emerald-500"></i>
+            <span>Financial Guardian & Health Gauge</span>
           </h2>
-          <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Komparasi total belanja troli Anda di 4 ritel terdekat</p>
+          <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Analisis burn rate, proyeksi pengeluaran AI, dan kunci anggaran ketat</p>
         </div>
 
-        <!-- Winner Retailer Recommendation Card -->
-        <div id="radarWinnerCard" class="p-4 rounded-3xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow-md relative overflow-hidden">
+        <!-- STRICT EMERGENCY FREEZE MASTER CARD -->
+        <div id="guardianFreezeCard" class="p-4 rounded-3xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 transition-all duration-300">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-3">
+              <div id="freezeBadgeIconContainer" class="w-10 h-10 rounded-2xl bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-slate-600 dark:text-slate-300">
+                <i data-lucide="lock" class="w-5 h-5"></i>
+              </div>
+              <div>
+                <h3 class="text-sm font-extrabold text-slate-900 dark:text-white" id="freezeCardTitle">Emergency Freeze Protection</h3>
+                <p class="text-[11px] text-slate-500 dark:text-slate-400" id="freezeCardDesc">Kunci hard-cap pengeluaran non-esensial</p>
+              </div>
+            </div>
+
+            <!-- Switcher -->
+            <label class="relative inline-flex items-center cursor-pointer">
+              <input type="checkbox" id="emergencyFreezeToggle" class="sr-only peer">
+              <div class="w-12 h-6 bg-slate-300 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-rose-600"></div>
+            </label>
+          </div>
+
+          <div id="freezeStatusNote" class="mt-3 p-2.5 rounded-xl bg-slate-100 dark:bg-slate-900/60 text-[11px] text-slate-600 dark:text-slate-300 flex items-center gap-2">
+            <i data-lucide="info" class="w-4 h-4 text-slate-400 shrink-0"></i>
+            <span>Mode Standar: Semua kategori barang dapat ditambahkan ke keranjang belanja.</span>
+          </div>
+        </div>
+
+        <!-- HEALTH SCORE & BURN RATE VELOCITY CARD -->
+        <div class="p-5 rounded-3xl bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white shadow-md relative overflow-hidden">
           <div class="flex items-start justify-between">
             <div>
-              <span class="text-[10px] font-black uppercase tracking-wider bg-white/20 px-2 py-0.5 rounded-full">Rekomendasi Hemat AI</span>
-              <h3 class="text-xl font-black mt-1" id="radarWinnerName">Pasar Tradisional</h3>
-              <p class="text-xs text-emerald-100 mt-1" id="radarWinnerSavings">Potensi hemat hingga Rp 38.000 untuk troli Anda!</p>
+              <span class="text-[10px] font-black uppercase tracking-wider text-emerald-400 bg-emerald-950/80 px-2 py-0.5 rounded-full border border-emerald-800">
+                AI Financial Health Score
+              </span>
+              <div class="flex items-baseline gap-2 mt-2">
+                <span class="text-3xl font-black font-mono" id="healthScoreDisplay">88/100</span>
+                <span class="text-xs font-semibold text-emerald-300" id="healthStatusWord">Sangat Sehat</span>
+              </div>
+              <p class="text-xs text-slate-400 mt-1" id="burnRateText">
+                Jatah aman belanja harian: <b>Rp 26.500/hari</b> untuk 25 hari ke depan.
+              </p>
             </div>
-            <div class="w-12 h-12 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center">
-              <i data-lucide="award" class="w-6 h-6 text-white"></i>
+
+            <div class="w-12 h-12 rounded-2xl bg-white/10 flex items-center justify-center text-emerald-400">
+              <i data-lucide="activity" class="w-6 h-6"></i>
             </div>
           </div>
 
-          <!-- Retailer Comparison Multi-Bars -->
-          <div class="mt-4 pt-3 border-t border-white/20 space-y-2.5 text-xs" id="retailerBarsContainer">
-            <!-- Rendered by JS -->
+          <!-- AI Spending Velocity Alert Banner -->
+          <div id="spendingVelocityBanner" class="mt-4 p-3 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-200 text-xs flex items-start gap-2">
+            <i data-lucide="zap" class="w-4 h-4 text-amber-400 shrink-0 mt-0.5"></i>
+            <span id="velocityWarningText">
+              <b>Proyeksi Keuangan AI:</b> Kecepatan belanja Anda stabil. Sisa anggaran diproyeksikan bertahan hingga akhir bulan berjalan.
+            </span>
           </div>
         </div>
 
-        <!-- Detailed Item Price Breakdown Table -->
-        <div class="p-4 rounded-3xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80 space-y-3">
-          <h4 class="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider">Perbandingan Harga Per Item</h4>
-          <div id="radarItemTable" class="space-y-2 text-xs">
-            <!-- Rendered by JS -->
+        <!-- MULTI-TIER ENVELOPE BUDGETING (4 Pos Alokasi) -->
+        <div class="p-4 rounded-3xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80 space-y-3.5">
+          <div class="flex items-center justify-between">
+            <div>
+              <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Metode Envelope Budgeting</span>
+              <h3 class="text-sm font-bold text-slate-900 dark:text-white">Alokasi Anggaran Berdasarkan Pos</h3>
+            </div>
+            <button id="editEnvelopesBtn" class="text-xs font-bold text-emerald-600 dark:text-emerald-400 underline">
+              Ubah Limit Pos
+            </button>
           </div>
+
+          <!-- Multi-Segment Visual Bar -->
+          <div class="w-full h-3 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden flex">
+            <div id="envSegSembako" class="bg-emerald-500 h-full transition-all" style="width: 40%" title="Sembako"></div>
+            <div id="envSegProtein" class="bg-teal-400 h-full transition-all" style="width: 30%" title="Protein"></div>
+            <div id="envSegToiletries" class="bg-sky-400 h-full transition-all" style="width: 20%" title="Toiletries"></div>
+            <div id="envSegSnack" class="bg-amber-400 h-full transition-all" style="width: 10%" title="Camilan"></div>
+          </div>
+
+          <!-- Pos 1: Sembako -->
+          <div class="p-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-1">
+            <div class="flex justify-between text-xs font-bold">
+              <span class="flex items-center gap-1.5 text-slate-800 dark:text-slate-200">
+                <span class="w-2 h-2 rounded-full bg-emerald-500"></span> 🌾 Sembako & Bahan Pokok
+              </span>
+              <span class="font-mono text-slate-700 dark:text-slate-300" id="envSpendSembako">Rp 74.000 / Rp 350.000</span>
+            </div>
+            <div class="w-full bg-slate-100 dark:bg-slate-800 h-1.5 rounded-full overflow-hidden">
+              <div id="envBarSembako" class="bg-emerald-500 h-full rounded-full" style="width: 21%"></div>
+            </div>
+          </div>
+
+          <!-- Pos 2: Protein & Makanan Segar -->
+          <div class="p-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-1">
+            <div class="flex justify-between text-xs font-bold">
+              <span class="flex items-center gap-1.5 text-slate-800 dark:text-slate-200">
+                <span class="w-2 h-2 rounded-full bg-teal-400"></span> 🥩 Protein, Daging & Sayur
+              </span>
+              <span class="font-mono text-slate-700 dark:text-slate-300" id="envSpendProtein">Rp 0 / Rp 250.000</span>
+            </div>
+            <div class="w-full bg-slate-100 dark:bg-slate-800 h-1.5 rounded-full overflow-hidden">
+              <div id="envBarProtein" class="bg-teal-400 h-full rounded-full" style="width: 0%"></div>
+            </div>
+          </div>
+
+          <!-- Pos 3: Toiletries & Rumah Tangga -->
+          <div class="p-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-1">
+            <div class="flex justify-between text-xs font-bold">
+              <span class="flex items-center gap-1.5 text-slate-800 dark:text-slate-200">
+                <span class="w-2 h-2 rounded-full bg-sky-400"></span> 🧼 Kebutuhan Rumah Tangga
+              </span>
+              <span class="font-mono text-slate-700 dark:text-slate-300" id="envSpendToiletries">Rp 0 / Rp 120.000</span>
+            </div>
+            <div class="w-full bg-slate-100 dark:bg-slate-800 h-1.5 rounded-full overflow-hidden">
+              <div id="envBarToiletries" class="bg-sky-400 h-full rounded-full" style="width: 0%"></div>
+            </div>
+          </div>
+
+          <!-- Pos 4: Camilan & Non-Esensial -->
+          <div class="p-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-1">
+            <div class="flex justify-between text-xs font-bold">
+              <span class="flex items-center gap-1.5 text-slate-800 dark:text-slate-200">
+                <span class="w-2 h-2 rounded-full bg-amber-400"></span> 🍪 Camilan & Jajan
+              </span>
+              <span class="font-mono text-slate-700 dark:text-slate-300" id="envSpendSnack">Rp 0 / Rp 80.000</span>
+            </div>
+            <div class="w-full bg-slate-100 dark:bg-slate-800 h-1.5 rounded-full overflow-hidden">
+              <div id="envBarSnack" class="bg-amber-400 h-full rounded-full" style="width: 0%"></div>
+            </div>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- TAB 3: REAL-WORLD SUPERMARKET & STORE RADAR -->
+      <section id="tab-radar" class="tab-content hidden space-y-4">
+        <div class="flex items-center justify-between">
+          <div>
+            <h2 class="text-sm font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
+              <i data-lucide="map-pin" class="w-4 h-4 text-emerald-500"></i>
+              <span>Real-World Supermarket Radar</span>
+            </h2>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Pemetaan harga keranjang di supermarket & ritel terdekat di dunia nyata</p>
+          </div>
+          <button id="detectLocationBtn" class="px-2.5 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-bold flex items-center gap-1 active:scale-95 transition border border-slate-200 dark:border-slate-700">
+            <i data-lucide="navigation" class="w-3.5 h-3.5 text-emerald-500"></i>
+            <span>Lokasi Saya</span>
+          </button>
+        </div>
+
+        <!-- Recommendation Banner -->
+        <div class="p-4 rounded-3xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow-md relative overflow-hidden">
+          <div class="flex items-start justify-between">
+            <div>
+              <span class="text-[10px] font-black uppercase tracking-wider bg-white/20 px-2.5 py-0.5 rounded-full">
+                Rekomendasi Ritel Paling Hemat
+              </span>
+              <h3 class="text-xl font-black mt-1" id="radarWinnerName">Pasar Tradisional / Pasar Jaya</h3>
+              <p class="text-xs text-emerald-100 mt-1" id="radarWinnerSavings">
+                Total belanja lebih hemat hingga Rp 42.500 dibanding belanja di supermarket modern!
+              </p>
+            </div>
+            <div class="w-11 h-11 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center shrink-0">
+              <i data-lucide="trophy" class="w-6 h-6 text-white"></i>
+            </div>
+          </div>
+        </div>
+
+        <!-- Real-World Retailers Cards Grid -->
+        <div class="space-y-2.5" id="realWorldStoresList">
+          <!-- Rendered via JS -->
         </div>
       </section>
 
-      <!-- TAB 3: SMART PANTRY & ZERO-WASTE TRACKER -->
+      <!-- TAB 4: SMART PANTRY & ZERO-WASTE TRACKER -->
       <section id="tab-pantry" class="tab-content hidden space-y-4">
         <div class="flex items-center justify-between">
           <div>
@@ -402,98 +501,6 @@
           <i data-lucide="archive" class="w-10 h-10 mx-auto text-slate-400 mb-2"></i>
           <h4 class="text-xs font-bold text-slate-700 dark:text-slate-300">Pantry Masih Kosong</h4>
           <p class="text-[11px] text-slate-500 mt-1">Selesaikan belanjaan di troli Anda untuk otomatis mencatat stok bahan di dapur.</p>
-        </div>
-      </section>
-
-      <!-- TAB 4: GAMIFIKASI & PENCAPAIAN BADGES -->
-      <section id="tab-gamifikasi" class="tab-content hidden space-y-4">
-        <div>
-          <h2 class="text-sm font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
-            <i data-lucide="trophy" class="w-4 h-4 text-amber-500"></i>
-            <span>Gamified Savings & Badges</span>
-          </h2>
-          <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Tingkatkan level dan raih lencana belanja cerdas</p>
-        </div>
-
-        <!-- Level & XP Status Card -->
-        <div class="p-5 rounded-3xl bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 text-white shadow-md">
-          <div class="flex items-center justify-between">
-            <div>
-              <span class="text-[10px] font-black uppercase tracking-wider bg-black/20 px-2 py-0.5 rounded-full">Peringkat Pengguna</span>
-              <h3 class="text-2xl font-black mt-1" id="userLevelTitle">Budget Master Lv. 3</h3>
-              <p class="text-xs text-amber-100 mt-0.5">Hemat cerdas, anti-impulsif & ramah lingkungan</p>
-            </div>
-            <div class="text-right">
-              <span class="text-3xl font-black font-mono" id="userXpTotal">620</span>
-              <span class="text-xs block text-amber-100">Total XP</span>
-            </div>
-          </div>
-
-          <div class="mt-4 pt-3 border-t border-white/20">
-            <div class="flex justify-between text-xs font-bold mb-1">
-              <span>Menuju Level 4</span>
-              <span>620 / 1000 XP</span>
-            </div>
-            <div class="w-full bg-black/20 h-2.5 rounded-full overflow-hidden">
-              <div class="bg-white h-full rounded-full transition-all duration-500" style="width: 62%"></div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Badges Grid -->
-        <div class="grid grid-cols-2 gap-3" id="badgesGrid">
-          <!-- 1. Budget Master -->
-          <div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-emerald-300 dark:border-emerald-800/60 flex flex-col justify-between">
-            <div class="flex items-start justify-between">
-              <div class="w-9 h-9 rounded-xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center">
-                <i data-lucide="shield-check" class="w-5 h-5"></i>
-              </div>
-              <span class="text-[10px] font-bold text-emerald-600 bg-emerald-100 dark:bg-emerald-950 px-2 py-0.5 rounded-full">Terbuka</span>
-            </div>
-            <div class="mt-2.5">
-              <h4 class="text-xs font-bold text-slate-800 dark:text-slate-100">Budget Master</h4>
-              <p class="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">Surplus sisa anggaran > 15%</p>
-            </div>
-          </div>
-
-          <!-- 2. Zero Waste Hero -->
-          <div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-emerald-300 dark:border-emerald-800/60 flex flex-col justify-between">
-            <div class="flex items-start justify-between">
-              <div class="w-9 h-9 rounded-xl bg-teal-500/10 text-teal-500 flex items-center justify-center">
-                <i data-lucide="sparkles" class="w-5 h-5"></i>
-              </div>
-              <span class="text-[10px] font-bold text-emerald-600 bg-emerald-100 dark:bg-emerald-950 px-2 py-0.5 rounded-full">Terbuka</span>
-            </div>
-            <div class="mt-2.5">
-              <h4 class="text-xs font-bold text-slate-800 dark:text-slate-100">Zero Waste Hero</h4>
-              <p class="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">0 bahan dapur yang basi terbuang</p>
-            </div>
-          </div>
-
-          <!-- 3. Smart Shopper -->
-          <div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-emerald-300 dark:border-emerald-800/60 flex flex-col justify-between">
-            <div class="w-9 h-9 rounded-xl bg-sky-500/10 text-sky-500 flex items-center justify-center">
-              <i data-lucide="trending-down" class="w-5 h-5"></i>
-            </div>
-            <div class="mt-2.5">
-              <h4 class="text-xs font-bold text-slate-800 dark:text-slate-100">Smart Shopper</h4>
-              <p class="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">Membandingkan harga 4 ritel</p>
-            </div>
-          </div>
-
-          <!-- 4. Impulse Shield -->
-          <div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 flex flex-col justify-between opacity-80" id="badgeImpulseShield">
-            <div class="flex items-start justify-between">
-              <div class="w-9 h-9 rounded-xl bg-rose-500/10 text-rose-500 flex items-center justify-center">
-                <i data-lucide="lock" class="w-5 h-5"></i>
-              </div>
-              <span class="text-[10px] font-bold text-slate-400 bg-slate-200 dark:bg-slate-700 px-2 py-0.5 rounded-full" id="impulseBadgeStatus">Terkunci</span>
-            </div>
-            <div class="mt-2.5">
-              <h4 class="text-xs font-bold text-slate-800 dark:text-slate-100">Impulse Shield</h4>
-              <p class="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">Aktifkan Emergency Freeze dan tahan jajan</p>
-            </div>
-          </div>
         </div>
       </section>
 
@@ -539,64 +546,114 @@
         </div>
       </section>
 
-      <!-- TAB 6: PENGATURAN & KATALOG HARGA -->
-      <section id="tab-anggaran" class="tab-content hidden space-y-3.5 pb-6">
+      <!-- TAB 6: PENGATURAN TERPUSAT (SETTINGS PAGE) -->
+      <section id="tab-settings" class="tab-content hidden space-y-4 pb-6">
         <div>
-          <h2 class="text-sm font-bold text-slate-800 dark:text-slate-100">Pengaturan Anggaran & Patokan</h2>
-          <p class="text-xs text-slate-500 dark:text-slate-400">Atur safety cap dan kelola referensi harga bulan lalu</p>
+          <h2 class="text-sm font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
+            <i data-lucide="sliders" class="w-4 h-4 text-emerald-500"></i>
+            <span>Pusat Pengaturan Sistem (Settings)</span>
+          </h2>
+          <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Kelola modul pemindai kamera, tema, audio, dan preferensi pagu</p>
         </div>
 
-        <div class="p-4 rounded-3xl bg-slate-100/90 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 space-y-3">
+        <!-- 1. KAMERA PEMINDAI ASLI (SCANNER STUDIO) -->
+        <div class="p-4 rounded-3xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 space-y-3">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2.5">
+              <div class="w-9 h-9 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
+                <i data-lucide="camera" class="w-5 h-5"></i>
+              </div>
+              <div>
+                <h3 class="text-xs font-bold text-slate-900 dark:text-white">Smart Receipt & Barcode Scanner</h3>
+                <p class="text-[10px] text-slate-500 dark:text-slate-400">Akses kamera asli untuk Barcode produk & OCR struk</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-2">
+            <button id="openCameraBarcodeBtn" class="py-2.5 px-3 rounded-xl bg-slate-900 dark:bg-slate-700 hover:bg-slate-800 text-white text-xs font-bold flex items-center justify-center gap-1.5 active:scale-95 transition">
+              <i data-lucide="barcode" class="w-4 h-4 text-emerald-400"></i>
+              <span>Scan Barcode</span>
+            </button>
+            <button id="openCameraOcrBtn" class="py-2.5 px-3 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold flex items-center justify-center gap-1.5 active:scale-95 transition">
+              <i data-lucide="receipt" class="w-4 h-4"></i>
+              <span>Scan Struk (OCR)</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- 2. PENGATURAN TEMA & TAMPILAN -->
+        <div class="p-4 rounded-3xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 space-y-3">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-2">
+              <i data-lucide="palette" class="w-4 h-4 text-emerald-500"></i>
+              <span>Tema Warna Antarmuka</span>
+            </span>
+          </div>
+
+          <div class="grid grid-cols-3 gap-2">
+            <button class="theme-choice-btn py-2 rounded-xl text-xs font-bold border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 flex items-center justify-center gap-1.5" data-theme="light">
+              <i data-lucide="sun" class="w-3.5 h-3.5 text-amber-500"></i>
+              <span>Terang</span>
+            </button>
+            <button class="theme-choice-btn py-2 rounded-xl text-xs font-bold border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 flex items-center justify-center gap-1.5" data-theme="dark">
+              <i data-lucide="moon" class="w-3.5 h-3.5 text-sky-400"></i>
+              <span>Gelap</span>
+            </button>
+            <button class="theme-choice-btn py-2 rounded-xl text-xs font-bold border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 flex items-center justify-center gap-1.5" data-theme="system">
+              <i data-lucide="monitor" class="w-3.5 h-3.5 text-emerald-500"></i>
+              <span>Sistem</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- 3. GAYA TATA LETAK (BENTO GRID VS SMARTPHONE) -->
+        <div class="p-4 rounded-3xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 space-y-3">
+          <div class="flex items-center justify-between">
+            <div>
+              <span class="text-xs font-bold text-slate-800 dark:text-slate-200 block">Arsitektur Tata Letak</span>
+              <span class="text-[10px] text-slate-500 dark:text-slate-400">Pilih mode tampilan layar lebar Bento Grid atau Smartphone</span>
+            </div>
+            <button id="toggleLayoutSettingsBtn" class="px-3 py-1.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-800 dark:text-slate-200">
+              <span id="layoutModeText">Smartphone (440px)</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- 4. PENGATURAN SUARA / AUDIO FEEDBACK -->
+        <div class="p-4 rounded-3xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 flex items-center justify-between">
+          <div class="flex items-center gap-2.5">
+            <div class="w-8 h-8 rounded-xl bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-slate-700 dark:text-slate-300">
+              <i data-lucide="volume-2" class="w-4 h-4"></i>
+            </div>
+            <div>
+              <span class="text-xs font-bold text-slate-800 dark:text-slate-200 block">Efek Suara Audio Feedback</span>
+              <span class="text-[10px] text-slate-500 dark:text-slate-400">Suara klik stepper, beep pemindai & alarm over-budget</span>
+            </div>
+          </div>
+          <label class="relative inline-flex items-center cursor-pointer">
+            <input type="checkbox" id="soundToggleCheckbox" class="sr-only peer" checked>
+            <div class="w-11 h-6 bg-slate-300 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500"></div>
+          </label>
+        </div>
+
+        <!-- 5. PENYETELAN LIMIT TOTAL ANGGARAN -->
+        <div class="p-4 rounded-3xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 space-y-3">
           <label class="block text-xs font-bold text-slate-800 dark:text-slate-200">
-            Batas Maksimal Anggaran Belanja (Safety Cap)
+            Pagu Maksimal Anggaran Bulanan
           </label>
           <div class="relative">
             <span class="absolute left-3.5 top-1/2 -translate-y-1/2 font-mono font-bold text-slate-400 text-sm">Rp</span>
             <input type="number" id="budgetLimitInput" min="50000" step="50000" class="w-full pl-10 pr-4 py-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white font-mono font-bold text-base focus:outline-none focus:border-emerald-500 transition" placeholder="800000">
           </div>
-          <div class="flex gap-2">
-            <button class="budget-preset-btn flex-1 py-1.5 rounded-xl bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 text-xs font-bold border border-slate-200 dark:border-slate-700 active:scale-95 transition" data-amount="500000">500 rb</button>
-            <button class="budget-preset-btn flex-1 py-1.5 rounded-xl bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 text-xs font-bold border border-slate-200 dark:border-slate-700 active:scale-95 transition" data-amount="800000">800 rb</button>
-            <button class="budget-preset-btn flex-1 py-1.5 rounded-xl bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 text-xs font-bold border border-slate-200 dark:border-slate-700 active:scale-95 transition" data-amount="1000000">1 jt</button>
-            <button class="budget-preset-btn flex-1 py-1.5 rounded-xl bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 text-xs font-bold border border-slate-200 dark:border-slate-700 active:scale-95 transition" data-amount="1500000">1.5 jt</button>
-          </div>
           <button id="saveBudgetLimitBtn" class="w-full py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold active:scale-95 transition shadow-sm">
-            Simpan Limit Anggaran
+            Simpan Pagu Anggaran
           </button>
         </div>
 
-        <!-- Catalog Benchmark Preview -->
-        <div class="p-4 rounded-3xl bg-sky-50/70 dark:bg-sky-950/20 border border-sky-200/80 dark:border-sky-900/40 space-y-3">
-          <div class="flex items-center justify-between">
-            <div class="flex items-center gap-1.5">
-              <i data-lucide="database" class="w-4 h-4 text-sky-600"></i>
-              <h3 class="text-xs font-bold text-slate-900 dark:text-slate-100">Daftar Harga Patokan Bulan Lalu</h3>
-            </div>
-            <span class="text-xs font-mono text-sky-800 dark:text-sky-300 font-bold" id="benchmarkItemCount">0 Produk</span>
-          </div>
-
-          <div class="relative">
-            <i data-lucide="search" class="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
-            <input type="text" id="benchmarkSearchInput" placeholder="Cari data patokan harga..." class="w-full pl-9 pr-3 py-2 rounded-xl bg-white dark:bg-slate-900 border border-sky-200 dark:border-sky-900/60 text-xs text-slate-800 dark:text-slate-100 focus:outline-none focus:border-sky-500">
-          </div>
-
-          <div id="benchmarkListPreview" class="max-h-52 overflow-y-auto space-y-1.5 pr-1 scrollbar-none">
-            <!-- Rendered by JS -->
-          </div>
-        </div>
       </section>
 
     </main>
-
-    <!-- FLOATING ACTION BUTTON (FAB) FOR QUICK INPUT -->
-    <div id="fabContainer" class="fixed bottom-20 left-1/2 -translate-x-1/2 z-40 w-full max-w-[440px] px-4 pointer-events-none flex justify-end gap-2">
-      <button id="fabScanBtn" class="pointer-events-auto w-12 h-12 rounded-2xl bg-slate-900 dark:bg-slate-800 text-white flex items-center justify-center shadow-lg active:scale-90 transition-all border border-slate-700" title="Scan Struk AI">
-        <i data-lucide="camera" class="w-5 h-5"></i>
-      </button>
-      <button id="openAddModalBtn" class="pointer-events-auto w-14 h-14 rounded-2xl bg-gradient-to-tr from-emerald-500 to-teal-500 text-white flex items-center justify-center shadow-lg shadow-emerald-500/30 active:scale-90 transition-all group" title="Tambah Barang">
-        <i data-lucide="plus" class="w-7 h-7 group-hover:rotate-90 transition-transform duration-200"></i>
-      </button>
-    </div>
 
     <!-- FLOATING BOTTOM NAVIGATION BAR -->
     <nav class="fixed bottom-0 left-1/2 -translate-x-1/2 z-40 w-full max-w-[440px] bg-white/95 dark:bg-[#1E293B]/95 backdrop-blur-xl border-t border-slate-200/90 dark:border-slate-800 px-2 py-2">
@@ -610,13 +667,22 @@
           <span class="text-[9px] mt-1 font-semibold">Troli</span>
         </button>
 
-        <!-- 2. Radar Harga -->
-        <button class="nav-tab-btn flex-1 flex flex-col items-center py-1 rounded-xl hover:text-slate-600 active:scale-95 transition" data-target="tab-radar">
-          <i data-lucide="radar" class="w-5 h-5"></i>
-          <span class="text-[9px] mt-1 font-semibold">Radar</span>
+        <!-- 2. Guardian -->
+        <button class="nav-tab-btn flex-1 flex flex-col items-center py-1 rounded-xl hover:text-slate-600 active:scale-95 transition" data-target="tab-guardian">
+          <div class="relative">
+            <i data-lucide="shield-alert" class="w-5 h-5"></i>
+            <span id="navGuardianDot" class="hidden absolute -top-1 -right-1 w-2 h-2 rounded-full bg-rose-500"></span>
+          </div>
+          <span class="text-[9px] mt-1 font-semibold">Guardian</span>
         </button>
 
-        <!-- 3. Pantry -->
+        <!-- 3. Radar Toko Fisik -->
+        <button class="nav-tab-btn flex-1 flex flex-col items-center py-1 rounded-xl hover:text-slate-600 active:scale-95 transition" data-target="tab-radar">
+          <i data-lucide="map-pin" class="w-5 h-5"></i>
+          <span class="text-[9px] mt-1 font-semibold">Radar Toko</span>
+        </button>
+
+        <!-- 4. Pantry -->
         <button class="nav-tab-btn flex-1 flex flex-col items-center py-1 rounded-xl hover:text-slate-600 active:scale-95 transition" data-target="tab-pantry">
           <div class="relative">
             <i data-lucide="box" class="w-5 h-5"></i>
@@ -625,22 +691,16 @@
           <span class="text-[9px] mt-1 font-semibold">Pantry</span>
         </button>
 
-        <!-- 4. Gamifikasi -->
-        <button class="nav-tab-btn flex-1 flex flex-col items-center py-1 rounded-xl hover:text-slate-600 active:scale-95 transition" data-target="tab-gamifikasi">
-          <i data-lucide="trophy" class="w-5 h-5"></i>
-          <span class="text-[9px] mt-1 font-semibold">XP & Badges</span>
-        </button>
-
         <!-- 5. Riwayat -->
         <button class="nav-tab-btn flex-1 flex flex-col items-center py-1 rounded-xl hover:text-slate-600 active:scale-95 transition" data-target="tab-riwayat">
           <i data-lucide="history" class="w-5 h-5"></i>
           <span class="text-[9px] mt-1 font-semibold">Riwayat</span>
         </button>
 
-        <!-- 6. Anggaran -->
-        <button class="nav-tab-btn flex-1 flex flex-col items-center py-1 rounded-xl hover:text-slate-600 active:scale-95 transition" data-target="tab-anggaran">
-          <i data-lucide="pie-chart" class="w-5 h-5"></i>
-          <span class="text-[9px] mt-1 font-semibold">Anggaran</span>
+        <!-- 6. Settings -->
+        <button class="nav-tab-btn flex-1 flex flex-col items-center py-1 rounded-xl hover:text-slate-600 active:scale-95 transition" data-target="tab-settings">
+          <i data-lucide="settings" class="w-5 h-5"></i>
+          <span class="text-[9px] mt-1 font-semibold">Settings</span>
         </button>
       </div>
     </nav>
@@ -648,338 +708,222 @@
   </div>
 
   <!-- ========================================================================= -->
-  <!-- MODAL 1: SMART RECEIPT SCANNER (AI OCR PARSING)                           -->
+  <!-- MODAL 1: NATIVE DEVICE CAMERA SCANNER (BARCODE & RECEIPT OCR LIVE)        -->
   <!-- ========================================================================= -->
-  <div id="ocrModalBackdrop" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-3 transition-opacity">
-    <div class="w-full max-w-[480px] max-h-[92vh] overflow-y-auto bg-white dark:bg-[#1E293B] border border-slate-200 dark:border-slate-700 rounded-3xl shadow-2xl p-5 space-y-4 scrollbar-none text-slate-800 dark:text-slate-100">
-      
-      <!-- Modal Header -->
-      <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
-        <div class="flex items-center gap-2.5">
-          <div class="w-9 h-9 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
-            <i data-lucide="camera" class="w-5 h-5"></i>
-          </div>
-          <div>
-            <h3 class="text-sm font-extrabold text-slate-900 dark:text-white">Smart Receipt Scanner (AI OCR)</h3>
-            <p class="text-[11px] text-slate-500 dark:text-slate-400">Ekstrak otomatis struk fisik & screenshot online</p>
-          </div>
-        </div>
-        <button id="closeOcrBtn" class="p-1.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-400 hover:text-slate-600">
-          <i data-lucide="x" class="w-4 h-4"></i>
-        </button>
+  <div id="cameraScannerModal" class="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md hidden flex flex-col items-center justify-between p-4 transition-all">
+    
+    <!-- Scanner Top Bar -->
+    <div class="w-full max-w-[440px] flex items-center justify-between text-white z-10">
+      <div class="flex items-center gap-2">
+        <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
+        <h3 class="text-xs font-bold uppercase tracking-wider" id="scannerModeTitle">Live Barcode Pemindai</h3>
       </div>
-
-      <!-- File Upload Zone -->
-      <div id="ocrUploadZone" class="border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-2xl p-6 text-center hover:border-emerald-500 transition-colors cursor-pointer bg-slate-50/50 dark:bg-slate-900/30 relative overflow-hidden">
-        <input type="file" id="receiptFileInput" accept="image/*" class="absolute inset-0 opacity-0 cursor-pointer">
-        <div class="w-12 h-12 mx-auto rounded-2xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mb-2">
-          <i data-lucide="upload-cloud" class="w-6 h-6"></i>
-        </div>
-        <p class="text-xs font-bold text-slate-800 dark:text-slate-200">Sentuh untuk Unggah Foto Struk</p>
-        <p class="text-[10px] text-slate-500 dark:text-slate-400 mt-1">Mendukung format JPG, PNG, atau Screenshot Belanja</p>
-      </div>
-
-      <!-- Preset Sample Receipts for Quick Instant Demo -->
-      <div>
-        <span class="text-[11px] font-bold text-slate-500 uppercase tracking-wider block mb-2">Uji Cepat dengan Contoh Struk Realistis:</span>
-        <div class="grid grid-cols-3 gap-2">
-          <button type="button" class="preset-ocr-btn p-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 border border-slate-200 dark:border-slate-700 text-[11px] font-bold text-slate-700 dark:text-slate-300 active:scale-95 transition" data-sample="indomaret">
-            🏪 Indomaret
-          </button>
-          <button type="button" class="preset-ocr-btn p-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 border border-slate-200 dark:border-slate-700 text-[11px] font-bold text-slate-700 dark:text-slate-300 active:scale-95 transition" data-sample="alfamart">
-            🛒 Alfamart
-          </button>
-          <button type="button" class="preset-ocr-btn p-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 border border-slate-200 dark:border-slate-700 text-[11px] font-bold text-slate-700 dark:text-slate-300 active:scale-95 transition" data-sample="shopee">
-            📱 Shopee Mart
-          </button>
-        </div>
-      </div>
-
-      <!-- AI Scanning Laser Animation State (Hidden by default) -->
-      <div id="ocrScanningState" class="hidden p-6 rounded-2xl bg-slate-900 text-white relative overflow-hidden text-center space-y-3">
-        <div class="absolute inset-x-0 h-1 bg-gradient-to-r from-transparent via-emerald-400 to-transparent shadow-[0_0_12px_#34d399] animate-scan-laser"></div>
-        <div class="w-10 h-10 mx-auto rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center animate-spin">
-          <i data-lucide="loader-2" class="w-5 h-5"></i>
-        </div>
-        <p class="text-xs font-bold text-emerald-300">AI Vision OCR sedang memproses...</p>
-        <p class="text-[10px] text-slate-400">Mendeteksi toko, daftar barang, kuantitas, harga, dan kategori esensial vs camilan.</p>
-      </div>
-
-      <!-- Parsed OCR Results Preview (Hidden until extracted) -->
-      <div id="ocrResultContainer" class="hidden space-y-3">
-        <div class="p-3 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 flex items-center justify-between">
-          <div>
-            <span class="text-[10px] uppercase font-bold text-emerald-700 dark:text-emerald-400 block" id="ocrMerchantDetected">Indomaret Point</span>
-            <span class="text-xs text-slate-500 dark:text-slate-400" id="ocrDateDetected">Hari ini</span>
-          </div>
-          <div class="text-right">
-            <span class="text-xs text-slate-400 block">Total Belanja</span>
-            <span class="text-sm font-black font-mono text-emerald-700 dark:text-emerald-400" id="ocrTotalDetected">Rp 0</span>
-          </div>
-        </div>
-
-        <div class="max-h-48 overflow-y-auto space-y-2 pr-1 scrollbar-none" id="ocrExtractedItemsList">
-          <!-- Rendered by JS -->
-        </div>
-
-        <button id="applyOcrToCartBtn" class="w-full py-3 rounded-2xl bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-black shadow-md shadow-emerald-500/20 active:scale-95 transition flex items-center justify-center gap-2">
-          <i data-lucide="plus-circle" class="w-4 h-4"></i>
-          <span>Masukkan Semua Item ke Troli & Pantry</span>
-        </button>
-      </div>
-
-    </div>
-  </div>
-
-  <!-- ========================================================================= -->
-  <!-- MODAL 2: PERSUASIVE EMERGENCY FREEZE BARRIER                              -->
-  <!-- ========================================================================= -->
-  <div id="freezeAlertModalBackdrop" class="fixed inset-0 z-50 bg-slate-900/70 backdrop-blur-sm hidden flex items-center justify-center p-4">
-    <div class="w-full max-w-[380px] bg-white dark:bg-[#1E293B] border border-rose-300 dark:border-rose-900 rounded-3xl shadow-2xl p-5 text-center space-y-3.5">
-      <div class="w-14 h-14 mx-auto rounded-full bg-rose-100 dark:bg-rose-950 text-rose-600 dark:text-rose-400 flex items-center justify-center animate-pulse">
-        <i data-lucide="shield-alert" class="w-7 h-7"></i>
-      </div>
-      <div>
-        <h3 class="text-base font-extrabold text-slate-900 dark:text-white">Emergency Freeze Aktif!</h3>
-        <p class="text-xs text-slate-500 dark:text-slate-400 mt-1.5 leading-relaxed">
-          Item ini terdeteksi sebagai <b>Camilan / Belanja Impulsif</b>. Sesuai target hemat bulanan Anda, pembelian non-esensial ditahan sementara untuk mengamankan anggaran.
-        </p>
-      </div>
-      <div class="p-3 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900/60 text-[11px] text-amber-800 dark:text-amber-300 text-left">
-        💡 <b>Tips FinTech:</b> Menunda pembelian camilan selama 24 jam terbukti memangkas 70% pengeluaran impulsif yang tidak terencana.
-      </div>
-      <div class="flex gap-2">
-        <button id="cancelImpulseBtn" class="flex-1 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-xs shadow-sm active:scale-95 transition">
-          Batalkan & Tetap Hemat
-        </button>
-        <button id="forceAddImpulseBtn" class="py-2.5 px-3 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-800 text-xs font-semibold active:scale-95 transition">
-          Paksa Masukkan
-        </button>
-      </div>
-    </div>
-  </div>
-
-  <!-- ========================================================================= -->
-  <!-- MODAL 3: ZERO-WASTE RECIPE DETAIL                                         -->
-  <!-- ========================================================================= -->
-  <div id="recipeModalBackdrop" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-3.5">
-    <div class="w-full max-w-[440px] max-h-[88vh] overflow-y-auto bg-white dark:bg-[#1E293B] border border-slate-200 dark:border-slate-700 rounded-3xl shadow-2xl p-5 space-y-4 scrollbar-none text-slate-800 dark:text-slate-100">
-      <div class="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-800">
-        <div class="flex items-center gap-2">
-          <div class="w-8 h-8 rounded-xl bg-amber-500/10 text-amber-500 flex items-center justify-center">
-            <i data-lucide="sparkles" class="w-4 h-4"></i>
-          </div>
-          <h3 class="text-sm font-bold text-slate-900 dark:text-white" id="recipeModalTitle">Tumis Kilat Ayam Sayur Zero-Waste</h3>
-        </div>
-        <button id="closeRecipeBtn" class="p-1.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-400 hover:text-slate-600">
-          <i data-lucide="x" class="w-4 h-4"></i>
-        </button>
-      </div>
-
-      <div class="p-3 rounded-2xl bg-amber-50/70 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900 text-xs">
-        <span class="font-bold text-amber-900 dark:text-amber-200 block mb-1">Bahan Dapur yang Diselamatkan:</span>
-        <div id="recipeUtilizedItems" class="flex flex-wrap gap-1.5">
-          <!-- Rendered by JS -->
-        </div>
-      </div>
-
-      <div class="space-y-2">
-        <h4 class="text-xs font-bold uppercase tracking-wider text-slate-500">Langkah Memasak Praktis:</h4>
-        <ol id="recipeStepsList" class="space-y-2 text-xs text-slate-600 dark:text-slate-300 list-decimal list-inside leading-relaxed">
-          <!-- Rendered by JS -->
-        </ol>
-      </div>
-
-      <button id="dismissRecipeBtn" class="w-full py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-xs shadow-sm">
-        Siap Masak & Habiskan Stok
+      <button id="closeCameraScannerBtn" class="p-2 rounded-full bg-white/20 text-white hover:bg-white/30 transition">
+        <i data-lucide="x" class="w-5 h-5"></i>
       </button>
     </div>
+
+    <!-- Live Video Viewfinder Box -->
+    <div class="relative w-full max-w-[400px] h-[340px] rounded-3xl overflow-hidden bg-black border border-white/20 my-auto shadow-2xl flex items-center justify-center">
+      <video id="scannerVideo" autoplay playsinline muted></video>
+      <canvas id="scannerCanvas" class="hidden"></canvas>
+
+      <!-- Reticle Box with Scanning Laser -->
+      <div class="reticle-box absolute inset-0 flex items-center justify-center pointer-events-none">
+        <div class="relative w-64 h-48 border-2 border-emerald-400/80 rounded-2xl overflow-hidden shadow-[0_0_20px_rgba(16,185,129,0.3)]">
+          <!-- Laser Line -->
+          <div class="absolute inset-x-0 h-0.5 bg-gradient-to-r from-transparent via-emerald-400 to-transparent shadow-[0_0_10px_#34d399] animate-scan-laser"></div>
+        </div>
+      </div>
+
+      <!-- Live Detection Overlay Status -->
+      <div id="scannerStatusBadge" class="absolute bottom-3 inset-x-4 py-1.5 px-3 rounded-xl bg-black/60 backdrop-blur-md text-white text-[11px] text-center font-medium">
+        Arahkan kamera ke barcode kemasan atau struk belanja
+      </div>
+    </div>
+
+    <!-- Scanner Bottom Controls: Mode Switcher & Snap Button -->
+    <div class="w-full max-w-[440px] space-y-3 z-10">
+      <!-- Mode Tabs: Barcode vs OCR -->
+      <div class="grid grid-cols-2 p-1 rounded-2xl bg-white/10 backdrop-blur-md text-xs font-bold text-white">
+        <button id="scanModeBarcodeBtn" class="py-2 rounded-xl bg-emerald-500 shadow-sm transition">
+          Barcode / QR
+        </button>
+        <button id="scanModeOcrBtn" class="py-2 rounded-xl text-slate-300 hover:text-white transition">
+          Struk Belanja (OCR)
+        </button>
+      </div>
+
+      <!-- Action Buttons Row -->
+      <div class="flex items-center justify-between gap-3">
+        <!-- Quick Sample / Fallback File Button -->
+        <button id="scannerSampleBtn" class="px-4 py-2.5 rounded-xl bg-white/15 hover:bg-white/25 text-white text-xs font-bold transition flex items-center gap-1.5">
+          <i data-lucide="sparkles" class="w-3.5 h-3.5 text-amber-400"></i>
+          <span>Uji Contoh Cepat</span>
+        </button>
+
+        <label class="px-4 py-2.5 rounded-xl bg-white/15 hover:bg-white/25 text-white text-xs font-bold transition cursor-pointer flex items-center gap-1.5">
+          <i data-lucide="upload" class="w-3.5 h-3.5"></i>
+          <span>Unggah Foto</span>
+          <input type="file" id="scannerUploadInput" accept="image/*" class="hidden">
+        </label>
+      </div>
+    </div>
+
   </div>
 
   <!-- ========================================================================= -->
-  <!-- MODAL 4: INPUT ITEM BELANJA MANUAL DENGAN KALKULATOR DISKON TIER          -->
+  <!-- MODAL 2: CUSTOM GROCERY ITEM BUILDER (Kustomisasi Bebas)                  -->
   <!-- ========================================================================= -->
-  <div id="itemModalBackdrop" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden flex items-end sm:items-center justify-center p-0 sm:p-4 transition-opacity">
-    <div id="itemModalCard" class="w-full max-w-[440px] max-h-[92vh] overflow-y-auto bg-white dark:bg-[#1E293B] border-t sm:border border-slate-200/90 dark:border-slate-700 rounded-t-3xl sm:rounded-3xl shadow-2xl p-4 sm:p-5 flex flex-col space-y-3.5 animate-slide-up scrollbar-none text-slate-800 dark:text-slate-100">
+  <div id="customItemModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden flex items-end sm:items-center justify-center p-0 sm:p-4 transition-opacity">
+    <div class="w-full max-w-[440px] max-h-[92vh] overflow-y-auto bg-white dark:bg-[#1E293B] border-t sm:border border-slate-200 dark:border-slate-700 rounded-t-3xl sm:rounded-3xl shadow-2xl p-5 space-y-3.5 animate-slide-up scrollbar-none text-slate-800 dark:text-slate-100">
 
       <div class="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-800">
         <div class="flex items-center gap-2">
           <div class="w-8 h-8 rounded-xl bg-emerald-50 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
-            <i data-lucide="tag" class="w-4 h-4" id="modalHeaderIcon"></i>
+            <i data-lucide="edit" class="w-4 h-4"></i>
           </div>
           <div>
-            <h3 class="text-sm font-bold text-slate-900 dark:text-white" id="modalTitle">Tambah Item Belanja</h3>
-            <p class="text-[10px] text-slate-500 dark:text-slate-400">Catat cepat saat ambil barang di lorong rak</p>
+            <h3 class="text-sm font-bold text-slate-900 dark:text-white" id="customItemModalTitle">Tambah Barang Belanja Bebas</h3>
+            <p class="text-[10px] text-slate-500 dark:text-slate-400">Kustomisasi nama, kuantitas, harga, dan toko tujuan</p>
           </div>
         </div>
-        <button id="closeModalBtn" class="p-1.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-400 hover:text-slate-600">
+        <button id="closeCustomItemBtn" class="p-1.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-400 hover:text-slate-600">
           <i data-lucide="x" class="w-4 h-4"></i>
         </button>
       </div>
 
-      <form id="itemForm" class="space-y-3" onsubmit="return false;">
-        <input type="hidden" id="editItemId" value="">
+      <form id="customItemForm" class="space-y-3" onsubmit="return false;">
+        <input type="hidden" id="customEditId" value="">
 
+        <!-- Product Name -->
         <div>
           <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-            Nama Produk <span class="text-rose-500">*</span>
+            Nama Produk / Barang <span class="text-rose-500">*</span>
           </label>
-          <div class="relative">
-            <input type="text" id="inputItemName" required autocomplete="off" placeholder="Contoh: Beras Ramos, Indomie, Minyak 2L..." class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-sm font-semibold text-slate-800 dark:text-white focus:outline-none focus:border-emerald-500 transition">
-            <div id="suggestionsBox" class="absolute left-0 right-0 top-full mt-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-xl z-20 max-h-40 overflow-y-auto hidden">
-              <!-- Rendered via JS -->
-            </div>
-          </div>
+          <input type="text" id="customInputName" required placeholder="Contoh: Beras Ramos 5kg, Telur Ayam, Daging Sapi..." class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-sm font-semibold text-slate-900 dark:text-white focus:outline-none focus:border-emerald-500">
         </div>
 
+        <!-- Envelope Category & Unit -->
         <div class="grid grid-cols-2 gap-2.5">
           <div>
-            <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-300 mb-1">Kategori</label>
-            <select id="inputItemCategory" class="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-800 dark:text-slate-100 focus:outline-none focus:border-emerald-500">
-              <option value="Sembako">🌾 Sembako</option>
+            <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-300 mb-1">Pos Kategori Anggaran</label>
+            <select id="customInputCategory" class="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-800 dark:text-slate-100 focus:outline-none focus:border-emerald-500">
+              <option value="Sembako">🌾 Sembako & Bahan Pokok</option>
+              <option value="Daging & Sayur">🥩 Daging & Makanan Segar</option>
               <option value="Makanan Instan">🍜 Makanan Instan</option>
-              <option value="Daging & Sayur">🥩 Daging & Sayur</option>
-              <option value="Toiletries">🧼 Toiletries</option>
+              <option value="Toiletries">🧼 Kebutuhan Rumah Tangga</option>
               <option value="Bumbu & Minyak">🧂 Bumbu & Minyak</option>
-              <option value="Minuman">🧃 Minuman</option>
-              <option value="Camilan">🍪 Camilan</option>
+              <option value="Camilan">🍪 Camilan / Jajan</option>
               <option value="Lainnya">📦 Lainnya</option>
             </select>
           </div>
 
           <div>
             <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-300 mb-1">Satuan</label>
-            <select id="inputItemUnit" class="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-800 dark:text-slate-100 focus:outline-none focus:border-emerald-500">
+            <select id="customInputUnit" class="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-800 dark:text-slate-100 focus:outline-none focus:border-emerald-500">
               <option value="pcs">pcs (buah)</option>
-              <option value="pack">pack</option>
               <option value="kg">kg</option>
+              <option value="gram">gram</option>
+              <option value="pack">pack</option>
               <option value="liter">liter</option>
               <option value="bungkus">bungkus</option>
               <option value="botol">botol</option>
               <option value="kaleng">kaleng</option>
-              <option value="gram">gram</option>
+              <option value="ikat">ikat</option>
+              <option value="kotak">kotak</option>
             </select>
           </div>
         </div>
 
-        <!-- Quantity Stepper -->
-        <div>
-          <div class="flex items-center justify-between mb-1">
-            <label class="text-[11px] font-bold text-slate-600 dark:text-slate-300">Kuantitas (Qty)</label>
-            <div class="flex gap-1">
-              <button type="button" class="qty-preset px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-[10px] text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700" data-add="1">+1</button>
-              <button type="button" class="qty-preset px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-[10px] text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700" data-add="2">+2</button>
-              <button type="button" class="qty-preset px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-[10px] text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700" data-add="5">+5</button>
-            </div>
+        <!-- Quantity & Unit Price -->
+        <div class="grid grid-cols-2 gap-2.5">
+          <div>
+            <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-300 mb-1">Kuantitas</label>
+            <input type="number" id="customInputQty" min="1" max="999" value="1" required class="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-sm font-mono font-bold text-slate-900 dark:text-white text-center">
           </div>
 
-          <div class="flex items-center gap-2">
-            <button type="button" id="btnQtyMinus" class="w-11 h-11 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-lg font-bold flex items-center justify-center border border-slate-200 dark:border-slate-700 active:scale-95 transition">-</button>
-            <input type="number" id="inputItemQty" min="1" max="999" value="1" step="1" required class="flex-1 py-2 text-center rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-lg font-extrabold text-slate-900 dark:text-white font-mono focus:outline-none focus:border-emerald-500">
-            <button type="button" id="btnQtyPlus" class="w-11 h-11 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-lg font-bold flex items-center justify-center border border-slate-200 dark:border-slate-700 active:scale-95 transition">+</button>
+          <div>
+            <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-300 mb-1">Harga Satuan (Rp) <span class="text-rose-500">*</span></label>
+            <input type="number" id="customInputPrice" min="0" step="500" required placeholder="0" class="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-sm font-mono font-bold text-slate-900 dark:text-white">
           </div>
         </div>
 
-        <!-- Unit Price & Comparator Preview -->
+        <!-- Preferred Real-World Store Destination -->
         <div>
-          <div class="flex items-center justify-between mb-1">
-            <label class="text-[11px] font-bold text-slate-600 dark:text-slate-300">
-              Harga Satuan Normal <span class="text-rose-500">*</span>
-            </label>
-            <span class="text-[10px] text-slate-400">Sebelum diskon</span>
-          </div>
-
-          <div class="relative">
-            <span class="absolute left-3.5 top-1/2 -translate-y-1/2 font-mono font-bold text-slate-400 text-sm">Rp</span>
-            <input type="number" id="inputItemPrice" min="0" step="100" required placeholder="0" class="w-full pl-10 pr-3 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-base font-extrabold text-slate-900 dark:text-white font-mono focus:outline-none focus:border-emerald-500 transition">
-          </div>
-
-          <div id="comparatorBadgeContainer" class="mt-2 p-2 rounded-xl bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700">
-            <div class="flex items-center justify-between text-xs">
-              <div class="flex items-center gap-1.5" id="compIconAndTitle">
-                <span id="compIcon" class="w-5 h-5 rounded-md flex items-center justify-center text-xs font-bold bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300">=</span>
-                <span id="compText" class="font-bold text-[11px] text-slate-700 dark:text-slate-300">Belum ada data pembanding</span>
-              </div>
-              <div class="text-[10px] text-slate-500 font-mono" id="compRefPrice">Bln Lalu: -</div>
-            </div>
-            <div id="compAnalysisNote" class="text-[10px] text-slate-500 mt-1 hidden"></div>
-          </div>
-        </div>
-
-        <!-- Multi-tier Discount Calculator -->
-        <div class="p-3 rounded-2xl bg-amber-50/50 dark:bg-amber-950/20 border border-amber-200/90 dark:border-amber-900/40 space-y-2">
-          <div class="flex items-center justify-between">
-            <label class="text-[11px] font-bold text-amber-900 dark:text-amber-200 flex items-center gap-1">
-              <i data-lucide="percent" class="w-3.5 h-3.5 text-amber-600"></i>
-              <span>Kalkulator Diskon Toko</span>
-            </label>
-            <span class="text-[10px] text-amber-700 dark:text-amber-400">Mendukung Tier 50%+20%</span>
-          </div>
-
-          <div class="grid grid-cols-4 gap-1">
-            <button type="button" class="disc-mode-btn active py-1 rounded-lg text-[10px] font-semibold bg-amber-100 dark:bg-amber-900 text-amber-900 dark:text-amber-200 border border-amber-300 dark:border-amber-800" data-mode="none">Tanpa</button>
-            <button type="button" class="disc-mode-btn py-1 rounded-lg text-[10px] font-semibold bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700" data-mode="single">Tunggal %</button>
-            <button type="button" class="disc-mode-btn py-1 rounded-lg text-[10px] font-semibold bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700" data-mode="tier">Bertingkat</button>
-            <button type="button" class="disc-mode-btn py-1 rounded-lg text-[10px] font-semibold bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700" data-mode="nominal">Nominal Rp</button>
-          </div>
-
-          <div id="discSingleBox" class="hidden space-y-1.5">
-            <div class="flex items-center gap-2">
-              <input type="number" id="inputDiscSingle" min="0" max="99" value="0" placeholder="20" class="w-full px-3 py-1.5 rounded-lg bg-white dark:bg-slate-900 border border-amber-200 dark:border-amber-900 text-xs font-mono font-bold text-amber-900 dark:text-amber-200 text-center">
-              <span class="text-xs font-bold text-slate-600 dark:text-slate-400">%</span>
-            </div>
-          </div>
-
-          <div id="discTierBox" class="hidden space-y-1.5">
-            <div class="flex items-center gap-1.5">
-              <div class="flex-1">
-                <span class="text-[9px] text-slate-500 block">Tier 1 (%)</span>
-                <input type="number" id="inputDiscTier1" min="0" max="99" value="50" class="w-full px-2 py-1.5 rounded-lg bg-white dark:bg-slate-900 border border-amber-200 dark:border-amber-900 text-xs font-mono font-bold text-center">
-              </div>
-              <span class="text-xs font-bold text-slate-400 mt-3">+</span>
-              <div class="flex-1">
-                <span class="text-[9px] text-slate-500 block">Tier 2 (%)</span>
-                <input type="number" id="inputDiscTier2" min="0" max="99" value="20" class="w-full px-2 py-1.5 rounded-lg bg-white dark:bg-slate-900 border border-amber-200 dark:border-amber-900 text-xs font-mono font-bold text-center">
-              </div>
-            </div>
-          </div>
-
-          <div id="discNominalBox" class="hidden">
-            <div class="relative">
-              <span class="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-mono text-slate-400">Rp</span>
-              <input type="number" id="inputDiscNominal" min="0" step="500" value="0" placeholder="5000" class="w-full pl-9 pr-3 py-1.5 rounded-lg bg-white dark:bg-slate-900 border border-amber-200 dark:border-amber-900 text-xs font-mono font-bold">
-            </div>
-          </div>
-
-          <div id="discountExplanation" class="text-[10px] text-amber-800 dark:text-amber-300 pt-1 border-t border-amber-200/70 dark:border-amber-900/40 hidden"></div>
+          <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-300 mb-1">Toko Fisik / Supermarket Tujuan</label>
+          <select id="customInputStore" class="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-800 dark:text-slate-100">
+            <option value="Indomaret">🏪 Indomaret Minimarket</option>
+            <option value="Alfamart">🛒 Alfamart</option>
+            <option value="Super Indo">🏬 Super Indo Supermarket</option>
+            <option value="Hypermart">🏢 Hypermart</option>
+            <option value="Lotte Mart">🏢 Lotte Mart Wholesale</option>
+            <option value="Pasar Tradisional">🥬 Pasar Tradisional / Pasar Jaya</option>
+            <option value="Lainnya">Toko Kelontong / Lainnya</option>
+          </select>
         </div>
 
         <!-- Row Total Preview -->
         <div class="p-3 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 flex items-center justify-between">
           <div>
-            <div class="text-[10px] text-slate-500 font-semibold uppercase">Total Baris Item</div>
-            <div class="text-[10px] text-slate-500 font-mono" id="formCalculationDetail">1 × Rp 0</div>
+            <span class="text-[10px] text-slate-400 uppercase font-semibold">Total Item</span>
+            <div class="text-[10px] text-slate-500 font-mono" id="customCalcPreview">1 × Rp 0</div>
           </div>
-          <div class="text-right">
-            <div class="text-base font-extrabold text-emerald-600 dark:text-emerald-400 font-mono" id="formFinalRowTotal">Rp 0</div>
-            <div class="text-[9px] text-emerald-600 dark:text-emerald-400 font-semibold" id="formSavingBadge">Hemat: Rp 0</div>
-          </div>
+          <span class="text-base font-extrabold text-emerald-600 dark:text-emerald-400 font-mono" id="customTotalPreview">Rp 0</span>
         </div>
 
+        <!-- Action Buttons -->
         <div class="pt-1 flex gap-2">
-          <button type="button" id="cancelModalBtn" class="flex-1 py-3 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-bold active:scale-95 transition">Batal</button>
-          <button type="submit" id="saveItemBtn" class="flex-2 w-2/3 py-3 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-extrabold shadow-md shadow-emerald-500/20 active:scale-95 transition flex items-center justify-center gap-1.5">
+          <button type="button" id="cancelCustomItemBtn" class="flex-1 py-3 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-bold active:scale-95 transition">
+            Batal
+          </button>
+          <button type="submit" id="saveCustomItemBtn" class="flex-2 w-2/3 py-3 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-extrabold shadow-md active:scale-95 transition flex items-center justify-center gap-1.5">
             <i data-lucide="check" class="w-4 h-4"></i>
-            <span id="saveBtnText">Simpan ke Troli</span>
+            <span>Simpan ke Troli</span>
           </button>
         </div>
-
       </form>
+
     </div>
   </div>
 
   <!-- ========================================================================= -->
-  <!-- MODAL 5: DETAIL STRUK DIGITAL RIWAYAT BELANJA                             -->
+  <!-- MODAL 3: STRICT EMERGENCY FREEZE HARD CAP BARRIER                         -->
+  <!-- ========================================================================= -->
+  <div id="strictFreezeModal" class="fixed inset-0 z-50 bg-slate-900/75 backdrop-blur-md hidden flex items-center justify-center p-4">
+    <div class="w-full max-w-[390px] bg-white dark:bg-[#1E293B] border-2 border-rose-500 dark:border-rose-600 rounded-3xl shadow-2xl p-6 text-center space-y-4">
+      <div class="w-16 h-16 mx-auto rounded-full bg-rose-100 dark:bg-rose-950 text-rose-600 dark:text-rose-400 flex items-center justify-center animate-pulse">
+        <i data-lucide="shield-alert" class="w-8 h-8"></i>
+      </div>
+      <div>
+        <span class="text-[10px] font-black uppercase tracking-wider bg-rose-100 dark:bg-rose-950 text-rose-700 dark:text-rose-300 px-2.5 py-0.5 rounded-full">
+          Hard Budget Lock Aktif
+        </span>
+        <h3 class="text-base font-black text-slate-900 dark:text-white mt-2">Transaksi Ditolak Guardian!</h3>
+        <p class="text-xs text-slate-600 dark:text-slate-300 mt-1.5 leading-relaxed" id="strictFreezeMessage">
+          Total pengeluaran telah mencapai batas kritis pagu bulanan dan <b>Emergency Freeze</b> sedang aktif. Item camilan / belanja impulsif tidak dapat ditambahkan demi menjaga stabilitas finansial rumah tangga Anda.
+        </p>
+      </div>
+
+      <div class="p-3 rounded-2xl bg-slate-50 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-700 text-left text-[11px] space-y-1">
+        <div class="flex justify-between font-bold">
+          <span class="text-slate-500">Pagu Anggaran:</span>
+          <span class="font-mono text-slate-800 dark:text-slate-200" id="freezeModalLimit">Rp 800.000</span>
+        </div>
+        <div class="flex justify-between font-bold">
+          <span class="text-slate-500">Pengeluaran Saat Ini:</span>
+          <span class="font-mono text-rose-500" id="freezeModalSpend">Rp 780.000</span>
+        </div>
+      </div>
+
+      <button id="dismissStrictFreezeBtn" class="w-full py-3 rounded-xl bg-slate-900 dark:bg-slate-700 hover:bg-slate-800 text-white font-bold text-xs shadow-sm active:scale-95 transition">
+        Saya Mengerti, Tahan Belanja Ini
+      </button>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- MODAL 4: DETAIL STRUK DIGITAL RIWAYAT                                     -->
   <!-- ========================================================================= -->
   <div id="receiptModalBackdrop" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-3.5">
     <div class="w-full max-w-[420px] max-h-[90vh] overflow-y-auto bg-white dark:bg-[#1E293B] border border-slate-200 dark:border-slate-700 rounded-3xl shadow-2xl p-4 flex flex-col space-y-3 scrollbar-none text-slate-800 dark:text-slate-100">
