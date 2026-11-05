@@ -152,3 +152,4 @@ INSERT INTO achievement_badges (badge_code, title, description, icon_name, xp_re
 ('SMART_SHOPPER', 'Smart Shopper', 'Rutin membandingkan harga antar ritel dan menghemat minimal Rp 50.000', 'trending-down', 150),
 ('IMPULSE_SHIELD', 'Impulse Shield', 'Mengaktifkan Emergency Freeze dan sukses menahan belanja camilan impulsif', 'lock', 180)
 ON CONFLICT (badge_code) DO NOTHING;
+

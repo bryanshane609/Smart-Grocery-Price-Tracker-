@@ -2,16 +2,50 @@
  * =============================================================================
  * SMART GROCERY & HOUSEHOLD FINANCIAL GUARDIAN
  * Advanced Full-Stack JavaScript Engine
- * Fitur: Native Camera Barcode/OCR Scanner, Strict Emergency Freeze Hard-Lock,
- * Multi-Tier Envelope Budgeting, Burn Rate AI Velocity, Real-World Store Radar,
- * Custom Grocery Item Builder, dan Settings Terpusat.
+ * Fitur: Stacked Cascading Discount Calculator, Voucher & Kupon Belanja,
+ * 4 Color Theme Selector, Fluid Bento Layout, Native Camera Barcode/OCR,
+ * Strict Emergency Freeze, Multi-Tier Envelope Budgeting, dan Real-World Store Radar.
  * =============================================================================
  */
 
 // -----------------------------------------------------------------------------
-// 1. DATA PRESETS, BARCODE CATALOG & REAL-WORLD RETAILERS
+// 1. DATA PRESETS, BARCODE CATALOG, VOUCHERS & RETAILERS
 // -----------------------------------------------------------------------------
 const DEFAULT_BUDGET_LIMIT = 800000;
+
+// Database Voucher & Kupon Belanja
+const VOUCHER_DATABASE = {
+  "HEMAT10K": {
+    code: "HEMAT10K",
+    type: "nominal",
+    value: 10000,
+    minSpend: 50000,
+    description: "Potongan Rp 10.000 (Min. belanja Rp 50.000)"
+  },
+  "SUPERHEMAT20": {
+    code: "SUPERHEMAT20",
+    type: "percentage",
+    value: 20, // 20%
+    maxDiscount: 25000,
+    minSpend: 75000,
+    description: "Diskon 20% hingga Rp 25.000 (Min. belanja Rp 75.000)"
+  },
+  "GAJIAN30K": {
+    code: "GAJIAN30K",
+    type: "nominal",
+    value: 30000,
+    minSpend: 150000,
+    description: "Potongan Rp 30.000 (Min. belanja Rp 150.000)"
+  },
+  "DISKON50": {
+    code: "DISKON50",
+    type: "percentage",
+    value: 50, // 50%
+    maxDiscount: 35000,
+    minSpend: 80000,
+    description: "Diskon 50% hingga Rp 35.000 (Min. belanja Rp 80.000)"
+  }
+};
 
 // Database Barcode Produk Ritel Nyata (EAN-13 / UPC)
 const BARCODE_CATALOG = {
@@ -85,7 +119,65 @@ const REAL_WORLD_STORES = [
 ];
 
 // -----------------------------------------------------------------------------
-// 2. STATE MANAGER
+// 2. MATHEMATICAL CALCULATION ENGINE: STACKED / CASCADING DISCOUNT
+// -----------------------------------------------------------------------------
+/**
+ * Menghitung harga akhir item dengan logika cascading discount:
+ * Diskon bertumpuk wajib berurutan persentase, bukan penjumlahan langsung!
+ * Contoh: 100.000 dengan promo 50% + 20%
+ * Step 1: 100.000 * 0.50 = 50.000
+ * Step 2: 50.000 * (1 - 0.20) = 40.000 (bukan diskon 70% / 30.000)
+ */
+function calculateItemPricing(rawPrice, qty, discount) {
+  const price = Number(rawPrice) || 0;
+  const quantity = Math.max(1, Number(qty) || 1);
+  const disc = discount || { mode: 'none', singlePercent: 0, tier1: 0, tier2: 0, nominalAmount: 0 };
+
+  let finalUnitPrice = price;
+  let unitSavings = 0;
+  let explanation = '';
+
+  if (disc.mode === 'single') {
+    const p = Math.min(100, Math.max(0, Number(disc.singlePercent) || 0));
+    unitSavings = price * (p / 100);
+    finalUnitPrice = Math.max(0, price - unitSavings);
+    explanation = `Diskon ${p}% (-${formatRupiah(unitSavings)}/unit)`;
+  } else if (disc.mode === 'tier') {
+    const t1 = Math.min(100, Math.max(0, Number(disc.tier1) || 0));
+    const t2 = Math.min(100, Math.max(0, Number(disc.tier2) || 0));
+    
+    // Perhitungan Cascading Presisi
+    const priceAfterT1 = price * (1 - t1 / 100);
+    finalUnitPrice = Math.max(0, priceAfterT1 * (1 - t2 / 100));
+    unitSavings = price - finalUnitPrice;
+    const effectivePercent = price > 0 ? Math.round((unitSavings / price) * 100) : 0;
+    explanation = `Diskon Bertingkat ${t1}% + ${t2}%: Rp ${price.toLocaleString('id-ID')} dipotong ${t1}% jadi Rp ${Math.round(priceAfterT1).toLocaleString('id-ID')}, lalu dipotong lagi ${t2}% jadi Rp ${Math.round(finalUnitPrice).toLocaleString('id-ID')} (Diskon Efektif: ${effectivePercent}%, Hemat ${formatRupiah(unitSavings)}/unit)`;
+  } else if (disc.mode === 'nominal') {
+    const nom = Math.max(0, Number(disc.nominalAmount) || 0);
+    finalUnitPrice = Math.max(0, price - nom);
+    unitSavings = Math.min(price, nom);
+    explanation = `Potongan langsung ${formatRupiah(unitSavings)}/unit`;
+  }
+
+  const roundedUnitPrice = Math.round(finalUnitPrice);
+  const normalRowTotal = price * quantity;
+  const rowTotal = roundedUnitPrice * quantity;
+  const rowSavings = Math.round(unitSavings) * quantity;
+
+  return {
+    rawPrice: price,
+    qty: quantity,
+    finalUnitPrice: roundedUnitPrice,
+    normalRowTotal,
+    rowTotal,
+    rowSavings,
+    explanation,
+    hasDiscount: unitSavings > 0
+  };
+}
+
+// -----------------------------------------------------------------------------
+// 3. STATE MANAGER
 // -----------------------------------------------------------------------------
 class AppState {
   constructor() {
@@ -96,12 +188,15 @@ class AppState {
     this.isFrozen = localStorage.getItem('sg_emergency_freeze') === 'true';
     this.activeCategoryFilter = 'ALL';
     this.soundEnabled = localStorage.getItem('sg_sound_enabled') !== 'false';
-    this.theme = localStorage.getItem('sg_theme') || 'system';
-    this.isBentoMode = localStorage.getItem('sg_layout_mode') === 'bento';
+    this.colorTheme = localStorage.getItem('sg_color_theme') || 'emerald'; // 'emerald' | 'obsidian' | 'amber' | 'indigo'
+    this.lightMode = localStorage.getItem('sg_light_mode') || 'dark'; // 'light' | 'dark'
+    this.isBentoFluid = localStorage.getItem('sg_layout_mode') === 'fluid';
+    this.appliedVoucher = this.loadData('sg_applied_voucher', null);
     this.userCoords = null;
     this.scannerStream = null;
-    this.scannerMode = 'barcode'; // 'barcode' | 'ocr'
+    this.scannerMode = 'barcode';
     this.scannerDetector = null;
+    this.itemFormDiscount = { mode: 'none', singlePercent: 0, tier1: 50, tier2: 20, nominalAmount: 0 };
   }
 
   getInitialSampleCart() {
@@ -113,16 +208,19 @@ class AppState {
         unit: "pack",
         qty: 1,
         price: 74000,
+        discount: { mode: 'none', singlePercent: 0, tier1: 0, tier2: 0, nominalAmount: 0 },
         store: "Super Indo",
         isEssential: true
       },
       {
         id: 'cart_' + Date.now() + '_2',
-        name: "Indomie Goreng Spesial",
-        category: "Makanan Instan",
-        unit: "bungkus",
-        qty: 10,
-        price: 3100,
+        name: "Sabun Lifebuoy Total 10 400ml",
+        category: "Toiletries",
+        unit: "botol",
+        qty: 2,
+        price: 25000,
+        // Contoh Diskon Bertingkat 50% + 20%
+        discount: { mode: 'tier', singlePercent: 0, tier1: 50, tier2: 20, nominalAmount: 0 },
         store: "Indomaret",
         isEssential: true
       },
@@ -133,6 +231,7 @@ class AppState {
         unit: "liter",
         qty: 1,
         price: 33500,
+        discount: { mode: 'none', singlePercent: 0, tier1: 0, tier2: 0, nominalAmount: 0 },
         store: "Alfamart",
         isEssential: true
       }
@@ -190,12 +289,16 @@ class AppState {
   saveFreezeState() {
     localStorage.setItem('sg_emergency_freeze', this.isFrozen.toString());
   }
+
+  saveVoucherState() {
+    localStorage.setItem('sg_applied_voucher', JSON.stringify(this.appliedVoucher));
+  }
 }
 
 const state = new AppState();
 
 // -----------------------------------------------------------------------------
-// 3. SOUND ENGINE (WEB AUDIO API SYNTHESIZER)
+// 4. SOUND ENGINE (WEB AUDIO API SYNTHESIZER)
 // -----------------------------------------------------------------------------
 class SoundEngine {
   constructor() {
@@ -233,7 +336,7 @@ class SoundEngine {
     const osc = this.ctx.createOscillator();
     const gain = this.ctx.createGain();
     osc.type = 'square';
-    osc.frequency.setValueAtTime(1760, this.ctx.currentTime); // High pitch supermarket beep
+    osc.frequency.setValueAtTime(1760, this.ctx.currentTime);
     gain.gain.setValueAtTime(0.15, this.ctx.currentTime);
     gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.12);
     osc.connect(gain);
@@ -263,7 +366,6 @@ class SoundEngine {
 
 const sounds = new SoundEngine();
 
-// Helper: Format Rupiah
 function formatRupiah(num) {
   return 'Rp ' + Number(num || 0).toLocaleString('id-ID');
 }
@@ -290,43 +392,80 @@ function showToast(msg, iconType = 'check-circle') {
 }
 
 // -----------------------------------------------------------------------------
-// 4. FINANCIAL GUARDIAN, ENVELOPE BUDGETING & BURN RATE CALCULATOR
+// 5. TOTALS & VOUCHER VALIDATION CALCULATOR
 // -----------------------------------------------------------------------------
 function calculateCartTotals() {
-  let cartTotal = 0;
+  let subtotalNormal = 0;
+  let itemsRowTotal = 0;
+  let itemSavingsTotal = 0;
+
   state.cart.forEach(item => {
-    const qty = Number(item.qty) || 1;
-    const price = Number(item.price) || 0;
-    cartTotal += qty * price;
+    const pricing = calculateItemPricing(item.price, item.qty, item.discount);
+    subtotalNormal += pricing.normalRowTotal;
+    itemsRowTotal += pricing.rowTotal;
+    itemSavingsTotal += pricing.rowSavings;
   });
-  return cartTotal;
+
+  // Calculate Voucher Deduction
+  let voucherDiscountAmount = 0;
+  let voucherIsValid = false;
+
+  if (state.appliedVoucher && VOUCHER_DATABASE[state.appliedVoucher.code]) {
+    const vDef = VOUCHER_DATABASE[state.appliedVoucher.code];
+    if (itemsRowTotal >= vDef.minSpend) {
+      voucherIsValid = true;
+      if (vDef.type === 'nominal') {
+        voucherDiscountAmount = vDef.value;
+      } else if (vDef.type === 'percentage') {
+        const calculated = itemsRowTotal * (vDef.value / 100);
+        voucherDiscountAmount = Math.min(calculated, vDef.maxDiscount || calculated);
+      }
+      voucherDiscountAmount = Math.min(itemsRowTotal, Math.round(voucherDiscountAmount));
+    }
+  }
+
+  const finalCartTotal = Math.max(0, itemsRowTotal - voucherDiscountAmount);
+  const totalSavingsCombined = itemSavingsTotal + voucherDiscountAmount;
+
+  return {
+    subtotalNormal,
+    itemsRowTotal,
+    itemSavingsTotal,
+    voucherDiscountAmount,
+    voucherIsValid,
+    finalCartTotal,
+    totalSavingsCombined
+  };
 }
 
+// -----------------------------------------------------------------------------
+// 6. RENDER GUARDIAN, MULTI-TIER ENVELOPES & BURN RATE
+// -----------------------------------------------------------------------------
 function renderGuardianAndEnvelopes() {
-  const cartTotal = calculateCartTotals();
+  const totals = calculateCartTotals();
   const limit = state.budgetLimit;
-  const remaining = limit - cartTotal;
+  const remaining = limit - totals.finalCartTotal;
 
-  // 1. Update Header Quick Bar
+  // Header quick bar
   const cartTotalHeader = document.getElementById('cartTotalHeader');
   const budgetRemainingHeader = document.getElementById('budgetRemainingHeader');
   const freezeMiniIndicator = document.getElementById('freezeMiniIndicator');
 
-  if (cartTotalHeader) cartTotalHeader.textContent = formatRupiah(cartTotal);
+  if (cartTotalHeader) cartTotalHeader.textContent = formatRupiah(totals.finalCartTotal);
   if (budgetRemainingHeader) {
     budgetRemainingHeader.textContent = formatRupiah(remaining);
     budgetRemainingHeader.className = remaining < 0 
-      ? 'font-mono font-bold text-rose-500' 
-      : 'font-mono font-bold text-emerald-600 dark:text-emerald-400';
+      ? 'font-mono font-bold text-rose-500 ml-1' 
+      : 'font-mono font-bold text-brand-500 ml-1';
   }
 
   if (freezeMiniIndicator) {
     freezeMiniIndicator.className = state.isFrozen 
       ? 'w-2.5 h-2.5 rounded-full bg-rose-500 animate-pulse' 
-      : 'w-2.5 h-2.5 rounded-full bg-emerald-500';
+      : 'w-2.5 h-2.5 rounded-full bg-brand-500';
   }
 
-  // 2. Strict Freeze Card Status
+  // Strict Freeze Card Status
   const freezeCard = document.getElementById('guardianFreezeCard');
   const freezeBadge = document.getElementById('freezeBadgeIconContainer');
   const freezeTitle = document.getElementById('freezeCardTitle');
@@ -359,7 +498,7 @@ function renderGuardianAndEnvelopes() {
     if (navDot) navDot.classList.add('hidden');
   }
 
-  // 3. Multi-Tier Envelope Calculations (4 Pos Alokasi)
+  // Multi-Tier Envelope Calculations
   const envCaps = {
     'Sembako': Math.round(limit * 0.45),
     'Protein': Math.round(limit * 0.30),
@@ -370,19 +509,18 @@ function renderGuardianAndEnvelopes() {
   const envSpend = { 'Sembako': 0, 'Protein': 0, 'Toiletries': 0, 'Camilan': 0 };
 
   state.cart.forEach(item => {
-    const itemTotal = (item.qty || 1) * (item.price || 0);
+    const pricing = calculateItemPricing(item.price, item.qty, item.discount);
     if (item.category === 'Sembako' || item.category === 'Bumbu & Minyak') {
-      envSpend['Sembako'] += itemTotal;
+      envSpend['Sembako'] += pricing.rowTotal;
     } else if (item.category === 'Daging & Sayur' || item.category === 'Makanan Instan') {
-      envSpend['Protein'] += itemTotal;
+      envSpend['Protein'] += pricing.rowTotal;
     } else if (item.category === 'Toiletries') {
-      envSpend['Toiletries'] += itemTotal;
+      envSpend['Toiletries'] += pricing.rowTotal;
     } else {
-      envSpend['Camilan'] += itemTotal;
+      envSpend['Camilan'] += pricing.rowTotal;
     }
   });
 
-  // Update Envelope Elements
   const updateEnvRow = (catKey, spendElId, barElId, segElId) => {
     const spend = envSpend[catKey];
     const cap = envCaps[catKey];
@@ -405,14 +543,13 @@ function renderGuardianAndEnvelopes() {
   updateEnvRow('Toiletries', 'envSpendToiletries', 'envBarToiletries', 'envSegToiletries');
   updateEnvRow('Camilan', 'envSpendSnack', 'envBarSnack', 'envSegSnack');
 
-  // 4. Burn Rate Analysis & AI Spending Velocity
+  // Burn Rate & Health Score
   const now = new Date();
   const currentDay = now.getDate();
   const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
   const remainingDays = Math.max(1, daysInMonth - currentDay);
-
   const safeDailyAllowance = remaining > 0 ? Math.round(remaining / remainingDays) : 0;
-  const currentDailyRate = Math.round(cartTotal / Math.max(1, currentDay));
+  const currentDailyRate = Math.round(totals.finalCartTotal / Math.max(1, currentDay));
 
   const healthScoreEl = document.getElementById('healthScoreDisplay');
   const healthWordEl = document.getElementById('healthStatusWord');
@@ -421,10 +558,10 @@ function renderGuardianAndEnvelopes() {
   const velocityText = document.getElementById('velocityWarningText');
 
   let healthScore = 100;
-  if (cartTotal > limit) {
+  if (totals.finalCartTotal > limit) {
     healthScore = 10;
   } else {
-    const spentRatio = cartTotal / limit;
+    const spentRatio = totals.finalCartTotal / limit;
     const daysRatio = currentDay / daysInMonth;
     if (spentRatio > daysRatio + 0.2) {
       healthScore = Math.max(30, Math.round(100 - (spentRatio - daysRatio) * 100));
@@ -437,7 +574,7 @@ function renderGuardianAndEnvelopes() {
   if (healthWordEl) {
     if (healthScore >= 80) {
       healthWordEl.textContent = 'Sangat Sehat';
-      healthWordEl.className = 'text-xs font-semibold text-emerald-400';
+      healthWordEl.className = 'text-xs font-semibold text-brand-400';
     } else if (healthScore >= 60) {
       healthWordEl.textContent = 'Kondisi Waspada';
       healthWordEl.className = 'text-xs font-semibold text-amber-400';
@@ -452,12 +589,12 @@ function renderGuardianAndEnvelopes() {
   }
 
   if (velocityBanner && velocityText) {
-    if (cartTotal > limit) {
+    if (totals.finalCartTotal > limit) {
       velocityBanner.className = 'mt-4 p-3 rounded-2xl bg-rose-500/20 border border-rose-500/40 text-rose-200 text-xs flex items-start gap-2';
       velocityText.innerHTML = `<b>Peringatan Kritis:</b> Pengeluaran telah melampaui pagu! Defisit sebesar ${formatRupiah(Math.abs(remaining))}. Kunci pengeluaran segera!`;
     } else if (currentDailyRate > safeDailyAllowance * 1.5 && currentDay < 20) {
       velocityBanner.className = 'mt-4 p-3 rounded-2xl bg-amber-500/15 border border-amber-500/30 text-amber-200 text-xs flex items-start gap-2';
-      velocityText.innerHTML = `<b>AI Spending Velocity Alert:</b> Kecepatan belanja Anda (${formatRupiah(currentDailyRate)}/hari) melampaui jatah aman harian (${formatRupiah(safeDailyAllowance)}/hari). Jika berlanjut, pagu akan habis lebih awal!`;
+      velocityText.innerHTML = `<b>AI Spending Velocity Alert:</b> Kecepatan belanja (${formatRupiah(currentDailyRate)}/hari) melampaui jatah aman harian (${formatRupiah(safeDailyAllowance)}/hari). Jika berlanjut, pagu akan habis lebih awal!`;
     } else {
       velocityBanner.className = 'mt-4 p-3 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-200 text-xs flex items-start gap-2';
       velocityText.innerHTML = `<b>Proyeksi Keuangan AI:</b> Pengeluaran Anda berada dalam kurva aman. Saldo belanja diproyeksikan mencukupi hingga akhir bulan.`;
@@ -466,7 +603,7 @@ function renderGuardianAndEnvelopes() {
 }
 
 // -----------------------------------------------------------------------------
-// 5. TROLI BELANJA (TAB 1) & STRICT EMERGENCY FREEZE VALIDATION
+// 7. RENDER TROLI BELANJA, STACKED DISCOUNTS & VOUCHER BANNER
 // -----------------------------------------------------------------------------
 function renderCartItems() {
   const container = document.getElementById('cartItemList');
@@ -474,10 +611,56 @@ function renderCartItems() {
   const actionFooter = document.getElementById('cartActionFooter');
   const totalItemsCount = document.getElementById('totalItemsCount');
   const navCartBadge = document.getElementById('navCartBadge');
+  const totalSavingsAmount = document.getElementById('totalSavingsAmount');
   if (!container) return;
+
+  const totals = calculateCartTotals();
 
   if (totalItemsCount) totalItemsCount.textContent = `${state.cart.length} item`;
   if (navCartBadge) navCartBadge.textContent = state.cart.length.toString();
+  if (totalSavingsAmount) totalSavingsAmount.textContent = formatRupiah(totals.totalSavingsCombined);
+
+  // Update Footer Breakdown
+  const fSubtotalNormal = document.getElementById('footerSubtotalNormal');
+  const fItemSavingsAmount = document.getElementById('footerItemSavingsAmount');
+  const fVoucherRow = document.getElementById('footerVoucherDiscountRow');
+  const fVoucherAmount = document.getElementById('footerVoucherDiscountAmount');
+  const fFinalTotal = document.getElementById('footerFinalTotal');
+
+  if (fSubtotalNormal) fSubtotalNormal.textContent = formatRupiah(totals.subtotalNormal);
+  if (fItemSavingsAmount) fItemSavingsAmount.textContent = `-${formatRupiah(totals.itemSavingsTotal)}`;
+  
+  if (fVoucherRow && fVoucherAmount) {
+    if (totals.voucherDiscountAmount > 0) {
+      fVoucherRow.classList.remove('hidden');
+      fVoucherAmount.textContent = `-${formatRupiah(totals.voucherDiscountAmount)}`;
+    } else {
+      fVoucherRow.classList.add('hidden');
+    }
+  }
+
+  if (fFinalTotal) fFinalTotal.textContent = formatRupiah(totals.finalCartTotal);
+
+  // Update Active Voucher Banner
+  const voucherBanner = document.getElementById('activeVoucherBanner');
+  const voucherCodeText = document.getElementById('activeVoucherCodeText');
+  const voucherDescText = document.getElementById('activeVoucherDescText');
+
+  if (state.appliedVoucher && VOUCHER_DATABASE[state.appliedVoucher.code]) {
+    const vDef = VOUCHER_DATABASE[state.appliedVoucher.code];
+    if (voucherBanner) voucherBanner.classList.remove('hidden');
+    if (voucherCodeText) voucherCodeText.textContent = vDef.code;
+    if (voucherDescText) {
+      if (totals.itemsRowTotal >= vDef.minSpend) {
+        voucherDescText.textContent = `✓ Hemat ${formatRupiah(totals.voucherDiscountAmount)} (${vDef.description})`;
+      } else {
+        const diff = vDef.minSpend - totals.itemsRowTotal;
+        voucherDescText.textContent = `⚠️ Kurang ${formatRupiah(diff)} lagi untuk aktifkan kupon`;
+      }
+    }
+  } else {
+    if (voucherBanner) voucherBanner.classList.add('hidden');
+  }
 
   const filteredItems = state.cart.filter(item => {
     if (state.activeCategoryFilter === 'ALL') return true;
@@ -497,35 +680,46 @@ function renderCartItems() {
 
   let html = '';
   filteredItems.forEach(item => {
-    const qty = Number(item.qty) || 1;
-    const price = Number(item.price) || 0;
-    const rowTotal = qty * price;
+    const pricing = calculateItemPricing(item.price, item.qty, item.discount);
     const isImpulse = item.category === 'Camilan' || item.category === 'Lainnya';
 
+    let discountBadgeHtml = '';
+    if (pricing.hasDiscount) {
+      discountBadgeHtml = `
+        <div class="mt-1 p-1.5 rounded-lg bg-amber-50 dark:bg-amber-950/40 border border-amber-200/80 dark:border-amber-900/40 text-[10px] text-amber-800 dark:text-amber-300 leading-tight">
+          <b>Diskon:</b> ${pricing.explanation}
+        </div>
+      `;
+    }
+
     html += `
-      <div class="p-3.5 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700/80 shadow-xs flex flex-col space-y-2.5 transition-all">
+      <div class="p-3.5 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700/80 shadow-xs flex flex-col space-y-2 transition-all">
         <div class="flex items-start justify-between">
           <div class="space-y-0.5">
             <div class="flex items-center gap-1.5">
               <span class="text-[10px] px-2 py-0.5 rounded-md font-semibold bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300">${item.category}</span>
-              ${isImpulse ? '<span class="text-[9px] font-bold px-1.5 py-0.2 rounded bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300">Non-Esensial</span>' : '<span class="text-[9px] font-bold px-1.5 py-0.2 rounded bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">Esensial</span>'}
-              <span class="text-[10px] text-slate-400 font-medium">@ ${item.store || 'Toko Terdekat'}</span>
+              ${isImpulse ? '<span class="text-[9px] font-bold px-1.5 py-0.2 rounded bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300">Non-Esensial</span>' : '<span class="text-[9px] font-bold px-1.5 py-0.2 rounded bg-brand-50 text-brand-700 dark:bg-slate-700 dark:text-brand-400">Esensial</span>'}
+              <span class="text-[10px] text-slate-400 font-medium">@ ${item.store || 'Super Indo'}</span>
             </div>
             <h4 class="text-sm font-bold text-slate-900 dark:text-white leading-snug">${item.name}</h4>
             <div class="text-[11px] text-slate-500 dark:text-slate-400 font-mono">
-              ${formatRupiah(price)} / ${item.unit || 'pcs'}
+              ${formatRupiah(pricing.finalUnitPrice)} / ${item.unit || 'pcs'}
+              ${pricing.hasDiscount ? `<span class="line-through text-slate-400 ml-1.5">${formatRupiah(item.price)}</span>` : ''}
             </div>
           </div>
           
           <div class="text-right">
-            <div class="text-sm font-black font-mono text-slate-900 dark:text-white">${formatRupiah(rowTotal)}</div>
+            <div class="text-sm font-black font-mono text-slate-900 dark:text-white">${formatRupiah(pricing.rowTotal)}</div>
+            ${pricing.hasDiscount ? `<span class="text-[9px] font-bold text-brand-600 dark:text-brand-400">Hemat ${formatRupiah(pricing.rowSavings)}</span>` : ''}
           </div>
         </div>
+
+        ${discountBadgeHtml}
 
         <div class="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-slate-700/60">
           <div class="flex items-center gap-1.5">
             <button class="btn-qty-minus w-7 h-7 rounded-lg bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 text-slate-700 dark:text-slate-200 font-bold text-xs flex items-center justify-center active:scale-95 transition" data-id="${item.id}">-</button>
-            <span class="px-2 text-xs font-bold font-mono text-slate-800 dark:text-slate-100">${qty} ${item.unit || 'pcs'}</span>
+            <span class="px-2 text-xs font-bold font-mono text-slate-800 dark:text-slate-100">${item.qty} ${item.unit || 'pcs'}</span>
             <button class="btn-qty-plus w-7 h-7 rounded-lg bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 text-slate-700 dark:text-slate-200 font-bold text-xs flex items-center justify-center active:scale-95 transition" data-id="${item.id}">+</button>
           </div>
 
@@ -571,9 +765,12 @@ function attachCartEventListeners() {
       const id = btn.getAttribute('data-id');
       const item = state.cart.find(i => i.id === id);
       if (item) {
-        // Strict Emergency Freeze Check on quantity increment
-        const nextTotal = calculateCartTotals() + item.price;
-        if (state.isFrozen && nextTotal > state.budgetLimit) {
+        const nextPricing = calculateItemPricing(item.price, item.qty + 1, item.discount);
+        const currentPricing = calculateItemPricing(item.price, item.qty, item.discount);
+        const addedNominal = nextPricing.rowTotal - currentPricing.rowTotal;
+
+        const totals = calculateCartTotals();
+        if (state.isFrozen && (totals.finalCartTotal + addedNominal) > state.budgetLimit) {
           showStrictFreezeModal('Kuantitas tidak dapat ditambah karena total akan melebihi pagu hard-cap!');
           sounds.playAlarm();
           return;
@@ -608,7 +805,47 @@ function attachCartEventListeners() {
 }
 
 // -----------------------------------------------------------------------------
-// 6. STRICT EMERGENCY FREEZE ENFORCEMENT & BARRIER
+// 8. VOUCHER & KUPON BELANJA ACTIONS
+// -----------------------------------------------------------------------------
+function handleApplyVoucher(codeString) {
+  const code = (codeString || '').trim().toUpperCase();
+  if (!code) {
+    showToast('Masukkan kode kupon voucher valid!', 'alert-triangle');
+    return;
+  }
+
+  const vDef = VOUCHER_DATABASE[code];
+  if (!vDef) {
+    showToast(`Kode voucher "${code}" tidak ditemukan atau sudah kadaluwarsa!`, 'alert-triangle');
+    sounds.playAlarm();
+    return;
+  }
+
+  const totals = calculateCartTotals();
+  if (totals.itemsRowTotal < vDef.minSpend) {
+    const diff = vDef.minSpend - totals.itemsRowTotal;
+    showToast(`Voucher ${code} butuh minimum belanja ${formatRupiah(vDef.minSpend)}. Tambah ${formatRupiah(diff)} lagi!`, 'alert-triangle');
+    sounds.playAlarm();
+    return;
+  }
+
+  state.appliedVoucher = { code };
+  state.saveVoucherState();
+  renderCartItems();
+  sounds.playClick();
+  showToast(`Voucher ${code} berhasil diterapkan!`, 'check-circle');
+}
+
+function handleRemoveVoucher() {
+  state.appliedVoucher = null;
+  state.saveVoucherState();
+  renderCartItems();
+  sounds.playClick();
+  showToast('Voucher belanja dilepas');
+}
+
+// -----------------------------------------------------------------------------
+// 9. STRICT EMERGENCY FREEZE ENFORCEMENT & BARRIER
 // -----------------------------------------------------------------------------
 function showStrictFreezeModal(reasonMessage) {
   const modal = document.getElementById('strictFreezeModal');
@@ -618,25 +855,25 @@ function showStrictFreezeModal(reasonMessage) {
 
   if (msgEl && reasonMessage) msgEl.textContent = reasonMessage;
   if (limitEl) limitEl.textContent = formatRupiah(state.budgetLimit);
-  if (spendEl) spendEl.textContent = formatRupiah(calculateCartTotals());
+  if (spendEl) spendEl.textContent = formatRupiah(calculateCartTotals().finalCartTotal);
 
   if (modal) modal.classList.remove('hidden');
 }
 
 function validateAndAddItemToCart(itemData) {
   const isImpulse = itemData.category === 'Camilan' || itemData.category === 'Lainnya';
-  const cartTotal = calculateCartTotals();
-  const addedTotal = (itemData.qty || 1) * (itemData.price || 0);
-  const projectedTotal = cartTotal + addedTotal;
+  const totals = calculateCartTotals();
+  const pricing = calculateItemPricing(itemData.price, itemData.qty, itemData.discount);
+  const projectedTotal = totals.finalCartTotal + pricing.rowTotal;
 
-  // STRICT VALIDATION 1: Emergency Freeze Active & Item is Non-Essential
+  // RULE 1: Emergency Freeze Active & Item is Non-Essential
   if (state.isFrozen && isImpulse) {
     showStrictFreezeModal('Sistem menolak transaksi ini karena kategori "Camilan / Non-Esensial" diblokir mutlak saat Emergency Freeze aktif.');
     sounds.playAlarm();
     return false;
   }
 
-  // STRICT VALIDATION 2: Emergency Freeze Active & Over-Budget Hard Limit
+  // RULE 2: Emergency Freeze Active & Over-Budget Hard Limit
   if (state.isFrozen && projectedTotal > state.budgetLimit) {
     showStrictFreezeModal(`Total transaksi (${formatRupiah(projectedTotal)}) melampaui pagu bulanan (${formatRupiah(state.budgetLimit)}). Hard Budget Cap aktif!`);
     sounds.playAlarm();
@@ -652,6 +889,7 @@ function validateAndAddItemToCart(itemData) {
       existing.unit = itemData.unit;
       existing.qty = itemData.qty;
       existing.price = itemData.price;
+      existing.discount = itemData.discount;
       existing.store = itemData.store;
     }
   } else {
@@ -662,6 +900,7 @@ function validateAndAddItemToCart(itemData) {
       unit: itemData.unit,
       qty: itemData.qty,
       price: itemData.price,
+      discount: itemData.discount || { mode: 'none' },
       store: itemData.store || 'Super Indo',
       isEssential: !isImpulse
     });
@@ -675,7 +914,7 @@ function validateAndAddItemToCart(itemData) {
 }
 
 // -----------------------------------------------------------------------------
-// 7. REAL-WORLD SUPERMARKET & STORE RADAR (TAB 3)
+// 10. REAL-WORLD SUPERMARKET & STORE RADAR (TAB 3)
 // -----------------------------------------------------------------------------
 function renderRealWorldRadar() {
   const container = document.getElementById('realWorldStoresList');
@@ -683,9 +922,6 @@ function renderRealWorldRadar() {
   const winnerSavings = document.getElementById('radarWinnerSavings');
   if (!container) return;
 
-  const cartTotal = calculateCartTotals();
-
-  // Calculate totals per store
   const storeEvaluations = REAL_WORLD_STORES.map(store => {
     let storeTotal = 0;
     state.cart.forEach(item => {
@@ -700,7 +936,6 @@ function renderRealWorldRadar() {
     };
   });
 
-  // Sort by lowest price
   storeEvaluations.sort((a, b) => a.computedTotal - b.computedTotal);
 
   const cheapest = storeEvaluations[0];
@@ -724,14 +959,14 @@ function renderRealWorldRadar() {
       : `${store.defaultDistanceMeters} m`;
 
     html += `
-      <div class="p-3.5 rounded-2xl bg-white dark:bg-slate-800 border ${isWinner ? 'border-emerald-500 ring-2 ring-emerald-500/20' : 'border-slate-200 dark:border-slate-700/80'} shadow-xs flex items-center justify-between">
+      <div class="p-3.5 rounded-2xl bg-white dark:bg-slate-800 border ${isWinner ? 'border-brand-500 ring-2 ring-brand-500/20' : 'border-slate-200 dark:border-slate-700/80'} shadow-xs flex items-center justify-between">
         <div class="space-y-0.5">
           <div class="flex items-center gap-1.5">
-            <span class="text-[10px] font-bold px-2 py-0.5 rounded-full ${isWinner ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300' : 'bg-slate-100 dark:bg-slate-700 text-slate-500'}">
+            <span class="text-[10px] font-bold px-2 py-0.5 rounded-full ${isWinner ? 'bg-brand-50 text-brand-700 dark:bg-slate-700 dark:text-brand-400' : 'bg-slate-100 dark:bg-slate-700 text-slate-500'}">
               ${store.badge}
             </span>
             <span class="text-[10px] text-slate-400 flex items-center gap-0.5">
-              <i data-lucide="map-pin" class="w-3 h-3 text-emerald-500"></i> ${distanceText}
+              <i data-lucide="map-pin" class="w-3 h-3 text-brand-500"></i> ${distanceText}
             </span>
           </div>
           <h4 class="text-xs font-bold text-slate-900 dark:text-white">${store.name}</h4>
@@ -739,7 +974,7 @@ function renderRealWorldRadar() {
         </div>
 
         <div class="text-right">
-          <span class="text-sm font-black font-mono ${isWinner ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-800 dark:text-slate-200'}">
+          <span class="text-sm font-black font-mono ${isWinner ? 'text-brand-500' : 'text-slate-800 dark:text-slate-200'}">
             ${formatRupiah(store.computedTotal)}
           </span>
           <span class="block text-[9px] text-slate-400 mt-0.5">Estimasi Total</span>
@@ -756,8 +991,7 @@ function handleDetectLocation() {
   if (navigator.geolocation) {
     showToast('Mendeteksi GPS lokasi Anda...', 'navigation');
     navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        state.userCoords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+      () => {
         showToast('Lokasi GPS berhasil diperbarui!', 'check-circle');
         renderRealWorldRadar();
       },
@@ -765,13 +999,11 @@ function handleDetectLocation() {
         showToast('Izin GPS tidak diberikan, menggunakan radius standar.', 'alert-triangle');
       }
     );
-  } else {
-    showToast('Browser Anda tidak mendukung Geolocation', 'alert-triangle');
   }
 }
 
 // -----------------------------------------------------------------------------
-// 8. ENHANCED SMART RECEIPT & BARCODE SCANNER (NATIVE CAMERA ACCESS)
+// 11. NATIVE CAMERA SCANNER
 // -----------------------------------------------------------------------------
 async function openNativeCameraScanner(mode = 'barcode') {
   const modal = document.getElementById('cameraScannerModal');
@@ -782,20 +1014,18 @@ async function openNativeCameraScanner(mode = 'barcode') {
 
   state.scannerMode = mode;
   if (modal) modal.classList.remove('hidden');
-
   if (title) title.textContent = mode === 'barcode' ? 'Live Barcode Pemindai' : 'Pemindai Struk Belanja (OCR)';
 
   if (btnBarcode && btnOcr) {
     if (mode === 'barcode') {
-      btnBarcode.className = 'py-2 rounded-xl bg-emerald-500 shadow-sm transition';
+      btnBarcode.className = 'py-2 rounded-xl bg-brand-500 shadow-sm transition';
       btnOcr.className = 'py-2 rounded-xl text-slate-300 hover:text-white transition';
     } else {
       btnBarcode.className = 'py-2 rounded-xl text-slate-300 hover:text-white transition';
-      btnOcr.className = 'py-2 rounded-xl bg-emerald-500 shadow-sm transition';
+      btnOcr.className = 'py-2 rounded-xl bg-brand-500 shadow-sm transition';
     }
   }
 
-  // Request Native Camera Stream
   try {
     const stream = await navigator.mediaDevices.getUserMedia({
       video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } },
@@ -806,11 +1036,9 @@ async function openNativeCameraScanner(mode = 'barcode') {
       video.srcObject = stream;
       video.play();
     }
-
     startBarcodeDetectionLoop();
   } catch (err) {
-    console.warn('Camera access error:', err);
-    showToast('Kamera tidak dapat diakses. Gunakan opsi unggah foto/contoh.', 'camera-off');
+    showToast('Kamera fisik tidak dapat diakses. Gunakan opsi unggah foto/contoh.', 'camera-off');
   }
 }
 
@@ -827,19 +1055,14 @@ function stopNativeCameraScanner() {
 }
 
 function startBarcodeDetectionLoop() {
-  if (!('BarcodeDetector' in window)) {
-    console.log('BarcodeDetector API native belum aktif pada peramban ini. Simulasi aktif.');
-    return;
-  }
+  if (!('BarcodeDetector' in window)) return;
 
   if (!state.scannerDetector) {
     try {
       state.scannerDetector = new BarcodeDetector({
         formats: ['ean_13', 'ean_8', 'qr_code', 'code_128', 'upc_a']
       });
-    } catch (e) {
-      console.warn('BarcodeDetector format not supported', e);
-    }
+    } catch (e) {}
   }
 
   const video = document.getElementById('scannerVideo');
@@ -854,14 +1077,11 @@ function startBarcodeDetectionLoop() {
       if (state.scannerDetector) {
         const barcodes = await state.scannerDetector.detect(video);
         if (barcodes.length > 0) {
-          const rawVal = barcodes[0].rawValue;
-          handleDetectedBarcode(rawVal);
           clearInterval(interval);
+          handleDetectedBarcode(barcodes[0].rawValue);
         }
       }
-    } catch (e) {
-      // Loop
-    }
+    } catch (e) {}
   }, 400);
 }
 
@@ -879,7 +1099,7 @@ function handleDetectedBarcode(barcodeString) {
 
   const statusBadge = document.getElementById('scannerStatusBadge');
   if (statusBadge) {
-    statusBadge.innerHTML = `<span class="text-emerald-400 font-bold">✓ Terdeteksi:</span> ${product.name} (${formatRupiah(product.price)})`;
+    statusBadge.innerHTML = `<span class="text-brand-400 font-bold">✓ Terdeteksi:</span> ${product.name} (${formatRupiah(product.price)})`;
   }
 
   setTimeout(() => {
@@ -900,28 +1120,23 @@ function handleDetectedBarcode(barcodeString) {
 
 function triggerQuickSampleScan() {
   if (state.scannerMode === 'barcode') {
-    // Pick random barcode
     const barcodes = Object.keys(BARCODE_CATALOG);
     const chosen = barcodes[Math.floor(Math.random() * barcodes.length)];
     handleDetectedBarcode(chosen);
   } else {
-    // Mode OCR
     sounds.playBarcodeBeep();
     stopNativeCameraScanner();
-    // Insert mock extracted receipt
     const mockItems = [
       { name: "Beras Ramos Premium 5kg", category: "Sembako", unit: "pack", qty: 1, price: 74000, store: "Indomaret" },
-      { name: "Telur Ayam Negeri 1kg", category: "Daging & Sayur", unit: "kg", qty: 1, price: 28500, store: "Indomaret" },
-      { name: "Minyak Goreng Sania 2L", category: "Bumbu & Minyak", unit: "liter", qty: 1, price: 33500, store: "Indomaret" }
+      { name: "Telur Ayam Negeri 1kg", category: "Daging & Sayur", unit: "kg", qty: 1, price: 28500, store: "Indomaret" }
     ];
-
     mockItems.forEach(item => validateAndAddItemToCart(item));
     showToast('Struk berhasil diekstrak via AI OCR!', 'camera');
   }
 }
 
 // -----------------------------------------------------------------------------
-// 9. CUSTOM GROCERY ITEM BUILDER MODAL
+// 12. CUSTOM GROCERY ITEM BUILDER WITH STACKED DISCOUNT CALCULATOR
 // -----------------------------------------------------------------------------
 function openCustomItemModalForNew() {
   const form = document.getElementById('customItemForm');
@@ -931,7 +1146,10 @@ function openCustomItemModalForNew() {
   const title = document.getElementById('customItemModalTitle');
   if (title) title.textContent = 'Tambah Barang Belanja Bebas';
 
+  state.itemFormDiscount = { mode: 'none', singlePercent: 0, tier1: 50, tier2: 20, nominalAmount: 0 };
+  updateDiscountModeButtonsUI();
   updateCustomPreview();
+
   const modal = document.getElementById('customItemModal');
   if (modal) modal.classList.remove('hidden');
 }
@@ -956,8 +1174,30 @@ function openCustomItemModalForEdit(item) {
   if (storeEl) storeEl.value = item.store || 'Super Indo';
   if (title) title.textContent = 'Edit Barang Belanja';
 
+  state.itemFormDiscount = item.discount || { mode: 'none', singlePercent: 0, tier1: 50, tier2: 20, nominalAmount: 0 };
+  updateDiscountModeButtonsUI();
   updateCustomPreview();
+
   if (modal) modal.classList.remove('hidden');
+}
+
+function updateDiscountModeButtonsUI() {
+  document.querySelectorAll('.custom-disc-mode-btn').forEach(btn => {
+    const mode = btn.getAttribute('data-mode');
+    if (mode === state.itemFormDiscount.mode) {
+      btn.className = 'custom-disc-mode-btn active py-1 rounded-lg text-[10px] font-bold bg-amber-200 dark:bg-amber-900 text-amber-900 dark:text-amber-100 border border-amber-300 dark:border-amber-700';
+    } else {
+      btn.className = 'custom-disc-mode-btn py-1 rounded-lg text-[10px] font-bold bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700';
+    }
+  });
+
+  const singleBox = document.getElementById('customDiscSingleBox');
+  const tierBox = document.getElementById('customDiscTierBox');
+  const nominalBox = document.getElementById('customDiscNominalBox');
+
+  if (singleBox) singleBox.classList.toggle('hidden', state.itemFormDiscount.mode !== 'single');
+  if (tierBox) tierBox.classList.toggle('hidden', state.itemFormDiscount.mode !== 'tier');
+  if (nominalBox) nominalBox.classList.toggle('hidden', state.itemFormDiscount.mode !== 'nominal');
 }
 
 function updateCustomPreview() {
@@ -965,9 +1205,42 @@ function updateCustomPreview() {
   const price = Number(document.getElementById('customInputPrice')?.value) || 0;
   const calcEl = document.getElementById('customCalcPreview');
   const totalEl = document.getElementById('customTotalPreview');
+  const noteEl = document.getElementById('customDiscountNote');
+  const savingBadge = document.getElementById('customSavingBadge');
 
-  if (calcEl) calcEl.textContent = `${qty} × ${formatRupiah(price)}`;
-  if (totalEl) totalEl.textContent = formatRupiah(qty * price);
+  // Read current discount inputs
+  const mode = state.itemFormDiscount.mode;
+  if (mode === 'single') {
+    state.itemFormDiscount.singlePercent = Number(document.getElementById('customInputDiscSingle')?.value) || 0;
+  } else if (mode === 'tier') {
+    state.itemFormDiscount.tier1 = Number(document.getElementById('customInputDiscTier1')?.value) || 0;
+    state.itemFormDiscount.tier2 = Number(document.getElementById('customInputDiscTier2')?.value) || 0;
+  } else if (mode === 'nominal') {
+    state.itemFormDiscount.nominalAmount = Number(document.getElementById('customInputDiscNominal')?.value) || 0;
+  }
+
+  const pricing = calculateItemPricing(price, qty, state.itemFormDiscount);
+
+  if (calcEl) calcEl.textContent = `${qty} × ${formatRupiah(pricing.finalUnitPrice)}`;
+  if (totalEl) totalEl.textContent = formatRupiah(pricing.rowTotal);
+
+  if (savingBadge) {
+    if (pricing.hasDiscount) {
+      savingBadge.classList.remove('hidden');
+      savingBadge.textContent = `Hemat ${formatRupiah(pricing.rowSavings)}`;
+    } else {
+      savingBadge.classList.add('hidden');
+    }
+  }
+
+  if (noteEl) {
+    if (pricing.hasDiscount && pricing.explanation) {
+      noteEl.classList.remove('hidden');
+      noteEl.textContent = pricing.explanation;
+    } else {
+      noteEl.classList.add('hidden');
+    }
+  }
 }
 
 function handleSaveCustomItem() {
@@ -984,7 +1257,17 @@ function handleSaveCustomItem() {
     return;
   }
 
-  const success = validateAndAddItemToCart({ id, name, category, unit, qty, price, store });
+  const success = validateAndAddItemToCart({
+    id,
+    name,
+    category,
+    unit,
+    qty,
+    price,
+    discount: { ...state.itemFormDiscount },
+    store
+  });
+
   if (success) {
     const modal = document.getElementById('customItemModal');
     if (modal) modal.classList.add('hidden');
@@ -992,7 +1275,7 @@ function handleSaveCustomItem() {
 }
 
 // -----------------------------------------------------------------------------
-// 10. SMART PANTRY & ZERO-WASTE
+// 13. SMART PANTRY & ZERO-WASTE
 // -----------------------------------------------------------------------------
 function renderPantryStock() {
   const container = document.getElementById('pantryStockList');
@@ -1041,7 +1324,7 @@ function renderPantryStock() {
           <p class="text-[10px] text-slate-400 mt-0.5">Tersimpan: ${item.qty} ${item.unit} &bull; Tanggal Beli: ${item.purchasedDate}</p>
         </div>
 
-        <button class="btn-consume-pantry px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-700 hover:bg-emerald-500 hover:text-white text-slate-700 dark:text-slate-200 text-xs font-bold active:scale-95 transition" data-id="${item.id}">
+        <button class="btn-consume-pantry px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-700 hover:bg-brand-500 hover:text-white text-slate-700 dark:text-slate-200 text-xs font-bold active:scale-95 transition" data-id="${item.id}">
           Habis Dimasak
         </button>
       </div>
@@ -1066,7 +1349,7 @@ function renderPantryStock() {
 }
 
 // -----------------------------------------------------------------------------
-// 11. RIWAYAT BELANJA
+// 14. RIWAYAT BELANJA
 // -----------------------------------------------------------------------------
 function renderHistoryView() {
   const container = document.getElementById('historyListContainer');
@@ -1107,9 +1390,9 @@ function renderHistoryView() {
 function checkoutTrip() {
   if (state.cart.length === 0) return;
 
-  const total = calculateCartTotals();
+  const totals = calculateCartTotals();
 
-  // Transfer items to virtual pantry
+  // Transfer to virtual pantry
   state.cart.forEach(item => {
     let days = 7;
     if (item.category === 'Daging & Sayur') days = 3;
@@ -1132,12 +1415,14 @@ function checkoutTrip() {
     id: 'trip_' + Date.now(),
     date: new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }),
     itemCount: state.cart.length,
-    totalAmount: total,
+    totalAmount: totals.finalCartTotal,
     items: [...state.cart]
   });
 
   state.cart = [];
+  state.appliedVoucher = null;
   state.saveCart();
+  state.saveVoucherState();
   state.saveHistory();
   state.savePantry();
 
@@ -1149,40 +1434,60 @@ function checkoutTrip() {
 }
 
 // -----------------------------------------------------------------------------
-// 12. INITIALIZATION & EVENT LISTENERS
+// 15. INITIALIZATION, THEME COLOR & EVENT LISTENERS
 // -----------------------------------------------------------------------------
 document.addEventListener('DOMContentLoaded', () => {
-  // Apply Saved Theme
-  const applyTheme = (themeName) => {
-    state.theme = themeName;
-    localStorage.setItem('sg_theme', themeName);
-    if (themeName === 'dark' || (themeName === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+  // 1. Apply Color Theme
+  const applyColorTheme = (themeName) => {
+    state.colorTheme = themeName;
+    localStorage.setItem('sg_color_theme', themeName);
+    document.documentElement.setAttribute('data-color-theme', themeName);
+
+    // Update active border on color theme buttons
+    document.querySelectorAll('.color-palette-btn').forEach(btn => {
+      const match = btn.getAttribute('data-theme-name') === themeName;
+      if (match) {
+        btn.classList.add('border-brand-500', 'ring-2', 'ring-brand-500/20', 'bg-brand-50/50', 'dark:bg-slate-800');
+        btn.classList.remove('border-slate-200', 'dark:border-slate-700');
+      } else {
+        btn.classList.remove('border-brand-500', 'ring-2', 'ring-brand-500/20', 'bg-brand-50/50');
+        btn.classList.add('border-slate-200', 'dark:border-slate-700');
+      }
+    });
+  };
+  applyColorTheme(state.colorTheme);
+
+  // 2. Apply Light / Dark Mode
+  const applyLightMode = (mode) => {
+    state.lightMode = mode;
+    localStorage.setItem('sg_light_mode', mode);
+    if (mode === 'dark') {
       document.documentElement.classList.add('dark');
     } else {
       document.documentElement.classList.remove('dark');
     }
   };
-  applyTheme(state.theme);
+  applyLightMode(state.lightMode);
 
-  // Apply Layout
+  // 3. Apply Fluid / Compact Layout (No rigid pixels)
   const mainContainer = document.getElementById('mainContainer');
   const layoutModeText = document.getElementById('layoutModeText');
-  const applyLayout = (isBento) => {
-    state.isBentoMode = isBento;
-    localStorage.setItem('sg_layout_mode', isBento ? 'bento' : 'mobile');
+  const applyLayoutMode = (isFluid) => {
+    state.isBentoFluid = isFluid;
+    localStorage.setItem('sg_layout_mode', isFluid ? 'fluid' : 'compact');
     if (mainContainer) {
-      if (isBento) {
-        mainContainer.classList.remove('mode-mobile');
-        mainContainer.classList.add('mode-bento');
-        if (layoutModeText) layoutModeText.textContent = 'Bento Grid (1200px)';
+      if (isFluid) {
+        mainContainer.classList.remove('app-viewport-compact');
+        mainContainer.classList.add('app-viewport-fluid');
+        if (layoutModeText) layoutModeText.textContent = 'Tampilan Bento Grid Lebar';
       } else {
-        mainContainer.classList.remove('mode-bento');
-        mainContainer.classList.add('mode-mobile');
-        if (layoutModeText) layoutModeText.textContent = 'Smartphone (440px)';
+        mainContainer.classList.remove('app-viewport-fluid');
+        mainContainer.classList.add('app-viewport-compact');
+        if (layoutModeText) layoutModeText.textContent = 'Tampilan Kompak Seluler';
       }
     }
   };
-  applyLayout(state.isBentoMode);
+  applyLayoutMode(state.isBentoFluid);
 
   // Initial Renders
   renderCartItems();
@@ -1200,7 +1505,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll('.nav-tab-btn').forEach(btn => {
       const match = btn.getAttribute('data-target') === targetId;
       btn.className = match
-        ? 'nav-tab-btn flex-1 flex flex-col items-center py-1 rounded-xl text-emerald-600 dark:text-emerald-400 font-bold active:scale-95 transition'
+        ? 'nav-tab-btn flex-1 flex flex-col items-center py-1 rounded-xl text-brand-500 font-bold active:scale-95 transition'
         : 'nav-tab-btn flex-1 flex flex-col items-center py-1 rounded-xl text-slate-400 hover:text-slate-600 active:scale-95 transition';
     });
 
@@ -1228,7 +1533,7 @@ document.addEventListener('DOMContentLoaded', () => {
       document.querySelectorAll('.cat-pill').forEach(b => {
         b.className = 'cat-pill px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:text-slate-900 border border-slate-200 dark:border-slate-700 transition active:scale-95';
       });
-      btn.className = 'cat-pill active px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap bg-emerald-500 text-white shadow-xs transition active:scale-95';
+      btn.className = 'cat-pill active px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap bg-brand-500 text-white shadow-xs transition active:scale-95';
       state.activeCategoryFilter = btn.getAttribute('data-category') || 'ALL';
       renderCartItems();
       sounds.playClick();
@@ -1256,6 +1561,23 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('dismissStrictFreezeBtn')?.addEventListener('click', () => {
     document.getElementById('strictFreezeModal')?.classList.add('hidden');
   });
+
+  // Voucher Actions
+  document.getElementById('applyVoucherBtn')?.addEventListener('click', () => {
+    const val = document.getElementById('voucherCodeInput')?.value;
+    handleApplyVoucher(val);
+  });
+
+  document.querySelectorAll('.quick-voucher-chip').forEach(btn => {
+    btn.onclick = () => {
+      const code = btn.getAttribute('data-code');
+      const input = document.getElementById('voucherCodeInput');
+      if (input) input.value = code;
+      handleApplyVoucher(code);
+    };
+  });
+
+  document.getElementById('removeVoucherBtn')?.addEventListener('click', handleRemoveVoucher);
 
   // Scanner Triggers
   document.getElementById('quickLaunchScannerBtn')?.addEventListener('click', () => openNativeCameraScanner('barcode'));
@@ -1287,30 +1609,65 @@ document.addEventListener('DOMContentLoaded', () => {
   });
   document.getElementById('saveCustomItemBtn')?.addEventListener('click', handleSaveCustomItem);
 
-  ['customInputQty', 'customInputPrice'].forEach(id => {
+  // Custom Item Discount Mode Buttons
+  document.querySelectorAll('.custom-disc-mode-btn').forEach(btn => {
+    btn.onclick = () => {
+      state.itemFormDiscount.mode = btn.getAttribute('data-mode');
+      updateDiscountModeButtonsUI();
+      updateCustomPreview();
+      sounds.playClick();
+    };
+  });
+
+  // Tier Preset Buttons in Item Builder
+  document.querySelectorAll('.tier-preset-btn').forEach(btn => {
+    btn.onclick = () => {
+      const t1 = Number(btn.getAttribute('data-t1')) || 50;
+      const t2 = Number(btn.getAttribute('data-t2')) || 20;
+      const inT1 = document.getElementById('customInputDiscTier1');
+      const inT2 = document.getElementById('customInputDiscTier2');
+      if (inT1) inT1.value = t1;
+      if (inT2) inT2.value = t2;
+      updateCustomPreview();
+      sounds.playClick();
+    };
+  });
+
+  ['customInputQty', 'customInputPrice', 'customInputDiscSingle', 'customInputDiscTier1', 'customInputDiscTier2', 'customInputDiscNominal'].forEach(id => {
     document.getElementById(id)?.addEventListener('input', updateCustomPreview);
   });
 
   // Geolocation Radar
   document.getElementById('detectLocationBtn')?.addEventListener('click', handleDetectLocation);
 
-  // Settings Actions: Theme choices
-  document.querySelectorAll('.theme-choice-btn').forEach(btn => {
+  // Settings: Color Themes Selection (4 Palet Warna)
+  document.querySelectorAll('.color-palette-btn').forEach(btn => {
     btn.onclick = () => {
-      applyTheme(btn.getAttribute('data-theme'));
+      const theme = btn.getAttribute('data-theme-name');
+      applyColorTheme(theme);
       sounds.playClick();
-      showToast(`Tema diterapkan: ${btn.getAttribute('data-theme')}`);
+      showToast(`Tema warna aktif: ${theme.toUpperCase()}`);
     };
   });
 
-  // Settings Actions: Layout Toggle
-  document.getElementById('toggleLayoutSettingsBtn')?.addEventListener('click', () => {
-    applyLayout(!state.isBentoMode);
-    sounds.playClick();
-    showToast(state.isBentoMode ? 'Mode Bento Grid Aktif' : 'Mode Smartphone Aktif');
+  // Settings: Light / Dark Mode Buttons
+  document.querySelectorAll('.dark-mode-btn').forEach(btn => {
+    btn.onclick = () => {
+      const mode = btn.getAttribute('data-mode');
+      applyLightMode(mode);
+      sounds.playClick();
+      showToast(`Mode pencahayaan: ${mode.toUpperCase()}`);
+    };
   });
 
-  // Settings Actions: Sound Toggle
+  // Settings: Fluid / Compact Layout Toggle
+  document.getElementById('toggleLayoutSettingsBtn')?.addEventListener('click', () => {
+    applyLayoutMode(!state.isBentoFluid);
+    sounds.playClick();
+    showToast(state.isBentoFluid ? 'Mode Bento Grid Lebar Aktif' : 'Mode Kompak Seluler Aktif');
+  });
+
+  // Settings: Sound Toggle
   const soundCheckbox = document.getElementById('soundToggleCheckbox');
   if (soundCheckbox) {
     soundCheckbox.checked = state.soundEnabled;
@@ -1322,7 +1679,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
   }
 
-  // Settings Actions: Save Budget Limit
+  // Settings: Save Budget Limit
   document.getElementById('saveBudgetLimitBtn')?.addEventListener('click', () => {
     const val = Number(document.getElementById('budgetLimitInput')?.value);
     if (val >= 50000) {
@@ -1340,7 +1697,9 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('clearCartBtn')?.addEventListener('click', () => {
     if (confirm('Kosongkan semua barang dari keranjang belanja?')) {
       state.cart = [];
+      state.appliedVoucher = null;
       state.saveCart();
+      state.saveVoucherState();
       renderCartItems();
       showToast('Keranjang dikosongkan');
     }

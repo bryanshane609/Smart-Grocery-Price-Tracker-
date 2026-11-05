@@ -15,7 +15,7 @@
   <meta name="application-name" content="SmartGrocery">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="description"
-    content="Smart Household Financial Guardian & Real-Time Expense Protection - Pengendali Anggaran Rumah Tangga, Kamera Barcode/OCR, dan Radar Ritel Dunia Nyata">
+    content="Smart Household Financial Guardian & Real-Time Expense Protection - Pengendali Anggaran Rumah Tangga, Diskon Bertingkat, Voucher Belanja, dan Radar Ritel">
 
   <!-- Favicon & Icons -->
   <link rel="icon" type="image/svg+xml" href="./icons/icon.svg">
@@ -42,12 +42,12 @@
           },
           colors: {
             brand: {
-              50: '#ecfdf5',
-              100: '#d1fae5',
-              400: '#34d399',
-              500: '#10b981',
-              600: '#059669',
-              700: '#047857'
+              50: 'var(--brand-50, #ecfdf5)',
+              100: 'var(--brand-100, #d1fae5)',
+              400: 'var(--brand-400, #34d399)',
+              500: 'var(--brand-500, #10b981)',
+              600: 'var(--brand-600, #059669)',
+              700: 'var(--brand-700, #047857)'
             },
             danger: {
               50: '#fef2f2',
@@ -91,6 +91,54 @@
   <script src="https://unpkg.com/lucide@latest"></script>
 
   <style>
+    :root {
+      /* Theme 1: Emerald Sage (Default) */
+      --brand-50: #ecfdf5;
+      --brand-100: #d1fae5;
+      --brand-400: #34d399;
+      --brand-500: #10b981;
+      --brand-600: #059669;
+      --brand-700: #047857;
+      --brand-gradient-from: #10b981;
+      --brand-gradient-to: #059669;
+    }
+
+    /* Theme 2: Midnight Obsidian (Electric Cyan) */
+    html[data-color-theme="obsidian"] {
+      --brand-50: #f0f9ff;
+      --brand-100: #e0f2fe;
+      --brand-400: #38bdf8;
+      --brand-500: #0284c7;
+      --brand-600: #0369a1;
+      --brand-700: #075985;
+      --brand-gradient-from: #38bdf8;
+      --brand-gradient-to: #0284c7;
+    }
+
+    /* Theme 3: Sunset Amber / Warm Coral */
+    html[data-color-theme="amber"] {
+      --brand-50: #fffbeb;
+      --brand-100: #fef3c7;
+      --brand-400: #fbbf24;
+      --brand-500: #f59e0b;
+      --brand-600: #d97706;
+      --brand-700: #b45309;
+      --brand-gradient-from: #f59e0b;
+      --brand-gradient-to: #f43f5e;
+    }
+
+    /* Theme 4: Royal Indigo Fintech */
+    html[data-color-theme="indigo"] {
+      --brand-50: #eef2ff;
+      --brand-100: #e0e7ff;
+      --brand-400: #818cf8;
+      --brand-500: #6366f1;
+      --brand-600: #4f46e5;
+      --brand-700: #4338ca;
+      --brand-gradient-from: #6366f1;
+      --brand-gradient-to: #4f46e5;
+    }
+
     body {
       touch-action: manipulation;
       -webkit-tap-highlight-color: transparent;
@@ -107,19 +155,23 @@
     .scrollbar-none::-webkit-scrollbar { display: none; }
     .scrollbar-none { -ms-overflow-style: none; scrollbar-width: none; }
 
-    /* Mobile Frame vs Bento Full View Modes */
-    .app-viewport.mode-mobile {
-      max-width: 440px;
-      margin: 0 auto;
-      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(226, 232, 240, 0.8);
-      border-radius: 28px;
+    /* Fluid Responsive Bento Container (No rigid pixels) */
+    .app-viewport-compact {
+      width: 100%;
+      max-width: 28rem; /* approx 448px fluid max-width */
+      margin-left: auto;
+      margin-right: auto;
+      border-radius: 1.75rem;
+      box-shadow: 0 20px 45px -12px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(226, 232, 240, 0.8);
     }
 
-    .app-viewport.mode-bento {
-      max-width: 1200px;
-      margin: 0 auto;
-      border-radius: 28px;
-      box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.15);
+    .app-viewport-fluid {
+      width: 100%;
+      max-width: 72rem; /* approx 1152px fluid container */
+      margin-left: auto;
+      margin-right: auto;
+      border-radius: 1.75rem;
+      box-shadow: 0 25px 50px -15px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(226, 232, 240, 0.8);
     }
 
     /* Video Scanner Camera Styles */
@@ -144,8 +196,8 @@
 
 <body class="bg-[#F9FAFB] dark:bg-[#0F172A] text-slate-800 dark:text-slate-100 antialiased font-sans min-h-screen py-0 sm:py-6 px-0 sm:px-4 flex flex-col justify-center items-center">
 
-  <!-- MAIN APP CONTAINER -->
-  <div id="mainContainer" class="app-viewport mode-mobile w-full min-h-screen sm:min-h-[92vh] bg-white dark:bg-[#1E293B] flex flex-col relative overflow-hidden transition-all duration-300 pb-24">
+  <!-- MAIN FLUID / COMPACT APP CONTAINER -->
+  <div id="mainContainer" class="app-viewport-compact w-full min-h-screen sm:min-h-[92vh] bg-white dark:bg-[#1E293B] flex flex-col relative overflow-hidden transition-all duration-300 pb-24">
 
     <!-- ========================================================================= -->
     <!-- TOP HEADER: CLEAN, UNCLUTTERED, PROFESSIONAL                             -->
@@ -153,13 +205,13 @@
     <header class="sticky top-0 z-30 bg-white/95 dark:bg-[#1E293B]/95 backdrop-blur-md border-b border-slate-200/90 dark:border-slate-800 px-4 pt-3.5 pb-3 transition-colors">
       <div class="flex items-center justify-between">
         <div class="flex items-center space-x-3">
-          <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-emerald-500 via-teal-500 to-emerald-600 flex items-center justify-center shadow-md shadow-emerald-500/20 text-white shrink-0">
+          <div class="w-10 h-10 rounded-2xl bg-brand-500 flex items-center justify-center shadow-md text-white shrink-0">
             <i data-lucide="shield-check" class="w-5 h-5"></i>
           </div>
           <div class="leading-tight">
             <div class="flex items-center gap-1.5">
               <h1 class="text-base font-extrabold tracking-tight text-slate-900 dark:text-white">Smart Grocery</h1>
-              <span class="text-[9px] font-black tracking-wider px-1.5 py-0.5 rounded-md bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">GUARDIAN</span>
+              <span class="text-[9px] font-black tracking-wider px-1.5 py-0.5 rounded-md bg-brand-50 text-brand-700 dark:bg-slate-800 dark:text-brand-400">GUARDIAN</span>
             </div>
             <!-- Istilah Baru Sesuai Permintaan SRS -->
             <p class="text-[10px] text-slate-500 dark:text-slate-400 font-medium line-clamp-1">
@@ -177,12 +229,12 @@
       <!-- Realtime Active Budget Bar (Sticky at Top) -->
       <div id="topBudgetQuickBar" class="mt-2.5 pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs">
         <div class="flex items-center gap-2">
-          <div id="freezeMiniIndicator" class="w-2.5 h-2.5 rounded-full bg-emerald-500"></div>
+          <div id="freezeMiniIndicator" class="w-2.5 h-2.5 rounded-full bg-brand-500"></div>
           <span class="text-[11px] text-slate-500 dark:text-slate-400">Troli: <b id="cartTotalHeader" class="text-slate-900 dark:text-white font-mono font-bold">Rp 0</b></span>
         </div>
         <div class="flex items-center gap-1 text-[11px]">
           <span class="text-slate-400">Sisa Pagu:</span>
-          <span id="budgetRemainingHeader" class="font-mono font-bold text-emerald-600 dark:text-emerald-400">Rp 800.000</span>
+          <span id="budgetRemainingHeader" class="font-mono font-bold text-brand-500 ml-1">Rp 800.000</span>
         </div>
       </div>
     </header>
@@ -192,24 +244,73 @@
     <!-- ========================================================================= -->
     <main class="flex-1 px-3.5 pt-3">
 
-      <!-- TAB 1: TROLI BELANJA (Active Shopping & Custom Item Builder) -->
+      <!-- TAB 1: TROLI BELANJA (Active Shopping, Cascading Discount & Voucher System) -->
       <section id="tab-belanja" class="tab-content space-y-3">
         
         <!-- Action Quick Bar: Add Custom Item & Launch Camera Scanner -->
         <div class="grid grid-cols-2 gap-2">
-          <button id="quickAddCustomBtn" class="py-2.5 px-3 rounded-2xl bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold shadow-sm shadow-emerald-500/20 active:scale-95 transition flex items-center justify-center gap-1.5">
+          <button id="quickAddCustomBtn" class="py-2.5 px-3 rounded-2xl bg-brand-500 hover:bg-brand-600 text-white text-xs font-bold shadow-sm active:scale-95 transition flex items-center justify-center gap-1.5">
             <i data-lucide="plus-circle" class="w-4 h-4"></i>
             <span>+ Tambah Item Bebas</span>
           </button>
           <button id="quickLaunchScannerBtn" class="py-2.5 px-3 rounded-2xl bg-slate-900 dark:bg-slate-800 hover:bg-slate-800 text-white text-xs font-bold border border-slate-700 active:scale-95 transition flex items-center justify-center gap-1.5 shadow-sm">
-            <i data-lucide="scan" class="w-4 h-4 text-emerald-400"></i>
+            <i data-lucide="scan" class="w-4 h-4 text-brand-400"></i>
             <span>Buka Kamera Scan</span>
           </button>
         </div>
 
+        <!-- BENTO CARD: KUPON & VOUCHER BELANJA (Stacked & Voucher System) -->
+        <div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 space-y-2.5">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-1.5">
+              <i data-lucide="ticket-percent" class="w-4 h-4 text-brand-500"></i>
+              <span class="text-xs font-bold text-slate-800 dark:text-slate-200">Kupon & Voucher Belanja</span>
+            </div>
+            <span class="text-[10px] text-slate-400">Promo Supermarket</span>
+          </div>
+
+          <!-- Voucher Input Form -->
+          <div class="flex gap-2">
+            <div class="relative flex-1">
+              <input type="text" id="voucherCodeInput" placeholder="Masukkan kode: HEMAT10K..." uppercase class="w-full pl-3 pr-2 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs font-mono font-bold text-slate-800 dark:text-white uppercase focus:outline-none focus:border-brand-500 placeholder:normal-case placeholder:font-sans">
+            </div>
+            <button id="applyVoucherBtn" class="px-4 py-2 rounded-xl bg-brand-500 hover:bg-brand-600 text-white text-xs font-bold active:scale-95 transition">
+              Terapkan
+            </button>
+          </div>
+
+          <!-- Quick Voucher Chips Preset -->
+          <div class="flex items-center gap-1.5 overflow-x-auto scrollbar-none pt-0.5">
+            <span class="text-[10px] text-slate-400 shrink-0">Kupon Aktif:</span>
+            <button type="button" class="quick-voucher-chip px-2 py-1 rounded-lg bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:text-brand-500 border border-slate-200 dark:border-slate-700 text-[10px] font-mono font-bold shrink-0 transition" data-code="HEMAT10K">
+              HEMAT10K (-Rp10rb)
+            </button>
+            <button type="button" class="quick-voucher-chip px-2 py-1 rounded-lg bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:text-brand-500 border border-slate-200 dark:border-slate-700 text-[10px] font-mono font-bold shrink-0 transition" data-code="SUPERHEMAT20">
+              SUPERHEMAT20 (-20%)
+            </button>
+            <button type="button" class="quick-voucher-chip px-2 py-1 rounded-lg bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:text-brand-500 border border-slate-200 dark:border-slate-700 text-[10px] font-mono font-bold shrink-0 transition" data-code="GAJIAN30K">
+              GAJIAN30K (-Rp30rb)
+            </button>
+          </div>
+
+          <!-- Active Voucher Applied Banner (Hidden if none) -->
+          <div id="activeVoucherBanner" class="hidden p-2.5 rounded-xl bg-brand-50 dark:bg-brand-950/40 border border-brand-200 dark:border-brand-800 flex items-center justify-between text-xs">
+            <div class="flex items-center gap-2">
+              <i data-lucide="check-circle" class="w-4 h-4 text-brand-500 shrink-0"></i>
+              <div>
+                <span class="font-bold text-slate-900 dark:text-white" id="activeVoucherCodeText">HEMAT10K</span>
+                <span class="block text-[10px] text-brand-600 dark:text-brand-400 font-semibold" id="activeVoucherDescText">Potongan Rp 10.000 diterapkan</span>
+              </div>
+            </div>
+            <button id="removeVoucherBtn" class="p-1 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-400 hover:text-rose-500 transition" title="Hapus Voucher">
+              <i data-lucide="x" class="w-3.5 h-3.5"></i>
+            </button>
+          </div>
+        </div>
+
         <!-- Category Filter Pills -->
         <div class="flex items-center gap-1.5 overflow-x-auto scrollbar-none py-1 -mx-3.5 px-3.5">
-          <button class="cat-pill active px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap bg-emerald-500 text-white shadow-xs transition active:scale-95" data-category="ALL">
+          <button class="cat-pill active px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap bg-brand-500 text-white shadow-xs transition active:scale-95" data-category="ALL">
             Semua (<span id="catCountAll">0</span>)
           </button>
           <button class="cat-pill px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:text-slate-900 border border-slate-200 dark:border-slate-700 transition active:scale-95" data-category="Sembako">
@@ -238,9 +339,9 @@
             <i data-lucide="package" class="w-4 h-4 text-slate-500"></i>
             <span>Keranjang: <b class="text-slate-900 dark:text-white font-bold" id="totalItemsCount">0 item</b></span>
           </div>
-          <div class="text-emerald-700 dark:text-emerald-400 font-bold flex items-center gap-1" id="totalSavingsTag">
+          <div class="text-brand-600 dark:text-brand-400 font-bold flex items-center gap-1" id="totalSavingsTag">
             <i data-lucide="tag" class="w-3.5 h-3.5"></i>
-            <span>Hemat Diskon: <span id="totalSavingsAmount" class="font-mono">Rp 0</span></span>
+            <span>Hemat Total: <span id="totalSavingsAmount" class="font-mono">Rp 0</span></span>
           </div>
         </div>
 
@@ -255,24 +356,44 @@
             <i data-lucide="shopping-bag" class="w-8 h-8"></i>
           </div>
           <h3 class="text-sm font-bold text-slate-700 dark:text-slate-200">Troli Belanja Masih Kosong</h3>
-          <p class="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-[260px] mx-auto">
-            Scan barcode produk langsung dengan kamera atau masukkan barang belanjaan kustom Anda.
+          <p class="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-xs mx-auto">
+            Scan barcode produk langsung dengan kamera atau masukkan barang belanjaan kustom dengan kalkulator diskon bertingkat.
           </p>
-          <div class="mt-4 flex flex-col gap-2 max-w-[220px] mx-auto">
+          <div class="mt-4 flex flex-col gap-2 max-w-xs mx-auto">
             <button id="emptyScanBtn" class="px-4 py-2.5 rounded-xl bg-slate-900 dark:bg-slate-800 hover:bg-slate-800 text-white text-xs font-bold border border-slate-700 active:scale-95 transition flex items-center justify-center gap-2">
-              <i data-lucide="camera" class="w-4 h-4 text-emerald-400"></i>
+              <i data-lucide="camera" class="w-4 h-4 text-brand-400"></i>
               <span>Buka Kamera Pemindai</span>
             </button>
-            <button id="emptyAddBtn" class="px-4 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold active:scale-95 transition flex items-center justify-center gap-1.5">
+            <button id="emptyAddBtn" class="px-4 py-2.5 rounded-xl bg-brand-500 hover:bg-brand-600 text-white text-xs font-bold active:scale-95 transition flex items-center justify-center gap-1.5">
               <i data-lucide="plus-circle" class="w-4 h-4"></i>
               <span>+ Input Barang Bebas</span>
             </button>
           </div>
         </div>
 
-        <!-- Cart Action Footer -->
-        <div id="cartActionFooter" class="pt-2 pb-6 space-y-2 hidden">
-          <button id="checkoutTripBtn" class="w-full py-3.5 px-4 rounded-2xl bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-600 hover:from-emerald-600 hover:to-teal-600 text-white font-extrabold text-sm shadow-lg shadow-emerald-500/20 active:scale-98 transition flex items-center justify-center gap-2">
+        <!-- Cart Action Footer with Final Breakdown -->
+        <div id="cartActionFooter" class="pt-2 pb-6 space-y-3 hidden">
+          <!-- Subtotal & Voucher Breakdown Box -->
+          <div class="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 space-y-1 text-xs">
+            <div class="flex justify-between text-slate-500">
+              <span>Subtotal Produk Normal</span>
+              <span class="font-mono" id="footerSubtotalNormal">Rp 0</span>
+            </div>
+            <div class="flex justify-between text-brand-600 dark:text-brand-400 font-semibold" id="footerItemSavingsRow">
+              <span>Hemat Diskon Barang (Stacked)</span>
+              <span class="font-mono" id="footerItemSavingsAmount">-Rp 0</span>
+            </div>
+            <div class="flex justify-between text-brand-600 dark:text-brand-400 font-semibold hidden" id="footerVoucherDiscountRow">
+              <span>Potongan Voucher Promo</span>
+              <span class="font-mono" id="footerVoucherDiscountAmount">-Rp 0</span>
+            </div>
+            <div class="pt-1.5 border-t border-slate-200 dark:border-slate-700 flex justify-between font-bold text-sm text-slate-900 dark:text-white">
+              <span>Total Akhir Tagihan</span>
+              <span class="font-mono text-brand-500 text-base" id="footerFinalTotal">Rp 0</span>
+            </div>
+          </div>
+
+          <button id="checkoutTripBtn" class="w-full py-3.5 px-4 rounded-2xl bg-brand-500 hover:bg-brand-600 text-white font-extrabold text-sm shadow-lg active:scale-98 transition flex items-center justify-center gap-2">
             <i data-lucide="check-circle-2" class="w-5 h-5"></i>
             <span>Selesaikan & Masukkan ke Pantry</span>
           </button>
@@ -289,7 +410,7 @@
       <section id="tab-guardian" class="tab-content hidden space-y-4">
         <div>
           <h2 class="text-sm font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
-            <i data-lucide="shield-alert" class="w-4 h-4 text-emerald-500"></i>
+            <i data-lucide="shield-alert" class="w-4 h-4 text-brand-500"></i>
             <span>Financial Guardian & Health Gauge</span>
           </h2>
           <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Analisis burn rate, proyeksi pengeluaran AI, dan kunci anggaran ketat</p>
@@ -325,19 +446,19 @@
         <div class="p-5 rounded-3xl bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white shadow-md relative overflow-hidden">
           <div class="flex items-start justify-between">
             <div>
-              <span class="text-[10px] font-black uppercase tracking-wider text-emerald-400 bg-emerald-950/80 px-2 py-0.5 rounded-full border border-emerald-800">
+              <span class="text-[10px] font-black uppercase tracking-wider text-brand-400 bg-brand-500/10 px-2 py-0.5 rounded-full border border-brand-500/30">
                 AI Financial Health Score
               </span>
               <div class="flex items-baseline gap-2 mt-2">
                 <span class="text-3xl font-black font-mono" id="healthScoreDisplay">88/100</span>
-                <span class="text-xs font-semibold text-emerald-300" id="healthStatusWord">Sangat Sehat</span>
+                <span class="text-xs font-semibold text-brand-400" id="healthStatusWord">Sangat Sehat</span>
               </div>
               <p class="text-xs text-slate-400 mt-1" id="burnRateText">
                 Jatah aman belanja harian: <b>Rp 26.500/hari</b> untuk 25 hari ke depan.
               </p>
             </div>
 
-            <div class="w-12 h-12 rounded-2xl bg-white/10 flex items-center justify-center text-emerald-400">
+            <div class="w-12 h-12 rounded-2xl bg-white/10 flex items-center justify-center text-brand-400">
               <i data-lucide="activity" class="w-6 h-6"></i>
             </div>
           </div>
@@ -358,9 +479,6 @@
               <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Metode Envelope Budgeting</span>
               <h3 class="text-sm font-bold text-slate-900 dark:text-white">Alokasi Anggaran Berdasarkan Pos</h3>
             </div>
-            <button id="editEnvelopesBtn" class="text-xs font-bold text-emerald-600 dark:text-emerald-400 underline">
-              Ubah Limit Pos
-            </button>
           </div>
 
           <!-- Multi-Segment Visual Bar -->
@@ -377,10 +495,10 @@
               <span class="flex items-center gap-1.5 text-slate-800 dark:text-slate-200">
                 <span class="w-2 h-2 rounded-full bg-emerald-500"></span> 🌾 Sembako & Bahan Pokok
               </span>
-              <span class="font-mono text-slate-700 dark:text-slate-300" id="envSpendSembako">Rp 74.000 / Rp 350.000</span>
+              <span class="font-mono text-slate-700 dark:text-slate-300" id="envSpendSembako">Rp 0 / Rp 360.000</span>
             </div>
             <div class="w-full bg-slate-100 dark:bg-slate-800 h-1.5 rounded-full overflow-hidden">
-              <div id="envBarSembako" class="bg-emerald-500 h-full rounded-full" style="width: 21%"></div>
+              <div id="envBarSembako" class="bg-emerald-500 h-full rounded-full" style="width: 0%"></div>
             </div>
           </div>
 
@@ -390,7 +508,7 @@
               <span class="flex items-center gap-1.5 text-slate-800 dark:text-slate-200">
                 <span class="w-2 h-2 rounded-full bg-teal-400"></span> 🥩 Protein, Daging & Sayur
               </span>
-              <span class="font-mono text-slate-700 dark:text-slate-300" id="envSpendProtein">Rp 0 / Rp 250.000</span>
+              <span class="font-mono text-slate-700 dark:text-slate-300" id="envSpendProtein">Rp 0 / Rp 240.000</span>
             </div>
             <div class="w-full bg-slate-100 dark:bg-slate-800 h-1.5 rounded-full overflow-hidden">
               <div id="envBarProtein" class="bg-teal-400 h-full rounded-full" style="width: 0%"></div>
@@ -431,26 +549,26 @@
         <div class="flex items-center justify-between">
           <div>
             <h2 class="text-sm font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
-              <i data-lucide="map-pin" class="w-4 h-4 text-emerald-500"></i>
+              <i data-lucide="map-pin" class="w-4 h-4 text-brand-500"></i>
               <span>Real-World Supermarket Radar</span>
             </h2>
             <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Pemetaan harga keranjang di supermarket & ritel terdekat di dunia nyata</p>
           </div>
           <button id="detectLocationBtn" class="px-2.5 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-bold flex items-center gap-1 active:scale-95 transition border border-slate-200 dark:border-slate-700">
-            <i data-lucide="navigation" class="w-3.5 h-3.5 text-emerald-500"></i>
+            <i data-lucide="navigation" class="w-3.5 h-3.5 text-brand-500"></i>
             <span>Lokasi Saya</span>
           </button>
         </div>
 
         <!-- Recommendation Banner -->
-        <div class="p-4 rounded-3xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow-md relative overflow-hidden">
+        <div class="p-4 rounded-3xl bg-brand-500 text-white shadow-md relative overflow-hidden">
           <div class="flex items-start justify-between">
             <div>
               <span class="text-[10px] font-black uppercase tracking-wider bg-white/20 px-2.5 py-0.5 rounded-full">
                 Rekomendasi Ritel Paling Hemat
               </span>
               <h3 class="text-xl font-black mt-1" id="radarWinnerName">Pasar Tradisional / Pasar Jaya</h3>
-              <p class="text-xs text-emerald-100 mt-1" id="radarWinnerSavings">
+              <p class="text-xs text-white/90 mt-1" id="radarWinnerSavings">
                 Total belanja lebih hemat hingga Rp 42.500 dibanding belanja di supermarket modern!
               </p>
             </div>
@@ -471,7 +589,7 @@
         <div class="flex items-center justify-between">
           <div>
             <h2 class="text-sm font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
-              <i data-lucide="box" class="w-4 h-4 text-emerald-500"></i>
+              <i data-lucide="box" class="w-4 h-4 text-brand-500"></i>
               <span>Smart Pantry & Expiry Guard</span>
             </h2>
             <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Inventaris dapur cerdas & pencegah bahan mubazir</p>
@@ -487,7 +605,7 @@
           <i data-lucide="clock" class="w-4 h-4 text-rose-500 shrink-0 mt-0.5"></i>
           <div>
             <span class="font-bold text-rose-900 dark:text-rose-200 block" id="pantryAlertTitle">2 Bahan Mendekati Basi</span>
-            <span class="text-rose-700 dark:text-rose-300 text-[11px]" id="pantryAlertDesc">Dada Ayam Fillet & Sawi Hijau segera kedaluwarsa dalam 1-2 hari. Klik 'Saran Resep AI' untuk ide masakan!</span>
+            <span class="text-rose-700 dark:text-rose-300 text-[11px]" id="pantryAlertDesc">Dada Ayam Fillet & Sawi Hijau segera kedaluwarsa dalam 1-2 hari.</span>
           </div>
         </div>
 
@@ -523,14 +641,12 @@
               <div class="text-base font-black text-slate-900 dark:text-white font-mono mt-0.5" id="historyTotalSpend">
                 Rp 0
               </div>
-              <div class="text-[10px] text-sky-700 dark:text-sky-400 font-medium mt-0.5">Tersimpan di Cloud Firebase</div>
             </div>
             <div class="pl-3">
               <div class="text-[10px] text-sky-800 dark:text-sky-300 uppercase font-bold">Item Terdaftar</div>
               <div class="text-base font-black text-sky-900 dark:text-sky-200 font-mono mt-0.5" id="historyBenchmarkCount">
                 0 Produk
               </div>
-              <div class="text-[10px] text-sky-700 dark:text-sky-400 font-medium mt-0.5">Siap dibandingkan realtime</div>
             </div>
           </div>
         </div>
@@ -550,72 +666,107 @@
       <section id="tab-settings" class="tab-content hidden space-y-4 pb-6">
         <div>
           <h2 class="text-sm font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
-            <i data-lucide="sliders" class="w-4 h-4 text-emerald-500"></i>
+            <i data-lucide="sliders" class="w-4 h-4 text-brand-500"></i>
             <span>Pusat Pengaturan Sistem (Settings)</span>
           </h2>
-          <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Kelola modul pemindai kamera, tema, audio, dan preferensi pagu</p>
+          <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Kelola pilihan tema warna, pemindai kamera, audio, dan tata letak responsif</p>
         </div>
 
-        <!-- 1. KAMERA PEMINDAI ASLI (SCANNER STUDIO) -->
+        <!-- 1. PILIHAN 4 TEMA WARNA ANTARMUKA (Color Theme Selector) -->
+        <div class="p-4 rounded-3xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 space-y-3">
+          <div>
+            <span class="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-2">
+              <i data-lucide="palette" class="w-4 h-4 text-brand-500"></i>
+              <span>Pilihan Tema Warna Antarmuka</span>
+            </span>
+            <p class="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">Pilih skema warna visual yang sesuai preferensi Anda</p>
+          </div>
+
+          <div class="grid grid-cols-2 gap-2.5">
+            <!-- Theme 1: Emerald Sage -->
+            <button class="color-palette-btn p-3 rounded-2xl border text-left flex items-center gap-2.5 transition active:scale-95" data-theme-name="emerald">
+              <span class="w-5 h-5 rounded-full bg-emerald-500 ring-2 ring-emerald-200 dark:ring-emerald-900 shrink-0"></span>
+              <div>
+                <span class="text-xs font-bold block text-slate-800 dark:text-slate-100">Emerald Sage</span>
+                <span class="text-[10px] text-slate-400">Default & Sehat</span>
+              </div>
+            </button>
+
+            <!-- Theme 2: Midnight Obsidian -->
+            <button class="color-palette-btn p-3 rounded-2xl border text-left flex items-center gap-2.5 transition active:scale-95" data-theme-name="obsidian">
+              <span class="w-5 h-5 rounded-full bg-sky-500 ring-2 ring-sky-200 dark:ring-sky-900 shrink-0"></span>
+              <div>
+                <span class="text-xs font-bold block text-slate-800 dark:text-slate-100">Midnight Obsidian</span>
+                <span class="text-[10px] text-slate-400">Electric Cyan</span>
+              </div>
+            </button>
+
+            <!-- Theme 3: Sunset Amber -->
+            <button class="color-palette-btn p-3 rounded-2xl border text-left flex items-center gap-2.5 transition active:scale-95" data-theme-name="amber">
+              <span class="w-5 h-5 rounded-full bg-amber-500 ring-2 ring-amber-200 dark:ring-amber-900 shrink-0"></span>
+              <div>
+                <span class="text-xs font-bold block text-slate-800 dark:text-slate-100">Sunset Amber</span>
+                <span class="text-[10px] text-slate-400">Warm Coral</span>
+              </div>
+            </button>
+
+            <!-- Theme 4: Royal Indigo -->
+            <button class="color-palette-btn p-3 rounded-2xl border text-left flex items-center gap-2.5 transition active:scale-95" data-theme-name="indigo">
+              <span class="w-5 h-5 rounded-full bg-indigo-500 ring-2 ring-indigo-200 dark:ring-indigo-900 shrink-0"></span>
+              <div>
+                <span class="text-xs font-bold block text-slate-800 dark:text-slate-100">Royal Indigo</span>
+                <span class="text-[10px] text-slate-400">Fintech Premium</span>
+              </div>
+            </button>
+          </div>
+
+          <!-- Mode Gelap / Terang Tambahan -->
+          <div class="pt-2 border-t border-slate-200/60 dark:border-slate-700/60 flex items-center justify-between">
+            <span class="text-xs font-semibold text-slate-600 dark:text-slate-300">Mode Pencahayaan:</span>
+            <div class="flex gap-1.5">
+              <button class="dark-mode-btn px-3 py-1.5 rounded-xl text-xs font-bold bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 active:scale-95 transition" data-mode="light">
+                ☀️ Terang
+              </button>
+              <button class="dark-mode-btn px-3 py-1.5 rounded-xl text-xs font-bold bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 active:scale-95 transition" data-mode="dark">
+                🌙 Gelap
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2. ARSITEKTUR TATA LETAK RESPONSIF (Fluid & Flexible Bento) -->
         <div class="p-4 rounded-3xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 space-y-3">
           <div class="flex items-center justify-between">
-            <div class="flex items-center gap-2.5">
-              <div class="w-9 h-9 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
-                <i data-lucide="camera" class="w-5 h-5"></i>
-              </div>
-              <div>
-                <h3 class="text-xs font-bold text-slate-900 dark:text-white">Smart Receipt & Barcode Scanner</h3>
-                <p class="text-[10px] text-slate-500 dark:text-slate-400">Akses kamera asli untuk Barcode produk & OCR struk</p>
-              </div>
+            <div>
+              <span class="text-xs font-bold text-slate-800 dark:text-slate-200 block">Arsitektur Tata Letak</span>
+              <span class="text-[10px] text-slate-500 dark:text-slate-400">Gunakan tata letak proporsional modular Bento Grid</span>
+            </div>
+            <button id="toggleLayoutSettingsBtn" class="px-3.5 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-800 dark:text-slate-200 active:scale-95 transition">
+              <span id="layoutModeText">Tampilan Kompak Seluler</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- 3. KAMERA PEMINDAI ASLI (SCANNER STUDIO) -->
+        <div class="p-4 rounded-3xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 space-y-3">
+          <div class="flex items-center gap-2.5">
+            <div class="w-9 h-9 rounded-xl bg-brand-50 text-brand-600 dark:bg-slate-800 dark:text-brand-400 flex items-center justify-center">
+              <i data-lucide="camera" class="w-5 h-5"></i>
+            </div>
+            <div>
+              <h3 class="text-xs font-bold text-slate-900 dark:text-white">Smart Receipt & Barcode Scanner</h3>
+              <p class="text-[10px] text-slate-500 dark:text-slate-400">Akses kamera asli untuk Barcode produk & OCR struk</p>
             </div>
           </div>
 
           <div class="grid grid-cols-2 gap-2">
             <button id="openCameraBarcodeBtn" class="py-2.5 px-3 rounded-xl bg-slate-900 dark:bg-slate-700 hover:bg-slate-800 text-white text-xs font-bold flex items-center justify-center gap-1.5 active:scale-95 transition">
-              <i data-lucide="barcode" class="w-4 h-4 text-emerald-400"></i>
+              <i data-lucide="barcode" class="w-4 h-4 text-brand-400"></i>
               <span>Scan Barcode</span>
             </button>
-            <button id="openCameraOcrBtn" class="py-2.5 px-3 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold flex items-center justify-center gap-1.5 active:scale-95 transition">
+            <button id="openCameraOcrBtn" class="py-2.5 px-3 rounded-xl bg-brand-500 hover:bg-brand-600 text-white text-xs font-bold flex items-center justify-center gap-1.5 active:scale-95 transition">
               <i data-lucide="receipt" class="w-4 h-4"></i>
               <span>Scan Struk (OCR)</span>
-            </button>
-          </div>
-        </div>
-
-        <!-- 2. PENGATURAN TEMA & TAMPILAN -->
-        <div class="p-4 rounded-3xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 space-y-3">
-          <div class="flex items-center justify-between">
-            <span class="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-2">
-              <i data-lucide="palette" class="w-4 h-4 text-emerald-500"></i>
-              <span>Tema Warna Antarmuka</span>
-            </span>
-          </div>
-
-          <div class="grid grid-cols-3 gap-2">
-            <button class="theme-choice-btn py-2 rounded-xl text-xs font-bold border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 flex items-center justify-center gap-1.5" data-theme="light">
-              <i data-lucide="sun" class="w-3.5 h-3.5 text-amber-500"></i>
-              <span>Terang</span>
-            </button>
-            <button class="theme-choice-btn py-2 rounded-xl text-xs font-bold border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 flex items-center justify-center gap-1.5" data-theme="dark">
-              <i data-lucide="moon" class="w-3.5 h-3.5 text-sky-400"></i>
-              <span>Gelap</span>
-            </button>
-            <button class="theme-choice-btn py-2 rounded-xl text-xs font-bold border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 flex items-center justify-center gap-1.5" data-theme="system">
-              <i data-lucide="monitor" class="w-3.5 h-3.5 text-emerald-500"></i>
-              <span>Sistem</span>
-            </button>
-          </div>
-        </div>
-
-        <!-- 3. GAYA TATA LETAK (BENTO GRID VS SMARTPHONE) -->
-        <div class="p-4 rounded-3xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 space-y-3">
-          <div class="flex items-center justify-between">
-            <div>
-              <span class="text-xs font-bold text-slate-800 dark:text-slate-200 block">Arsitektur Tata Letak</span>
-              <span class="text-[10px] text-slate-500 dark:text-slate-400">Pilih mode tampilan layar lebar Bento Grid atau Smartphone</span>
-            </div>
-            <button id="toggleLayoutSettingsBtn" class="px-3 py-1.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-800 dark:text-slate-200">
-              <span id="layoutModeText">Smartphone (440px)</span>
             </button>
           </div>
         </div>
@@ -628,12 +779,12 @@
             </div>
             <div>
               <span class="text-xs font-bold text-slate-800 dark:text-slate-200 block">Efek Suara Audio Feedback</span>
-              <span class="text-[10px] text-slate-500 dark:text-slate-400">Suara klik stepper, beep pemindai & alarm over-budget</span>
+              <span class="text-[10px] text-slate-500 dark:text-slate-400">Suara klik stepper, beep barcode & alarm over-budget</span>
             </div>
           </div>
           <label class="relative inline-flex items-center cursor-pointer">
             <input type="checkbox" id="soundToggleCheckbox" class="sr-only peer" checked>
-            <div class="w-11 h-6 bg-slate-300 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500"></div>
+            <div class="w-11 h-6 bg-slate-300 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-brand-500"></div>
           </label>
         </div>
 
@@ -644,9 +795,9 @@
           </label>
           <div class="relative">
             <span class="absolute left-3.5 top-1/2 -translate-y-1/2 font-mono font-bold text-slate-400 text-sm">Rp</span>
-            <input type="number" id="budgetLimitInput" min="50000" step="50000" class="w-full pl-10 pr-4 py-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white font-mono font-bold text-base focus:outline-none focus:border-emerald-500 transition" placeholder="800000">
+            <input type="number" id="budgetLimitInput" min="50000" step="50000" class="w-full pl-10 pr-4 py-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white font-mono font-bold text-base focus:outline-none focus:border-brand-500 transition" placeholder="800000">
           </div>
-          <button id="saveBudgetLimitBtn" class="w-full py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold active:scale-95 transition shadow-sm">
+          <button id="saveBudgetLimitBtn" class="w-full py-2.5 rounded-xl bg-brand-500 hover:bg-brand-600 text-white text-xs font-bold active:scale-95 transition shadow-sm">
             Simpan Pagu Anggaran
           </button>
         </div>
@@ -656,13 +807,13 @@
     </main>
 
     <!-- FLOATING BOTTOM NAVIGATION BAR -->
-    <nav class="fixed bottom-0 left-1/2 -translate-x-1/2 z-40 w-full max-w-[440px] bg-white/95 dark:bg-[#1E293B]/95 backdrop-blur-xl border-t border-slate-200/90 dark:border-slate-800 px-2 py-2">
+    <nav class="fixed bottom-0 left-1/2 -translate-x-1/2 z-40 w-full max-w-lg bg-white/95 dark:bg-[#1E293B]/95 backdrop-blur-xl border-t border-slate-200/90 dark:border-slate-800 px-2 py-2">
       <div class="flex items-center justify-around text-slate-400 dark:text-slate-400">
         <!-- 1. Belanja -->
-        <button class="nav-tab-btn flex-1 flex flex-col items-center py-1 rounded-xl text-emerald-600 dark:text-emerald-400 font-bold active:scale-95 transition" data-target="tab-belanja">
+        <button class="nav-tab-btn flex-1 flex flex-col items-center py-1 rounded-xl text-brand-500 font-bold active:scale-95 transition" data-target="tab-belanja">
           <div class="relative">
             <i data-lucide="shopping-cart" class="w-5 h-5"></i>
-            <span id="navCartBadge" class="absolute -top-1.5 -right-2 px-1.5 py-0.2 rounded-full text-[9px] font-extrabold bg-emerald-500 text-white min-w-4 text-center">0</span>
+            <span id="navCartBadge" class="absolute -top-1.5 -right-2 px-1.5 py-0.2 rounded-full text-[9px] font-extrabold bg-brand-500 text-white min-w-4 text-center">0</span>
           </div>
           <span class="text-[9px] mt-1 font-semibold">Troli</span>
         </button>
@@ -713,9 +864,9 @@
   <div id="cameraScannerModal" class="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md hidden flex flex-col items-center justify-between p-4 transition-all">
     
     <!-- Scanner Top Bar -->
-    <div class="w-full max-w-[440px] flex items-center justify-between text-white z-10">
+    <div class="w-full max-w-md flex items-center justify-between text-white z-10">
       <div class="flex items-center gap-2">
-        <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
+        <span class="w-2.5 h-2.5 rounded-full bg-brand-400 animate-pulse"></span>
         <h3 class="text-xs font-bold uppercase tracking-wider" id="scannerModeTitle">Live Barcode Pemindai</h3>
       </div>
       <button id="closeCameraScannerBtn" class="p-2 rounded-full bg-white/20 text-white hover:bg-white/30 transition">
@@ -724,15 +875,14 @@
     </div>
 
     <!-- Live Video Viewfinder Box -->
-    <div class="relative w-full max-w-[400px] h-[340px] rounded-3xl overflow-hidden bg-black border border-white/20 my-auto shadow-2xl flex items-center justify-center">
+    <div class="relative w-full max-w-sm h-80 rounded-3xl overflow-hidden bg-black border border-white/20 my-auto shadow-2xl flex items-center justify-center">
       <video id="scannerVideo" autoplay playsinline muted></video>
       <canvas id="scannerCanvas" class="hidden"></canvas>
 
       <!-- Reticle Box with Scanning Laser -->
       <div class="reticle-box absolute inset-0 flex items-center justify-center pointer-events-none">
-        <div class="relative w-64 h-48 border-2 border-emerald-400/80 rounded-2xl overflow-hidden shadow-[0_0_20px_rgba(16,185,129,0.3)]">
-          <!-- Laser Line -->
-          <div class="absolute inset-x-0 h-0.5 bg-gradient-to-r from-transparent via-emerald-400 to-transparent shadow-[0_0_10px_#34d399] animate-scan-laser"></div>
+        <div class="relative w-64 h-48 border-2 border-brand-400/80 rounded-2xl overflow-hidden shadow-[0_0_20px_rgba(16,185,129,0.3)]">
+          <div class="absolute inset-x-0 h-0.5 bg-gradient-to-r from-transparent via-brand-400 to-transparent shadow-[0_0_10px_#34d399] animate-scan-laser"></div>
         </div>
       </div>
 
@@ -743,10 +893,9 @@
     </div>
 
     <!-- Scanner Bottom Controls: Mode Switcher & Snap Button -->
-    <div class="w-full max-w-[440px] space-y-3 z-10">
-      <!-- Mode Tabs: Barcode vs OCR -->
+    <div class="w-full max-w-md space-y-3 z-10">
       <div class="grid grid-cols-2 p-1 rounded-2xl bg-white/10 backdrop-blur-md text-xs font-bold text-white">
-        <button id="scanModeBarcodeBtn" class="py-2 rounded-xl bg-emerald-500 shadow-sm transition">
+        <button id="scanModeBarcodeBtn" class="py-2 rounded-xl bg-brand-500 shadow-sm transition">
           Barcode / QR
         </button>
         <button id="scanModeOcrBtn" class="py-2 rounded-xl text-slate-300 hover:text-white transition">
@@ -754,9 +903,7 @@
         </button>
       </div>
 
-      <!-- Action Buttons Row -->
       <div class="flex items-center justify-between gap-3">
-        <!-- Quick Sample / Fallback File Button -->
         <button id="scannerSampleBtn" class="px-4 py-2.5 rounded-xl bg-white/15 hover:bg-white/25 text-white text-xs font-bold transition flex items-center gap-1.5">
           <i data-lucide="sparkles" class="w-3.5 h-3.5 text-amber-400"></i>
           <span>Uji Contoh Cepat</span>
@@ -773,19 +920,19 @@
   </div>
 
   <!-- ========================================================================= -->
-  <!-- MODAL 2: CUSTOM GROCERY ITEM BUILDER (Kustomisasi Bebas)                  -->
+  <!-- MODAL 2: CUSTOM GROCERY ITEM BUILDER WITH STACKED DISCOUNT CALCULATOR     -->
   <!-- ========================================================================= -->
   <div id="customItemModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden flex items-end sm:items-center justify-center p-0 sm:p-4 transition-opacity">
-    <div class="w-full max-w-[440px] max-h-[92vh] overflow-y-auto bg-white dark:bg-[#1E293B] border-t sm:border border-slate-200 dark:border-slate-700 rounded-t-3xl sm:rounded-3xl shadow-2xl p-5 space-y-3.5 animate-slide-up scrollbar-none text-slate-800 dark:text-slate-100">
+    <div class="w-full max-w-lg max-h-[92vh] overflow-y-auto bg-white dark:bg-[#1E293B] border-t sm:border border-slate-200 dark:border-slate-700 rounded-t-3xl sm:rounded-3xl shadow-2xl p-5 space-y-3.5 animate-slide-up scrollbar-none text-slate-800 dark:text-slate-100">
 
       <div class="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-800">
         <div class="flex items-center gap-2">
-          <div class="w-8 h-8 rounded-xl bg-emerald-50 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
+          <div class="w-8 h-8 rounded-xl bg-brand-50 text-brand-600 dark:bg-slate-800 dark:text-brand-400 flex items-center justify-center">
             <i data-lucide="edit" class="w-4 h-4"></i>
           </div>
           <div>
             <h3 class="text-sm font-bold text-slate-900 dark:text-white" id="customItemModalTitle">Tambah Barang Belanja Bebas</h3>
-            <p class="text-[10px] text-slate-500 dark:text-slate-400">Kustomisasi nama, kuantitas, harga, dan toko tujuan</p>
+            <p class="text-[10px] text-slate-500 dark:text-slate-400">Kustomisasi nama, harga, toko, dan kalkulator diskon bertingkat</p>
           </div>
         </div>
         <button id="closeCustomItemBtn" class="p-1.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-400 hover:text-slate-600">
@@ -801,14 +948,14 @@
           <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
             Nama Produk / Barang <span class="text-rose-500">*</span>
           </label>
-          <input type="text" id="customInputName" required placeholder="Contoh: Beras Ramos 5kg, Telur Ayam, Daging Sapi..." class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-sm font-semibold text-slate-900 dark:text-white focus:outline-none focus:border-emerald-500">
+          <input type="text" id="customInputName" required placeholder="Contoh: Beras Ramos 5kg, Telur Ayam, Minyak Sania..." class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-sm font-semibold text-slate-900 dark:text-white focus:outline-none focus:border-brand-500">
         </div>
 
         <!-- Envelope Category & Unit -->
         <div class="grid grid-cols-2 gap-2.5">
           <div>
             <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-300 mb-1">Pos Kategori Anggaran</label>
-            <select id="customInputCategory" class="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-800 dark:text-slate-100 focus:outline-none focus:border-emerald-500">
+            <select id="customInputCategory" class="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-800 dark:text-slate-100 focus:outline-none focus:border-brand-500">
               <option value="Sembako">🌾 Sembako & Bahan Pokok</option>
               <option value="Daging & Sayur">🥩 Daging & Makanan Segar</option>
               <option value="Makanan Instan">🍜 Makanan Instan</option>
@@ -821,7 +968,7 @@
 
           <div>
             <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-300 mb-1">Satuan</label>
-            <select id="customInputUnit" class="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-800 dark:text-slate-100 focus:outline-none focus:border-emerald-500">
+            <select id="customInputUnit" class="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-800 dark:text-slate-100 focus:outline-none focus:border-brand-500">
               <option value="pcs">pcs (buah)</option>
               <option value="kg">kg</option>
               <option value="gram">gram</option>
@@ -844,8 +991,86 @@
           </div>
 
           <div>
-            <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-300 mb-1">Harga Satuan (Rp) <span class="text-rose-500">*</span></label>
+            <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-300 mb-1">Harga Satuan Normal (Rp) <span class="text-rose-500">*</span></label>
             <input type="number" id="customInputPrice" min="0" step="500" required placeholder="0" class="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-sm font-mono font-bold text-slate-900 dark:text-white">
+          </div>
+        </div>
+
+        <!-- ================================================================= -->
+        <!-- FITUR DISKON BERTINGKAT (STACKED / CASCADING DISCOUNT SYSTEM)      -->
+        <!-- ================================================================= -->
+        <div class="p-3 rounded-2xl bg-amber-50/60 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/50 space-y-2">
+          <div class="flex items-center justify-between">
+            <label class="text-[11px] font-bold text-amber-900 dark:text-amber-200 flex items-center gap-1">
+              <i data-lucide="percent" class="w-3.5 h-3.5 text-amber-600"></i>
+              <span>Kalkulator Diskon Toko</span>
+            </label>
+            <span class="text-[10px] text-amber-700 dark:text-amber-400 font-semibold">Cascading Tier (50%+20%)</span>
+          </div>
+
+          <!-- Mode Selector Chips -->
+          <div class="grid grid-cols-4 gap-1">
+            <button type="button" class="custom-disc-mode-btn active py-1 rounded-lg text-[10px] font-bold bg-amber-200 dark:bg-amber-900 text-amber-900 dark:text-amber-100 border border-amber-300 dark:border-amber-700" data-mode="none">
+              Tanpa
+            </button>
+            <button type="button" class="custom-disc-mode-btn py-1 rounded-lg text-[10px] font-bold bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700" data-mode="single">
+              Tunggal %
+            </button>
+            <button type="button" class="custom-disc-mode-btn py-1 rounded-lg text-[10px] font-bold bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700" data-mode="tier">
+              Bertingkat
+            </button>
+            <button type="button" class="custom-disc-mode-btn py-1 rounded-lg text-[10px] font-bold bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700" data-mode="nominal">
+              Nominal Rp
+            </button>
+          </div>
+
+          <!-- 1. Single Mode Input -->
+          <div id="customDiscSingleBox" class="hidden space-y-1">
+            <div class="flex items-center gap-2">
+              <input type="number" id="customInputDiscSingle" min="0" max="99" value="0" placeholder="Contoh: 20" class="w-full px-3 py-1.5 rounded-lg bg-white dark:bg-slate-900 border border-amber-200 dark:border-amber-900 text-xs font-mono font-bold text-center">
+              <span class="text-xs font-bold text-slate-500">%</span>
+            </div>
+          </div>
+
+          <!-- 2. Stacked Multi-Tier Mode (50% + 20%) -->
+          <div id="customDiscTierBox" class="hidden space-y-1.5">
+            <div class="flex items-center gap-1.5">
+              <div class="flex-1">
+                <span class="text-[9px] text-slate-500 block">Tier 1 (%)</span>
+                <input type="number" id="customInputDiscTier1" min="0" max="99" value="50" class="w-full px-2 py-1.5 rounded-lg bg-white dark:bg-slate-900 border border-amber-200 dark:border-amber-900 text-xs font-mono font-bold text-center">
+              </div>
+              <span class="text-xs font-bold text-slate-400 mt-3">+</span>
+              <div class="flex-1">
+                <span class="text-[9px] text-slate-500 block">Tier 2 (%)</span>
+                <input type="number" id="customInputDiscTier2" min="0" max="99" value="20" class="w-full px-2 py-1.5 rounded-lg bg-white dark:bg-slate-900 border border-amber-200 dark:border-amber-900 text-xs font-mono font-bold text-center">
+              </div>
+            </div>
+
+            <!-- Quick Tier Presets -->
+            <div class="flex gap-1">
+              <button type="button" class="tier-preset-btn flex-1 py-0.5 rounded bg-white dark:bg-slate-800 text-[10px] font-bold border border-amber-200 dark:border-amber-900 text-amber-900 dark:text-amber-200" data-t1="50" data-t2="20">
+                50% + 20%
+              </button>
+              <button type="button" class="tier-preset-btn flex-1 py-0.5 rounded bg-white dark:bg-slate-800 text-[10px] font-bold border border-amber-200 dark:border-amber-900 text-amber-900 dark:text-amber-200" data-t1="30" data-t2="10">
+                30% + 10%
+              </button>
+              <button type="button" class="tier-preset-btn flex-1 py-0.5 rounded bg-white dark:bg-slate-800 text-[10px] font-bold border border-amber-200 dark:border-amber-900 text-amber-900 dark:text-amber-200" data-t1="70" data-t2="10">
+                70% + 10%
+              </button>
+            </div>
+          </div>
+
+          <!-- 3. Nominal Mode -->
+          <div id="customDiscNominalBox" class="hidden">
+            <div class="relative">
+              <span class="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-mono text-slate-400">Rp</span>
+              <input type="number" id="customInputDiscNominal" min="0" step="500" value="0" placeholder="5000" class="w-full pl-9 pr-3 py-1.5 rounded-lg bg-white dark:bg-slate-900 border border-amber-200 dark:border-amber-900 text-xs font-mono font-bold">
+            </div>
+          </div>
+
+          <!-- Mathematical Explanation Note -->
+          <div id="customDiscountNote" class="text-[10px] text-amber-800 dark:text-amber-300 pt-1 border-t border-amber-200/70 dark:border-amber-900/40 hidden leading-relaxed">
+            <!-- Rendered by JS: e.g. Rp 100.000 -> 50% = 50.000 -> 20% = 40.000 (Hemat Rp 60.000) -->
           </div>
         </div>
 
@@ -866,10 +1091,13 @@
         <!-- Row Total Preview -->
         <div class="p-3 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 flex items-center justify-between">
           <div>
-            <span class="text-[10px] text-slate-400 uppercase font-semibold">Total Item</span>
+            <span class="text-[10px] text-slate-400 uppercase font-semibold">Total Item Bersih</span>
             <div class="text-[10px] text-slate-500 font-mono" id="customCalcPreview">1 × Rp 0</div>
           </div>
-          <span class="text-base font-extrabold text-emerald-600 dark:text-emerald-400 font-mono" id="customTotalPreview">Rp 0</span>
+          <div class="text-right">
+            <span class="text-base font-extrabold text-brand-500 font-mono block" id="customTotalPreview">Rp 0</span>
+            <span class="text-[9px] text-brand-600 dark:text-brand-400 font-semibold hidden" id="customSavingBadge">Hemat Rp 0</span>
+          </div>
         </div>
 
         <!-- Action Buttons -->
@@ -877,7 +1105,7 @@
           <button type="button" id="cancelCustomItemBtn" class="flex-1 py-3 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-bold active:scale-95 transition">
             Batal
           </button>
-          <button type="submit" id="saveCustomItemBtn" class="flex-2 w-2/3 py-3 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-extrabold shadow-md active:scale-95 transition flex items-center justify-center gap-1.5">
+          <button type="submit" id="saveCustomItemBtn" class="flex-2 w-2/3 py-3 rounded-xl bg-brand-500 hover:bg-brand-600 text-white text-xs font-extrabold shadow-md active:scale-95 transition flex items-center justify-center gap-1.5">
             <i data-lucide="check" class="w-4 h-4"></i>
             <span>Simpan ke Troli</span>
           </button>
@@ -891,7 +1119,7 @@
   <!-- MODAL 3: STRICT EMERGENCY FREEZE HARD CAP BARRIER                         -->
   <!-- ========================================================================= -->
   <div id="strictFreezeModal" class="fixed inset-0 z-50 bg-slate-900/75 backdrop-blur-md hidden flex items-center justify-center p-4">
-    <div class="w-full max-w-[390px] bg-white dark:bg-[#1E293B] border-2 border-rose-500 dark:border-rose-600 rounded-3xl shadow-2xl p-6 text-center space-y-4">
+    <div class="w-full max-w-sm bg-white dark:bg-[#1E293B] border-2 border-rose-500 dark:border-rose-600 rounded-3xl shadow-2xl p-6 text-center space-y-4">
       <div class="w-16 h-16 mx-auto rounded-full bg-rose-100 dark:bg-rose-950 text-rose-600 dark:text-rose-400 flex items-center justify-center animate-pulse">
         <i data-lucide="shield-alert" class="w-8 h-8"></i>
       </div>
@@ -926,7 +1154,7 @@
   <!-- MODAL 4: DETAIL STRUK DIGITAL RIWAYAT                                     -->
   <!-- ========================================================================= -->
   <div id="receiptModalBackdrop" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-3.5">
-    <div class="w-full max-w-[420px] max-h-[90vh] overflow-y-auto bg-white dark:bg-[#1E293B] border border-slate-200 dark:border-slate-700 rounded-3xl shadow-2xl p-4 flex flex-col space-y-3 scrollbar-none text-slate-800 dark:text-slate-100">
+    <div class="w-full max-w-sm max-h-[90vh] overflow-y-auto bg-white dark:bg-[#1E293B] border border-slate-200 dark:border-slate-700 rounded-3xl shadow-2xl p-4 flex flex-col space-y-3 scrollbar-none text-slate-800 dark:text-slate-100">
       <div class="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-800">
         <div class="flex items-center gap-2">
           <div class="w-7 h-7 rounded-lg bg-sky-50 dark:bg-sky-950 text-sky-600 dark:text-sky-400 flex items-center justify-center">
@@ -948,7 +1176,7 @@
           <i data-lucide="copy" class="w-3.5 h-3.5"></i>
           <span>Salin ke WhatsApp</span>
         </button>
-        <button id="dismissReceiptBtn" class="py-2.5 px-4 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold active:scale-95 transition">
+        <button id="dismissReceiptBtn" class="py-2.5 px-4 rounded-xl bg-brand-500 hover:bg-brand-600 text-white text-xs font-bold active:scale-95 transition">
           Tutup
         </button>
       </div>
@@ -956,8 +1184,8 @@
   </div>
 
   <!-- TOAST NOTIFICATION CONTAINER -->
-  <div id="toastNotification" class="fixed top-5 left-1/2 -translate-x-1/2 z-50 px-4 py-2.5 rounded-2xl bg-white/95 dark:bg-slate-800/95 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 text-xs font-semibold shadow-2xl transition-all duration-300 pointer-events-none opacity-0 -translate-y-4 max-w-[360px] flex items-center gap-2">
-    <i data-lucide="check-circle" id="toastIcon" class="w-4 h-4 text-emerald-500 shrink-0"></i>
+  <div id="toastNotification" class="fixed top-5 left-1/2 -translate-x-1/2 z-50 px-4 py-2.5 rounded-2xl bg-white/95 dark:bg-slate-800/95 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 text-xs font-semibold shadow-2xl transition-all duration-300 pointer-events-none opacity-0 -translate-y-4 max-w-sm flex items-center gap-2">
+    <i data-lucide="check-circle" id="toastIcon" class="w-4 h-4 text-brand-500 shrink-0"></i>
     <span id="toastMessage">Pemberitahuan</span>
   </div>
 
