@@ -131,7 +131,7 @@ class FirebaseSharedService {
       } : { mode: 'none' },
       store: String(item.store || 'Super Indo'),
       isEssential: item.isEssential !== false,
-      checked: item.checked !== false
+      checked: true
     }));
   }
 

@@ -1,5 +1,5 @@
 // Service Worker for Smart Grocery & Budget Safety Tracker (PWA)
-const CACHE_NAME = 'smart-grocery-v19';
+const CACHE_NAME = 'smart-grocery-v21';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
@@ -45,24 +45,23 @@ self.addEventListener('fetch', (event) => {
     return; // Langsung kirim lewat jaringan asli
   }
 
+  // Network-First strategy: selalu ambil kode terbaru jika online, fallback ke cache jika offline
   event.respondWith(
-    caches.match(event.request).then((cachedResponse) => {
-      if (cachedResponse) {
-        // Return cache but update in background
-        fetch(event.request).then((networkResponse) => {
-          if (networkResponse && networkResponse.status === 200) {
-            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, networkResponse));
-          }
-        }).catch(() => {/* offline silent */});
-        return cachedResponse;
-      }
-
-      return fetch(event.request).catch(() => {
-        // Fallback for HTML documents if offline
-        if (event.request.destination === 'document') {
-          return caches.match('./index.html');
+    fetch(event.request)
+      .then((networkResponse) => {
+        if (networkResponse && networkResponse.status === 200) {
+          const responseClone = networkResponse.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, responseClone));
         }
-      });
-    })
+        return networkResponse;
+      })
+      .catch(() => {
+        return caches.match(event.request).then((cachedResponse) => {
+          if (cachedResponse) return cachedResponse;
+          if (event.request.destination === 'document') {
+            return caches.match('./index.html');
+          }
+        });
+      })
   );
 });

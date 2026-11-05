@@ -301,6 +301,10 @@ class AppState {
   constructor() {
     this.budgetLimit = Number(localStorage.getItem('sg_budget_limit')) || DEFAULT_BUDGET_LIMIT;
     this.cart = this.loadData('sg_cart_items', this.getInitialSampleCart());
+    // Auto-heal: Pastikan seluruh item troli aktif selalu ter-select (checked: true)
+    if (Array.isArray(this.cart)) {
+      this.cart = this.cart.map(item => ({ ...item, checked: true }));
+    }
     this.history = this.loadData('sg_history_trips', []);
     this.pantry = this.loadData('sg_pantry_items', this.getInitialPantryItems());
     this.isFrozen = localStorage.getItem('sg_emergency_freeze') === 'true';
@@ -2172,8 +2176,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // ⚡ Realtime listener: Perangkat lain mengubah troli
   window.addEventListener('cloud-cart-update', (e) => {
-    const remoteItems = e.detail?.items;
+    let remoteItems = e.detail?.items;
     if (!Array.isArray(remoteItems)) return;
+
+    // Jaminan Realtime: Item dari perangkat lain selalu otomatis terpilih/tercentang (checked: true)
+    remoteItems = remoteItems.map(item => ({
+      ...item,
+      checked: true
+    }));
+
     const currentJson = JSON.stringify(state.cart);
     const remoteJson = JSON.stringify(remoteItems);
     if (currentJson !== remoteJson) {
