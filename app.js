@@ -310,6 +310,8 @@ class AppState {
     this.lightMode = localStorage.getItem('sg_light_mode') || 'dark'; // 'light' | 'dark'
     this.isBentoFluid = localStorage.getItem('sg_layout_mode') === 'fluid';
     this.appliedVoucher = this.loadData('sg_applied_voucher', null);
+    this.selectedStore = localStorage.getItem('sg_selected_store') || 'Lotte Mart Grocery - Boulevard';
+    this.selectedDate = localStorage.getItem('sg_selected_date') || new Date().toISOString().split('T')[0];
     this.userCoords = null;
     this.scannerStream = null;
     this.scannerMode = 'barcode';
@@ -411,6 +413,16 @@ class AppState {
   saveVoucherState() {
     localStorage.setItem('sg_applied_voucher', JSON.stringify(this.appliedVoucher));
   }
+
+  saveSelectedStore(store) {
+    this.selectedStore = store;
+    localStorage.setItem('sg_selected_store', store);
+  }
+
+  saveSelectedDate(date) {
+    this.selectedDate = date;
+    localStorage.setItem('sg_selected_date', date);
+  }
 }
 
 const state = new AppState();
@@ -484,6 +496,16 @@ class SoundEngine {
 
 const sounds = new SoundEngine();
 
+function safeCreateIcons(opts) {
+  if (typeof window !== 'undefined' && window.lucide && typeof window.lucide.createIcons === 'function') {
+    try {
+      window.lucide.createIcons(opts);
+    } catch (e) {
+      console.warn('Icon render non-critical warning:', e);
+    }
+  }
+}
+
 function formatRupiah(num) {
   return 'Rp ' + Number(num || 0).toLocaleString('id-ID');
 }
@@ -497,7 +519,7 @@ function showToast(msg, iconType = 'check-circle') {
   toastMsg.textContent = msg;
   if (toastIcon) {
     toastIcon.setAttribute('data-lucide', iconType);
-    lucide.createIcons({ targets: [toastIcon] });
+    safeCreateIcons({ targets: [toastIcon] });
   }
 
   toast.classList.remove('opacity-0', '-translate-y-4', 'pointer-events-none');
@@ -666,7 +688,7 @@ function renderGuardianAndEnvelopes() {
   const heroMaxLabel = document.getElementById('heroMaxLabel');
   if (heroMaxLabel) heroMaxLabel.textContent = `Max ${formattedCapK}`;
 
-  const activeSegmentCount = totals.finalCartTotal === 0 ? 0 : Math.min(10, Math.ceil(spentPct / 10));
+  const activeSegmentCount = totals.finalCartTotal === 0 ? 0 : Math.max(1, Math.min(10, Math.round(spentPct / 10)));
   const segBlocks = document.querySelectorAll('#heroSegmentedBar .seg-block');
   segBlocks.forEach((block, idx) => {
     const blockNum = idx + 1;
@@ -1085,7 +1107,7 @@ function renderCartItems() {
   container.innerHTML = html;
   attachCartEventListeners();
   renderGuardianAndEnvelopes();
-  lucide.createIcons();
+  safeCreateIcons();
 }
 
 function attachCartEventListeners() {
@@ -1342,7 +1364,7 @@ function renderRealWorldRadar() {
   });
 
   container.innerHTML = html;
-  lucide.createIcons();
+  safeCreateIcons();
 }
 
 function handleDetectLocation() {
@@ -1742,8 +1764,8 @@ function handleSaveCustomItem() {
   const price = Number(document.getElementById('customInputPrice')?.value) || 0;
   const store = document.getElementById('customInputStore')?.value;
 
-  if (!name || price <= 0) {
-    showToast('Mohon masukkan nama produk dan harga valid!', 'alert-triangle');
+  if (!name || isNaN(price) || price < 0) {
+    showToast('Mohon masukkan nama produk dan harga valid (minimal Rp 0)!', 'alert-triangle');
     return;
   }
 
@@ -2007,7 +2029,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (targetId === 'tab-riwayat') renderHistoryView();
 
     sounds.playClick();
-    lucide.createIcons();
+    safeCreateIcons();
   };
 
   document.querySelectorAll('.nav-tab-btn').forEach(btn => {
@@ -2018,6 +2040,26 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('headerSettingsBtn')?.addEventListener('click', () => {
     switchTab('tab-settings');
   });
+
+  // Header Store Selector & Date Picker Persistence
+  const headerStoreSelector = document.getElementById('headerStoreSelector');
+  if (headerStoreSelector) {
+    if (state.selectedStore) headerStoreSelector.value = state.selectedStore;
+    headerStoreSelector.addEventListener('change', (e) => {
+      state.saveSelectedStore(e.target.value);
+      showToast(`Lokasi toko: ${e.target.value}`);
+      sounds.playClick();
+    });
+  }
+
+  const headerDatePicker = document.getElementById('headerDatePicker');
+  if (headerDatePicker) {
+    if (state.selectedDate) headerDatePicker.value = state.selectedDate;
+    headerDatePicker.addEventListener('change', (e) => {
+      state.saveSelectedDate(e.target.value);
+      sounds.playClick();
+    });
+  }
 
   // Category Pills
   document.querySelectorAll('.cat-pill').forEach(btn => {
@@ -2200,5 +2242,5 @@ document.addEventListener('DOMContentLoaded', () => {
   // Supermarket Catalog Autocomplete & Smart Auto-Assign
   setupSupermarketCatalogAutocomplete();
 
-  lucide.createIcons();
+  safeCreateIcons();
 });

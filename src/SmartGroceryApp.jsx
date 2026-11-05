@@ -170,7 +170,7 @@ export default function SmartGroceryApp() {
     else if (spentPct >= 70) status = 'warning';
 
     // 10-Segment block count
-    const activeSegments = finalTotal === 0 ? 0 : Math.min(10, Math.ceil(spentPct / 10));
+    const activeSegments = finalTotal === 0 ? 0 : Math.max(1, Math.min(10, Math.round(spentPct / 10)));
 
     return {
       subtotalNormal,
@@ -214,7 +214,7 @@ export default function SmartGroceryApp() {
 
   // Tambah item ke keranjang
   const handleSaveItem = () => {
-    if (!customName.trim() || Number(customPrice) <= 0) return;
+    if (!customName.trim() || isNaN(Number(customPrice)) || Number(customPrice) < 0) return;
 
     let discountObj = { mode: 'none' };
     if (customDiscMode === 'single') {
