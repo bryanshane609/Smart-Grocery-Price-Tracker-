@@ -600,13 +600,13 @@ function renderGuardianAndEnvelopes() {
   const heroBudgetStatusText = document.getElementById('heroBudgetStatusText');
   if (heroBudgetStatusPill && heroBudgetStatusText) {
     if (statusTier === 'safe') {
-      heroBudgetStatusPill.className = 'inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 font-mono text-[11px] font-extrabold tracking-wider shadow-xs';
+      heroBudgetStatusPill.className = 'text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800 shadow-xs inline-flex items-center gap-1';
       heroBudgetStatusText.textContent = '• STATUS: AMAN';
     } else if (statusTier === 'warning') {
-      heroBudgetStatusPill.className = 'inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-600 dark:text-amber-400 font-mono text-[11px] font-extrabold tracking-wider shadow-xs';
+      heroBudgetStatusPill.className = 'text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border border-amber-300 dark:border-amber-800 shadow-xs inline-flex items-center gap-1';
       heroBudgetStatusText.textContent = '• STATUS: WASPADA';
     } else {
-      heroBudgetStatusPill.className = 'inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-500/20 border border-rose-500/40 text-rose-600 dark:text-rose-400 font-mono text-[11px] font-extrabold tracking-wider shadow-xs animate-pulse';
+      heroBudgetStatusPill.className = 'text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-rose-100 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 border border-rose-300 dark:border-rose-800 shadow-xs inline-flex items-center gap-1 animate-pulse';
       heroBudgetStatusText.textContent = totals.finalCartTotal > limit ? '• STATUS: OVER LIMIT' : '• STATUS: KRITIS';
     }
   }
@@ -627,6 +627,13 @@ function renderGuardianAndEnvelopes() {
   const heroUsageCapText = document.getElementById('heroUsageCapText');
   if (heroUsageCapText) {
     heroUsageCapText.textContent = `${spentPct}% CAP`;
+    if (statusTier === 'safe') {
+      heroUsageCapText.className = 'font-mono text-xl sm:text-2xl font-black text-slate-800 dark:text-slate-100';
+    } else if (statusTier === 'warning') {
+      heroUsageCapText.className = 'font-mono text-xl sm:text-2xl font-black text-[#F59E0B]';
+    } else {
+      heroUsageCapText.className = 'font-mono text-xl sm:text-2xl font-black text-[#EF4444]';
+    }
   }
 
   const heroRemainingNumber = document.getElementById('heroRemainingNumber');
@@ -634,19 +641,31 @@ function renderGuardianAndEnvelopes() {
   if (heroRemainingNumber) {
     if (remaining >= 0) {
       heroRemainingNumber.textContent = formatRupiah(remaining);
-      heroRemainingNumber.className = 'text-amber-600 dark:text-amber-400 font-mono font-bold ml-1';
+      if (statusTier === 'safe') {
+        heroRemainingNumber.className = 'text-[#10B981] font-mono font-bold ml-1';
+      } else if (statusTier === 'warning') {
+        heroRemainingNumber.className = 'text-[#F59E0B] font-mono font-bold ml-1';
+      } else {
+        heroRemainingNumber.className = 'text-[#EF4444] font-mono font-bold ml-1';
+      }
     } else {
       heroRemainingNumber.textContent = `Defisit ${formatRupiah(Math.abs(remaining))}`;
-      heroRemainingNumber.className = 'text-rose-600 dark:text-rose-400 font-mono font-bold ml-1';
+      heroRemainingNumber.className = 'text-[#EF4444] font-mono font-bold ml-1';
     }
   }
   if (heroRemainingSub) {
     if (remaining >= 0) {
-      heroRemainingSub.textContent = `${Math.max(0, 100 - spentPct)}% Tersedia`;
-      heroRemainingSub.className = 'text-[10px] font-mono font-bold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-2 py-0.5 rounded-lg';
+      heroRemainingSub.textContent = `${Math.max(0, 100 - spentPct)}% Sisa`;
+      if (statusTier === 'safe') {
+        heroRemainingSub.className = 'text-[10px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800/60 px-2 py-0.5 rounded-lg';
+      } else if (statusTier === 'warning') {
+        heroRemainingSub.className = 'text-[10px] font-bold text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/60 border border-amber-200 dark:border-amber-800/60 px-2 py-0.5 rounded-lg';
+      } else {
+        heroRemainingSub.className = 'text-[10px] font-bold text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/80 border border-rose-200 dark:border-rose-800/60 px-2 py-0.5 rounded-lg';
+      }
     } else {
       heroRemainingSub.textContent = 'Defisit Anggaran';
-      heroRemainingSub.className = 'text-[10px] font-mono font-bold text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/80 border border-rose-200 dark:border-rose-800/60 px-2 py-0.5 rounded-lg';
+      heroRemainingSub.className = 'text-[10px] font-bold text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/80 border border-rose-200 dark:border-rose-800/60 px-2 py-0.5 rounded-lg';
     }
   }
 
@@ -660,14 +679,14 @@ function renderGuardianAndEnvelopes() {
     const blockNum = idx + 1;
     if (blockNum <= activeSegmentCount) {
       if (statusTier === 'safe') {
-        block.className = 'seg-block h-2.5 sm:h-3 rounded-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)] border border-emerald-400 transition-all duration-300';
+        block.className = 'seg-block h-2.5 sm:h-3 rounded-full bg-[#10B981] shadow-[0_0_8px_rgba(16,185,129,0.35)] border border-[#10B981] transition-all duration-300';
       } else if (statusTier === 'warning') {
-        block.className = 'seg-block h-2.5 sm:h-3 rounded-full bg-amber-400 shadow-[0_0_10px_rgba(245,158,11,0.5)] border border-amber-300 transition-all duration-300';
+        block.className = 'seg-block h-2.5 sm:h-3 rounded-full bg-[#F59E0B] shadow-[0_0_8px_rgba(245,158,11,0.35)] border border-[#F59E0B] transition-all duration-300';
       } else {
-        block.className = 'seg-block h-2.5 sm:h-3 rounded-full bg-rose-500 shadow-[0_0_10px_rgba(244,63,94,0.6)] border border-rose-400 transition-all duration-300 animate-pulse';
+        block.className = 'seg-block h-2.5 sm:h-3 rounded-full bg-[#EF4444] shadow-[0_0_8px_rgba(239,68,68,0.45)] border border-[#EF4444] transition-all duration-300 animate-pulse';
       }
     } else {
-      block.className = 'seg-block h-2.5 sm:h-3 rounded-full bg-slate-200 dark:bg-slate-700/60 border border-slate-300/40 dark:border-slate-600/30 shadow-none transition-all duration-300';
+      block.className = 'seg-block h-2.5 sm:h-3 rounded-full bg-slate-200 dark:bg-white/[0.08] border border-slate-300/40 dark:border-white/[0.06] shadow-none transition-all duration-300';
     }
   });
 

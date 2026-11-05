@@ -345,7 +345,7 @@ export default function KeranjangPintarApp() {
         <motion.div
           initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
-          className="p-5 sm:p-6 rounded-3xl bg-slate-50 dark:bg-[#151f32]/95 border border-slate-200/90 dark:border-slate-700/70 shadow-sm text-slate-800 dark:text-slate-100 relative overflow-hidden transition-all duration-300"
+          className="p-4 sm:p-5 rounded-3xl bg-white dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700 shadow-sm text-slate-800 dark:text-slate-100 relative overflow-hidden transition-all duration-300"
         >
           {/* Subtle Glow Accents */}
           <div className="absolute -top-16 -right-16 w-48 h-48 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
@@ -355,21 +355,21 @@ export default function KeranjangPintarApp() {
           <div className="flex items-center justify-between relative z-10">
             {/* Pill Status Aman / Waspada */}
             <div
-              className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full font-mono text-[11px] font-extrabold tracking-wider ${
+              className={`text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full border shadow-xs inline-flex items-center gap-1 ${
                 calculation.status === 'safe'
-                  ? 'bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400'
+                  ? 'bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border-emerald-300 dark:border-emerald-800'
                   : calculation.status === 'warning'
-                  ? 'bg-amber-500/10 border border-amber-500/30 text-amber-600 dark:text-amber-400'
-                  : 'bg-rose-500/15 border border-rose-500/30 text-rose-600 dark:text-rose-400 animate-pulse'
+                  ? 'bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border-amber-300 dark:border-amber-800'
+                  : 'bg-rose-100 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 border-rose-300 dark:border-rose-800 animate-pulse'
               }`}
             >
               <span
-                className={`w-2 h-2 rounded-full ${
+                className={`w-1.5 h-1.5 rounded-full ${
                   calculation.status === 'safe'
-                    ? 'bg-emerald-500'
+                    ? 'bg-[#10B981]'
                     : calculation.status === 'warning'
-                    ? 'bg-amber-500'
-                    : 'bg-rose-500 animate-pulse'
+                    ? 'bg-[#F59E0B]'
+                    : 'bg-[#EF4444] animate-pulse'
                 }`}
               />
               <span>
@@ -382,7 +382,7 @@ export default function KeranjangPintarApp() {
             </div>
 
             {/* Badge Hemat Rp */}
-            <div className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-600 dark:text-amber-400 font-mono text-[11px] font-extrabold shadow-xs">
+            <div className="inline-flex items-center gap-1 text-[10px] font-bold text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/60 border border-amber-200 dark:border-amber-800/60 px-2.5 py-1 rounded-full shadow-xs">
               <Flame className="w-3.5 h-3.5 text-amber-500" />
               <span>{`HEMAT RP ${Math.round(calculation.totalSavings).toLocaleString('id-ID')}`}</span>
             </div>
@@ -390,14 +390,14 @@ export default function KeranjangPintarApp() {
 
           {/* Area Anggaran Utama */}
           <div className="mt-4 relative z-10">
-            <span className="text-[10px] sm:text-[11px] font-extrabold text-slate-400 dark:text-slate-400 uppercase tracking-widest block">
+            <span className="text-[10px] sm:text-[11px] font-extrabold text-[#94A3B8] uppercase tracking-widest block">
               TOTAL BELANJA BERJALAN
             </span>
 
             <div className="flex items-baseline justify-between mt-1">
               {/* Angka Besar */}
               <div className="flex items-baseline">
-                <span className="text-amber-500 dark:text-amber-400 font-mono font-bold text-2xl sm:text-3xl mr-1.5">Rp</span>
+                <span className="text-[#F59E0B] font-mono font-bold text-2xl sm:text-3xl mr-1.5">Rp</span>
                 <motion.span
                   key={calculation.finalTotal}
                   initial={{ scale: 0.95 }}
@@ -410,10 +410,16 @@ export default function KeranjangPintarApp() {
 
               {/* Sisi Kanan: Label Pemakaian & Cap % */}
               <div className="text-right">
-                <span className="text-[9px] sm:text-[10px] font-extrabold text-slate-400 dark:text-slate-400 uppercase tracking-widest block">
+                <span className="text-[9px] sm:text-[10px] font-extrabold text-[#94A3B8] uppercase tracking-widest block">
                   PEMAKAIAN
                 </span>
-                <span className="font-mono text-xl sm:text-2xl font-black text-slate-800 dark:text-slate-100">
+                <span className={`font-mono text-xl sm:text-2xl font-black ${
+                  calculation.status === 'safe'
+                    ? 'text-slate-800 dark:text-slate-100'
+                    : calculation.status === 'warning'
+                    ? 'text-[#F59E0B]'
+                    : 'text-[#EF4444]'
+                }`}>
                   {`${calculation.spentPct}% CAP`}
                 </span>
               </div>
@@ -423,12 +429,24 @@ export default function KeranjangPintarApp() {
             <div className="mt-3.5 p-2.5 sm:p-3 rounded-2xl bg-white dark:bg-slate-900/60 border border-slate-200/90 dark:border-slate-700/60 flex items-center justify-between">
               <span className="text-xs font-semibold text-slate-600 dark:text-slate-300">
                 Sisa Aman:{' '}
-                <b className="text-amber-600 dark:text-amber-400 font-mono font-bold ml-1">
-                  {formatRupiah(calculation.remaining)}
+                <b className={`font-mono font-bold ml-1 ${
+                  calculation.status === 'safe'
+                    ? 'text-[#10B981]'
+                    : calculation.status === 'warning'
+                    ? 'text-[#F59E0B]'
+                    : 'text-[#EF4444]'
+                }`}>
+                  {calculation.remaining >= 0 ? formatRupiah(calculation.remaining) : `Defisit ${formatRupiah(Math.abs(calculation.remaining))}`}
                 </b>
               </span>
-              <span className="text-[10px] font-mono font-bold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-2 py-0.5 rounded-lg">
-                {`${Math.max(0, 100 - calculation.spentPct)}% Tersedia`}
+              <span className={`text-[10px] font-bold px-2 py-0.5 rounded-lg border ${
+                calculation.status === 'safe'
+                  ? 'text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 border-emerald-200 dark:border-emerald-800/60'
+                  : calculation.status === 'warning'
+                  ? 'text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/60 border-amber-200 dark:border-amber-800/60'
+                  : 'text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/80 border-rose-200 dark:border-rose-800/60'
+              }`}>
+                {calculation.remaining >= 0 ? `${Math.max(0, 100 - calculation.spentPct)}% Sisa` : 'Defisit Anggaran'}
               </span>
             </div>
           </div>
@@ -438,15 +456,15 @@ export default function KeranjangPintarApp() {
             <div className="grid grid-cols-10 gap-1 sm:gap-1.5">
               {[...Array(10)].map((_, idx) => {
                 const isActive = idx < calculation.activeSegments;
-                let bgClass = 'bg-slate-200 dark:bg-slate-700/60 border-slate-300/40 dark:border-slate-600/30';
+                let bgClass = 'bg-slate-200 dark:bg-white/[0.08] border-slate-300/40 dark:border-white/[0.06]';
 
                 if (isActive) {
                   if (calculation.status === 'safe') {
-                    bgClass = 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.35)] border-emerald-400';
+                    bgClass = 'bg-[#10B981] shadow-[0_0_8px_rgba(16,185,129,0.35)] border-[#10B981]';
                   } else if (calculation.status === 'warning') {
-                    bgClass = 'bg-amber-400 shadow-[0_0_8px_rgba(245,158,11,0.35)] border-amber-300';
+                    bgClass = 'bg-[#F59E0B] shadow-[0_0_8px_rgba(245,158,11,0.35)] border-[#F59E0B]';
                   } else {
-                    bgClass = 'bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.45)] border-rose-400 animate-pulse';
+                    bgClass = 'bg-[#EF4444] shadow-[0_0_8px_rgba(239,68,68,0.45)] border-[#EF4444] animate-pulse';
                   }
                 }
 
@@ -466,7 +484,7 @@ export default function KeranjangPintarApp() {
             <div className="flex items-center justify-between text-[10px] font-mono font-bold text-slate-400 dark:text-slate-500 pt-0.5">
               <span>Rp 0</span>
               <span>50%</span>
-              <span className="text-amber-500 dark:text-amber-400">80% Waspada</span>
+              <span className="text-[#F59E0B]">80% Waspada</span>
               <span className="text-slate-600 dark:text-slate-300">{`Max ${Math.round(budgetLimit / 1000)}k`}</span>
             </div>
           </div>
