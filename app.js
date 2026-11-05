@@ -119,6 +119,124 @@ const REAL_WORLD_STORES = [
 ];
 
 // -----------------------------------------------------------------------------
+// 1.5. REAL-TIME SUPERMARKET PRODUCT CATALOG DATABASE & SMART AUTO-ASSIGN
+// -----------------------------------------------------------------------------
+const SUPERMARKET_CATALOG = [
+  // Sembako & Bahan Pokok
+  { name: 'Beras Ramos Setra 5kg', price: 74500, category: 'Sembako', unit: 'kg', store: 'Indomaret' },
+  { name: 'Beras Pandan Wangi Premium 5kg', price: 88000, category: 'Sembako', unit: 'kg', store: 'Super Indo' },
+  { name: 'Minyak Goreng Sania 2L', price: 37900, category: 'Sembako', unit: 'liter', store: 'Alfamart' },
+  { name: 'Minyak Goreng Bimoli 2L', price: 38500, category: 'Sembako', unit: 'liter', store: 'Indomaret' },
+  { name: 'Minyak Goreng Tropical Botol 2L', price: 39000, category: 'Sembako', unit: 'liter', store: 'Hypermart' },
+  { name: 'Telur Ayam Negeri 1kg', price: 29500, category: 'Sembako', unit: 'kg', store: 'Pasar Tradisional' },
+  { name: 'Gula Pasir Gulaku Premium 1kg', price: 17500, category: 'Sembako', unit: 'kg', store: 'Indomaret' },
+  { name: 'Tepung Terigu Segitiga Biru 1kg', price: 13000, category: 'Sembako', unit: 'kg', store: 'Alfamart' },
+  { name: 'Garam Beryodium Cap Kapal 250g', price: 4500, category: 'Sembako', unit: 'bungkus', store: 'Indomaret' },
+
+  // Daging & Sayur & Makanan Segar
+  { name: 'Daging Sapi Rendang Segar 1kg', price: 135000, category: 'Daging & Sayur', unit: 'kg', store: 'Super Indo' },
+  { name: 'Daging Dada Ayam Fillet 1kg', price: 52000, category: 'Daging & Sayur', unit: 'kg', store: 'Super Indo' },
+  { name: 'Ayam Broiler Utuh 1kg', price: 38000, category: 'Daging & Sayur', unit: 'kg', store: 'Pasar Tradisional' },
+  { name: 'Ikan Gurame Segar 1kg', price: 45000, category: 'Daging & Sayur', unit: 'kg', store: 'Pasar Tradisional' },
+  { name: 'Udang Vaname Segar 500g', price: 48000, category: 'Daging & Sayur', unit: 'pack', store: 'Super Indo' },
+  { name: 'Sayur Bayam Hijau Segar 1 Ikat', price: 4000, category: 'Daging & Sayur', unit: 'ikat', store: 'Pasar Tradisional' },
+  { name: 'Sayur Kangkung Segar 1 Ikat', price: 3500, category: 'Daging & Sayur', unit: 'ikat', store: 'Pasar Tradisional' },
+  { name: 'Wortel Brastagi Segar 500g', price: 9500, category: 'Daging & Sayur', unit: 'pack', store: 'Super Indo' },
+  { name: 'Tomat Merah Segar 500g', price: 8000, category: 'Daging & Sayur', unit: 'pack', store: 'Indomaret' },
+  { name: 'Bawang Merah Brebes 500g', price: 24000, category: 'Daging & Sayur', unit: 'gram', store: 'Pasar Tradisional' },
+  { name: 'Bawang Putih Honan 500g', price: 22000, category: 'Daging & Sayur', unit: 'gram', store: 'Pasar Tradisional' },
+  { name: 'Cabe Rawit Merah 250g', price: 18000, category: 'Daging & Sayur', unit: 'gram', store: 'Pasar Tradisional' },
+
+  // Makanan Olahan, Susu & Minuman
+  { name: 'Susu UHT Ultra Milk Full Cream 1L', price: 19500, category: 'Makanan Instan', unit: 'liter', store: 'Indomaret' },
+  { name: 'Susu Greenfields Fresh Milk 1L', price: 31000, category: 'Makanan Instan', unit: 'liter', store: 'Super Indo' },
+  { name: 'Keju Kraft Cheddar All-in-1 165g', price: 22500, category: 'Makanan Instan', unit: 'kotak', store: 'Alfamart' },
+  { name: 'Mentega Blue Band Serbaguna 200g', price: 11500, category: 'Makanan Instan', unit: 'pack', store: 'Indomaret' },
+  { name: 'Indomie Goreng Spesial', price: 3100, category: 'Makanan Instan', unit: 'bungkus', store: 'Indomaret' },
+  { name: 'Indomie Kuah Ayam Bawang', price: 3100, category: 'Makanan Instan', unit: 'bungkus', store: 'Alfamart' },
+  { name: 'Mie Sedaap Goreng Ayam Krispi', price: 3100, category: 'Makanan Instan', unit: 'bungkus', store: 'Indomaret' },
+  { name: 'Nugget Ayam Fiesta Crispy 500g', price: 46500, category: 'Makanan Instan', unit: 'pack', store: 'Super Indo' },
+  { name: 'Sosis Kanzler Singles Original', price: 8500, category: 'Makanan Instan', unit: 'pcs', store: 'Alfamart' },
+  { name: 'Kornet Daging Sapi Pronas 198g', price: 24000, category: 'Makanan Instan', unit: 'kaleng', store: 'Indomaret' },
+  { name: 'Sarden ABC Saus Tomat 155g', price: 11500, category: 'Makanan Instan', unit: 'kaleng', store: 'Alfamart' },
+  { name: 'Kopi Kapal Api Spesial Mix 10x24g', price: 14500, category: 'Makanan Instan', unit: 'pack', store: 'Indomaret' },
+  { name: 'Teh Celup SariWangi 50s', price: 12000, category: 'Makanan Instan', unit: 'kotak', store: 'Indomaret' },
+  { name: 'Air Mineral Aqua Botol 1500ml', price: 6500, category: 'Makanan Instan', unit: 'botol', store: 'Alfamart' },
+
+  // Toiletries & Rumah Tangga
+  { name: 'Sabun Mandi Cair Lifebuoy Refill 450ml', price: 23500, category: 'Toiletries', unit: 'botol', store: 'Indomaret' },
+  { name: 'Sabun Cuci Piring Sunlight Lime 700ml', price: 15000, category: 'Toiletries', unit: 'botol', store: 'Alfamart' },
+  { name: 'Deterjen Rinso Matic Front Load 750ml', price: 25500, category: 'Toiletries', unit: 'botol', store: 'Super Indo' },
+  { name: 'Pewangi Molto Konsentrat 720ml', price: 18500, category: 'Toiletries', unit: 'botol', store: 'Indomaret' },
+  { name: 'Pasta Gigi Pepsodent Pencegah Gigi Berlubang 190g', price: 15500, category: 'Toiletries', unit: 'pcs', store: 'Alfamart' },
+  { name: 'Shampoo Pantene Anti Ketombe 290ml', price: 39000, category: 'Toiletries', unit: 'botol', store: 'Super Indo' },
+  { name: 'Tisu Wajah Paseo Smart 250 Sheets', price: 16500, category: 'Toiletries', unit: 'pack', store: 'Indomaret' },
+
+  // Bumbu & Minyak
+  { name: 'Kecap Manis Bango Botol 275ml', price: 16500, category: 'Bumbu & Minyak', unit: 'botol', store: 'Indomaret' },
+  { name: 'Saus Sambal ABC Extra Pedas 275ml', price: 13500, category: 'Bumbu & Minyak', unit: 'botol', store: 'Alfamart' },
+  { name: 'Masako Rasa Ayam 10x10g', price: 5500, category: 'Bumbu & Minyak', unit: 'bungkus', store: 'Indomaret' },
+
+  // Camilan & Jajan
+  { name: 'Biskuit Oreo Vanilla Roll 133g', price: 9500, category: 'Camilan', unit: 'pack', store: 'Indomaret' },
+  { name: 'Keripik Chitato Sapi Panggang 68g', price: 11500, category: 'Camilan', unit: 'pack', store: 'Alfamart' },
+  { name: 'Wafer Tango Cokelat 130g', price: 8500, category: 'Camilan', unit: 'pack', store: 'Indomaret' },
+  { name: 'Cokelat SilverQueen Cashew 58g', price: 17500, category: 'Camilan', unit: 'pcs', store: 'Indomaret' },
+  { name: 'Roti Tawar Kupas Sari Roti', price: 16500, category: 'Camilan', unit: 'pack', store: 'Alfamart' }
+];
+
+/**
+ * Smart Auto-Assign Classifier:
+ * Secara otomatis mendeteksi kategori belanja dan satuan bawaan berdasarkan kata kunci
+ */
+function autoDetectCategoryAndUnit(productName) {
+  if (!productName || typeof productName !== 'string') {
+    return { category: 'Lainnya', unit: 'pcs' };
+  }
+  const lower = productName.toLowerCase();
+
+  // 1. Detect Satuan
+  let unit = 'pcs';
+  if (/\b(kg|kilogram|5kg|2kg|1kg|10kg)\b/i.test(lower)) {
+    unit = 'kg';
+  } else if (/\b(gr|gram|g|250g|500g|100g)\b/i.test(lower)) {
+    unit = 'gram';
+  } else if (/\b(liter|ltr|lt|1l|2l|1\.5l|ml|450ml|700ml|750ml)\b/i.test(lower)) {
+    unit = 'liter';
+  } else if (/\b(bungkus|bgks|bks|mie|indomie|sedaap|garam)\b/i.test(lower)) {
+    unit = 'bungkus';
+  } else if (/\b(botol|btl|kecap|saus|sirup|shampoo|sunlight|minyak)\b/i.test(lower)) {
+    unit = 'botol';
+  } else if (/\b(kaleng|klg|sarden|kornet)\b/i.test(lower)) {
+    unit = 'kaleng';
+  } else if (/\b(ikat|bayam|kangkung|sawi)\b/i.test(lower)) {
+    unit = 'ikat';
+  } else if (/\b(pack|pak|biskuit|oreo|chitato|wafer|tisu|tissue|nugget)\b/i.test(lower)) {
+    unit = 'pack';
+  } else if (/\b(kotak|box|teh|keju|susu uht)\b/i.test(lower)) {
+    unit = 'kotak';
+  }
+
+  // 2. Detect Category
+  let category = 'Lainnya';
+  if (/\b(beras|minyak|telur|telor|gula|tepung|terigu)\b/i.test(lower)) {
+    category = 'Sembako';
+  } else if (/\b(ayam|daging|sapi|fillet|broiler|ikan|udang|bayam|kangkung|wortel|tomat|bawang|cabe|cabai|sayur)\b/i.test(lower)) {
+    category = 'Daging & Sayur';
+  } else if (/\b(mie|indomie|sedaap|nugget|sosis|kornet|sarden|susu|keju|mentega|kopi|teh|air|mineral|aqua)\b/i.test(lower)) {
+    category = 'Makanan Instan';
+  } else if (/\b(sabun|sunlight|rinso|deterjen|molto|pepsodent|shampoo|tisu|tissue|pembersih|pasta gigi)\b/i.test(lower)) {
+    category = 'Toiletries';
+  } else if (/\b(garam|kecap|saus|sambal|masako|royco|merica|lada|bumbu)\b/i.test(lower)) {
+    category = 'Bumbu & Minyak';
+  } else if (/\b(oreo|chitato|tango|silverqueen|snack|camilan|jajan|wafer|keripik|biskuit|cokelat|roti)\b/i.test(lower)) {
+    category = 'Camilan';
+  }
+
+  return { category, unit };
+}
+
+// -----------------------------------------------------------------------------
 // 2. MATHEMATICAL CALCULATION ENGINE: STACKED / CASCADING DISCOUNT
 // -----------------------------------------------------------------------------
 /**
@@ -445,8 +563,124 @@ function renderGuardianAndEnvelopes() {
   const totals = calculateCartTotals();
   const limit = state.budgetLimit;
   const remaining = limit - totals.finalCartTotal;
+  const spentPct = limit > 0 ? Math.round((totals.finalCartTotal / limit) * 100) : 0;
+  const clampedPct = Math.min(100, Math.max(0, spentPct));
 
-  // Header quick bar
+  // Dynamic status tier:
+  // Green: < 70% (Aman)
+  // Amber: 70% - 90% (Waspada)
+  // Red: > 90% (Kritis / Overbudget)
+  let statusTier = 'safe';
+  if (spentPct >= 90 || totals.finalCartTotal > limit) {
+    statusTier = 'danger';
+  } else if (spentPct >= 70) {
+    statusTier = 'warning';
+  }
+
+  // 1. UPDATE INTERACTIVE VISUAL BUDGET DASHBOARD (SVG GAUGE & 3 STAT CARDS)
+  const gaugeCircle = document.getElementById('budgetGaugeCircle');
+  const gaugePercent = document.getElementById('budgetGaugePercent');
+  const gaugeStatusText = document.getElementById('gaugeStatusText');
+  const visualStatusBadge = document.getElementById('budgetVisualStatusBadge');
+
+  const circumference = 251.327;
+  const offset = circumference - (clampedPct / 100) * circumference;
+
+  if (gaugeCircle) {
+    gaugeCircle.style.strokeDashoffset = offset;
+    if (statusTier === 'safe') {
+      gaugeCircle.style.stroke = '#10B981';
+    } else if (statusTier === 'warning') {
+      gaugeCircle.style.stroke = '#F59E0B';
+    } else {
+      gaugeCircle.style.stroke = '#F43F5E';
+    }
+  }
+
+  if (gaugePercent) {
+    gaugePercent.textContent = `${spentPct}%`;
+    if (statusTier === 'safe') {
+      gaugePercent.className = 'text-xl font-black font-mono text-emerald-600 dark:text-emerald-400';
+    } else if (statusTier === 'warning') {
+      gaugePercent.className = 'text-xl font-black font-mono text-amber-500 dark:text-amber-400';
+    } else {
+      gaugePercent.className = 'text-xl font-black font-mono text-rose-500 dark:text-rose-400';
+    }
+  }
+
+  if (gaugeStatusText) {
+    if (statusTier === 'safe') {
+      gaugeStatusText.textContent = `🟢 Aman (${formatRupiah(remaining)} tersisa)`;
+      gaugeStatusText.className = 'text-[11px] font-bold text-emerald-600 dark:text-emerald-400';
+    } else if (statusTier === 'warning') {
+      gaugeStatusText.textContent = `🟡 Waspada (${spentPct}% terpakai)`;
+      gaugeStatusText.className = 'text-[11px] font-bold text-amber-500 dark:text-amber-400';
+    } else {
+      gaugeStatusText.textContent = totals.finalCartTotal > limit 
+        ? `🔴 Defisit ${formatRupiah(Math.abs(remaining))}!` 
+        : `🔴 Kritis (Sisa ${formatRupiah(remaining)})`;
+      gaugeStatusText.className = 'text-[11px] font-bold text-rose-500 dark:text-rose-400';
+    }
+  }
+
+  if (visualStatusBadge) {
+    if (statusTier === 'safe') {
+      visualStatusBadge.className = 'text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800';
+      visualStatusBadge.textContent = '🟢 Anggaran Aman';
+    } else if (statusTier === 'warning') {
+      visualStatusBadge.className = 'text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border border-amber-300 dark:border-amber-800';
+      visualStatusBadge.textContent = '🟡 Waspada Pengeluaran';
+    } else {
+      visualStatusBadge.className = 'text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-rose-100 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 border border-rose-300 dark:border-rose-800 animate-pulse';
+      visualStatusBadge.textContent = totals.finalCartTotal > limit ? '🔴 Over Budget Defisit' : '🔴 Anggaran Kritis';
+    }
+  }
+
+  // Update 3 Stat Cards
+  const statTotal = document.getElementById('statTotalBudget');
+  const statSpent = document.getElementById('statSpentBudget');
+  const statSpentPct = document.getElementById('statSpentPct');
+  const statRem = document.getElementById('statRemainingBudget');
+  const statRemPct = document.getElementById('statRemainingPct');
+
+  if (statTotal) statTotal.textContent = formatRupiah(limit);
+  if (statSpent) statSpent.textContent = formatRupiah(totals.finalCartTotal);
+  if (statSpentPct) statSpentPct.textContent = `${spentPct}%`;
+
+  if (statRem) {
+    statRem.textContent = formatRupiah(remaining);
+    statRem.className = remaining < 0 
+      ? 'text-xs font-bold font-mono text-rose-600 dark:text-rose-400' 
+      : 'text-xs font-bold font-mono text-emerald-600 dark:text-emerald-400';
+  }
+  if (statRemPct) {
+    if (remaining < 0) {
+      statRemPct.textContent = 'Defisit';
+      statRemPct.className = 'text-[9px] font-bold text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/60 px-2 py-0.5 rounded-lg';
+    } else {
+      statRemPct.textContent = `${Math.max(0, 100 - spentPct)}% Sisa`;
+      statRemPct.className = 'text-[9px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded-lg';
+    }
+  }
+
+  // Update Dynamic Linear Progress Bar
+  const linearBar = document.getElementById('budgetLinearProgressBar');
+  const linearLabel = document.getElementById('budgetLinearLabel');
+  if (linearBar) {
+    linearBar.style.width = `${clampedPct}%`;
+    if (statusTier === 'safe') {
+      linearBar.style.backgroundColor = '#10B981';
+    } else if (statusTier === 'warning') {
+      linearBar.style.backgroundColor = '#F59E0B';
+    } else {
+      linearBar.style.backgroundColor = '#F43F5E';
+    }
+  }
+  if (linearLabel) {
+    linearLabel.textContent = `${spentPct}% dari batas bulanan`;
+  }
+
+  // 2. HEADER QUICK BAR
   const cartTotalHeader = document.getElementById('cartTotalHeader');
   const budgetRemainingHeader = document.getElementById('budgetRemainingHeader');
   const freezeMiniIndicator = document.getElementById('freezeMiniIndicator');
@@ -591,10 +825,10 @@ function renderGuardianAndEnvelopes() {
   if (velocityBanner && velocityText) {
     if (totals.finalCartTotal > limit) {
       velocityBanner.className = 'mt-4 p-3 rounded-2xl bg-rose-500/20 border border-rose-500/40 text-rose-200 text-xs flex items-start gap-2';
-      velocityText.innerHTML = `<b>Peringatan Kritis:</b> Pengeluaran telah melampaui pagu! Defisit sebesar ${formatRupiah(Math.abs(remaining))}. Kunci pengeluaran segera!`;
+      velocityText.innerHTML = `<b>Peringatan Kritis:</b> Pengeluaran telah melampaui batas anggaran! Defisit sebesar ${formatRupiah(Math.abs(remaining))}. Kunci pengeluaran segera!`;
     } else if (currentDailyRate > safeDailyAllowance * 1.5 && currentDay < 20) {
       velocityBanner.className = 'mt-4 p-3 rounded-2xl bg-amber-500/15 border border-amber-500/30 text-amber-200 text-xs flex items-start gap-2';
-      velocityText.innerHTML = `<b>AI Spending Velocity Alert:</b> Kecepatan belanja (${formatRupiah(currentDailyRate)}/hari) melampaui jatah aman harian (${formatRupiah(safeDailyAllowance)}/hari). Jika berlanjut, pagu akan habis lebih awal!`;
+      velocityText.innerHTML = `<b>AI Spending Velocity Alert:</b> Kecepatan belanja (${formatRupiah(currentDailyRate)}/hari) melampaui jatah aman harian (${formatRupiah(safeDailyAllowance)}/hari). Jika berlanjut, anggaran akan habis lebih awal!`;
     } else {
       velocityBanner.className = 'mt-4 p-3 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-200 text-xs flex items-start gap-2';
       velocityText.innerHTML = `<b>Proyeksi Keuangan AI:</b> Pengeluaran Anda berada dalam kurva aman. Saldo belanja diproyeksikan mencukupi hingga akhir bulan.`;
@@ -771,7 +1005,7 @@ function attachCartEventListeners() {
 
         const totals = calculateCartTotals();
         if (state.isFrozen && (totals.finalCartTotal + addedNominal) > state.budgetLimit) {
-          showStrictFreezeModal('Kuantitas tidak dapat ditambah karena total akan melebihi pagu hard-cap!');
+          showStrictFreezeModal('Kuantitas tidak dapat ditambah karena total akan melebihi batas anggaran hard-cap!');
           sounds.playAlarm();
           return;
         }
@@ -875,7 +1109,7 @@ function validateAndAddItemToCart(itemData) {
 
   // RULE 2: Emergency Freeze Active & Over-Budget Hard Limit
   if (state.isFrozen && projectedTotal > state.budgetLimit) {
-    showStrictFreezeModal(`Total transaksi (${formatRupiah(projectedTotal)}) melampaui pagu bulanan (${formatRupiah(state.budgetLimit)}). Hard Budget Cap aktif!`);
+    showStrictFreezeModal(`Total transaksi (${formatRupiah(projectedTotal)}) melampaui batas anggaran bulanan (${formatRupiah(state.budgetLimit)}). Hard Budget Cap aktif!`);
     sounds.playAlarm();
     return false;
   }
@@ -1146,6 +1380,14 @@ function openCustomItemModalForNew() {
   const title = document.getElementById('customItemModalTitle');
   if (title) title.textContent = 'Tambah Barang Belanja Bebas';
 
+  const badgeEl = document.getElementById('autoDetectedBadge');
+  if (badgeEl) badgeEl.classList.add('hidden');
+  const suggestionsBox = document.getElementById('catalogSuggestionsBox');
+  if (suggestionsBox) {
+    suggestionsBox.classList.add('hidden');
+    suggestionsBox.innerHTML = '';
+  }
+
   state.itemFormDiscount = { mode: 'none', singlePercent: 0, tier1: 50, tier2: 20, nominalAmount: 0 };
   updateDiscountModeButtonsUI();
   updateCustomPreview();
@@ -1164,6 +1406,13 @@ function openCustomItemModalForEdit(item) {
   const priceEl = document.getElementById('customInputPrice');
   const storeEl = document.getElementById('customInputStore');
   const title = document.getElementById('customItemModalTitle');
+  const badgeEl = document.getElementById('autoDetectedBadge');
+  const suggestionsBox = document.getElementById('catalogSuggestionsBox');
+
+  if (suggestionsBox) {
+    suggestionsBox.classList.add('hidden');
+    suggestionsBox.innerHTML = '';
+  }
 
   if (idEl) idEl.value = item.id;
   if (nameEl) nameEl.value = item.name;
@@ -1174,11 +1423,128 @@ function openCustomItemModalForEdit(item) {
   if (storeEl) storeEl.value = item.store || 'Super Indo';
   if (title) title.textContent = 'Edit Barang Belanja';
 
+  if (badgeEl) {
+    badgeEl.classList.remove('hidden');
+    badgeEl.textContent = `Kategori: ${item.category} • Satuan: ${item.unit || 'pcs'}`;
+  }
+
   state.itemFormDiscount = item.discount || { mode: 'none', singlePercent: 0, tier1: 50, tier2: 20, nominalAmount: 0 };
   updateDiscountModeButtonsUI();
   updateCustomPreview();
 
   if (modal) modal.classList.remove('hidden');
+}
+
+function setupSupermarketCatalogAutocomplete() {
+  const nameInput = document.getElementById('customInputName');
+  const suggestionsBox = document.getElementById('catalogSuggestionsBox');
+  const badgeEl = document.getElementById('autoDetectedBadge');
+  const catEl = document.getElementById('customInputCategory');
+  const unitEl = document.getElementById('customInputUnit');
+  const priceEl = document.getElementById('customInputPrice');
+  const storeEl = document.getElementById('customInputStore');
+
+  if (!nameInput || !suggestionsBox) return;
+
+  const selectCatalogItem = (item) => {
+    nameInput.value = item.name;
+    if (priceEl) priceEl.value = item.price;
+    if (catEl) catEl.value = item.category;
+    if (unitEl) unitEl.value = item.unit;
+    if (storeEl) storeEl.value = item.store || 'Indomaret';
+
+    if (badgeEl) {
+      badgeEl.classList.remove('hidden');
+      badgeEl.textContent = `Katalog ✨ ${item.category} • ${item.unit}`;
+    }
+
+    suggestionsBox.classList.add('hidden');
+    suggestionsBox.innerHTML = '';
+    updateCustomPreview();
+    sounds.playClick();
+  };
+
+  nameInput.addEventListener('input', (e) => {
+    const query = e.target.value.trim();
+
+    if (!query) {
+      suggestionsBox.classList.add('hidden');
+      suggestionsBox.innerHTML = '';
+      if (badgeEl) badgeEl.classList.add('hidden');
+      return;
+    }
+
+    // 1. Smart Auto-Assign on free custom typing
+    const detected = autoDetectCategoryAndUnit(query);
+    if (catEl && detected.category !== 'Lainnya') catEl.value = detected.category;
+    if (unitEl) unitEl.value = detected.unit;
+
+    if (badgeEl) {
+      badgeEl.classList.remove('hidden');
+      badgeEl.textContent = `✨ Auto-assign: ${detected.category} • ${detected.unit}`;
+    }
+
+    // 2. Real-Time Supermarket Catalog Auto-Complete filter
+    const matches = SUPERMARKET_CATALOG.filter(item => 
+      item.name.toLowerCase().includes(query.toLowerCase())
+    ).slice(0, 6);
+
+    if (matches.length === 0) {
+      suggestionsBox.classList.add('hidden');
+      suggestionsBox.innerHTML = '';
+      return;
+    }
+
+    let html = '';
+    matches.forEach(item => {
+      html += `
+        <div class="catalog-suggestion-item p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-700/80 cursor-pointer flex items-center justify-between transition text-xs" data-item-name="${item.name}">
+          <div>
+            <div class="font-bold text-slate-900 dark:text-white">${item.name}</div>
+            <div class="flex items-center gap-1.5 mt-0.5 text-[10px] text-slate-500 dark:text-slate-400">
+              <span class="bg-slate-200 dark:bg-slate-700 px-1.5 py-0.5 rounded font-medium">${item.category}</span>
+              <span>•</span>
+              <span>Satuan: ${item.unit}</span>
+              <span>•</span>
+              <span class="text-brand-600 dark:text-brand-400">${item.store}</span>
+            </div>
+          </div>
+          <div class="text-right">
+            <span class="font-mono font-bold text-brand-600 dark:text-brand-400">${formatRupiah(item.price)}</span>
+          </div>
+        </div>
+      `;
+    });
+
+    suggestionsBox.innerHTML = html;
+    suggestionsBox.classList.remove('hidden');
+
+    suggestionsBox.querySelectorAll('.catalog-suggestion-item').forEach(itemEl => {
+      itemEl.onclick = () => {
+        const itemName = itemEl.getAttribute('data-item-name');
+        const found = SUPERMARKET_CATALOG.find(i => i.name === itemName);
+        if (found) selectCatalogItem(found);
+      };
+    });
+  });
+
+  // Quick chips click
+  document.querySelectorAll('.quick-catalog-chip').forEach(chip => {
+    chip.onclick = () => {
+      const targetName = chip.getAttribute('data-name');
+      const found = SUPERMARKET_CATALOG.find(i => i.name === targetName);
+      if (found) {
+        selectCatalogItem(found);
+      }
+    };
+  });
+
+  // Close suggestion dropdown when clicking outside
+  document.addEventListener('click', (e) => {
+    if (!nameInput.contains(e.target) && !suggestionsBox.contains(e.target)) {
+      suggestionsBox.classList.add('hidden');
+    }
+  });
 }
 
 function updateDiscountModeButtonsUI() {
@@ -1687,7 +2053,7 @@ document.addEventListener('DOMContentLoaded', () => {
       localStorage.setItem('sg_budget_limit', val.toString());
       renderGuardianAndEnvelopes();
       sounds.playClick();
-      showToast('Pagu anggaran berhasil disimpan!');
+      showToast('Batas anggaran bulanan berhasil disimpan!');
     }
   });
 
@@ -1704,6 +2070,9 @@ document.addEventListener('DOMContentLoaded', () => {
       showToast('Keranjang dikosongkan');
     }
   });
+
+  // Supermarket Catalog Autocomplete & Smart Auto-Assign
+  setupSupermarketCatalogAutocomplete();
 
   lucide.createIcons();
 });

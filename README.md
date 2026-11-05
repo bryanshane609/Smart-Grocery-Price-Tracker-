@@ -54,7 +54,7 @@ Platform Web FinTech Rumah Tangga & Smart Pantry yang menggabungkan **AI-Powered
 
 1. **Skema Basis Data PostgreSQL (`schema.sql`):**
    - `users`: Data pengguna, XP, dan level.
-   - `budgets`: Pagu bulanan dan status emergency freeze.
+   - `budgets`: Batas anggaran bulanan dan status emergency freeze.
    - `transactions`: Arsip struk belanja dan metadata OCR.
    - `grocery_items`: Baris produk, harga normal, harga akhir diskon, kategori, dan status esensial.
    - `pantry_stock`: Pelacak masa simpan bahan dapur, tanggal kedaluwarsa, dan status konsumsi zero-waste.

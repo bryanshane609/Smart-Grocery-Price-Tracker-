@@ -202,7 +202,7 @@ function evaluateBudgetSafety(currentSpending, newExpense, monthlyLimit, isEmerg
 
   if (percentage >= 100) {
     tier = 'critical';
-    message = `🚨 OVER BUDGET! Anda melebihi pagu sebesar Rp ${Math.abs(remaining).toLocaleString('id-ID')}.`;
+    message = `🚨 OVER BUDGET! Anda melebihi batas anggaran sebesar Rp ${Math.abs(remaining).toLocaleString('id-ID')}.`;
   } else if (percentage >= 90) {
     tier = 'critical';
     message = '⚠️ Peringatan Kritis: Anggaran sudah mencapai >90%! Batasi belanja Anda.';
