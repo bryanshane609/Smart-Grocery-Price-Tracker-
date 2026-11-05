@@ -580,7 +580,7 @@ function renderGuardianAndEnvelopes() {
   }
 
   // ---------------------------------------------------------------------------
-  // 0. UPDATE KERANJANGPINTAR PRO TOP HEADER & DARK CHARCOAL HERO CARD
+  // 0. UPDATE TOP HEADER & DARK CHARCOAL HERO CARD
   // ---------------------------------------------------------------------------
   const headerQuickBudgetAmount = document.getElementById('headerQuickBudgetAmount');
   const headerQuickBudgetAmountMobile = document.getElementById('headerQuickBudgetAmountMobile');

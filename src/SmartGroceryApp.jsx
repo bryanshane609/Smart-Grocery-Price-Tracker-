@@ -19,7 +19,7 @@ import {
 
 /**
  * =============================================================================
- * KERANJANGPINTAR PRO (REACT / NEXT.JS MODULAR COMPONENT)
+ * SMART GROCERY GUARDIAN (REACT / NEXT.JS MODULAR COMPONENT)
  * Desain Eksak Sesuai Referensi Visual:
  * - Header Putih/Clean: Logo kantong belanja kuning di kotak hitam, Toko Selector,
  *   Date Picker, Status ONLINE, Card Anggaran Ringkas, Avatar Pengguna.
@@ -80,7 +80,7 @@ function formatRupiah(num) {
   return 'Rp ' + Math.max(0, Math.round(num || 0)).toLocaleString('id-ID');
 }
 
-export default function KeranjangPintarApp() {
+export default function SmartGroceryApp() {
   // Global State
   const [budgetLimit, setBudgetLimit] = useState(350000); // Default Rp 350.000 sesuai referensi
   const [selectedStore, setSelectedStore] = useState('Lotte Mart Grocery - Boulevard');
