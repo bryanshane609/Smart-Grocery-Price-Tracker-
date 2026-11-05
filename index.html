@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="id" class="h-full bg-slate-100">
+<html lang="id" class="h-full">
 
 <head>
   <meta charset="UTF-8">
@@ -8,31 +8,32 @@
   <title>Smart Grocery & Budget Safety Tracker</title>
 
   <!-- PWA Meta Tags -->
-  <meta name="theme-color" content="#fafbfc">
+  <meta name="theme-color" content="#10b981">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="SmartGrocery">
   <meta name="application-name" content="SmartGrocery">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="description"
-    content="Aplikasi mobile PWA pengontrol anggaran & komparator harga belanja bulanan anak rantau">
+    content="Smart Grocery & Budget Safety Tracker - Platform FinTech Rumah Tangga, Anti-Impulsif, dan Pantry Cerdas">
 
   <!-- Favicon & Icons -->
   <link rel="icon" type="image/svg+xml" href="./icons/icon.svg">
   <link rel="apple-touch-icon" href="./icons/icon.svg">
   <link rel="manifest" href="./manifest.json">
 
-  <!-- Google Fonts: Plus Jakarta Sans -->
+  <!-- Google Fonts: Plus Jakarta Sans & JetBrains Mono -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link
-    href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap"
+    href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;700;800&display=swap"
     rel="stylesheet">
 
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
+      darkMode: 'class',
       theme: {
         extend: {
           fontFamily: {
@@ -48,23 +49,17 @@
               600: '#059669',
               700: '#047857'
             },
-            pastel: {
-              green: '#dcfce7',
-              'green-dark': '#15803d',
-              blue: '#e0f2fe',
-              'blue-dark': '#0369a1',
-              yellow: '#fef3c7',
-              'yellow-dark': '#b45309',
-              orange: '#ffedd5',
-              'orange-dark': '#c2410c',
-              grey: '#f1f5f9',
-              'grey-dark': '#475569'
+            dark: {
+              bg: '#0F172A',
+              card: '#1E293B',
+              border: '#334155',
+              text: '#F8FAFC'
             }
           },
           animation: {
             'pulse-danger': 'dangerPulse 1.5s infinite ease-in-out',
             'slide-up': 'slideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1)',
-            'bounce-sm': 'bounceSm 0.5s ease-in-out'
+            'scan-laser': 'scanLaser 2s infinite ease-in-out'
           },
           keyframes: {
             dangerPulse: {
@@ -75,9 +70,9 @@
               '0%': { transform: 'translateY(100%)', opacity: '0' },
               '100%': { transform: 'translateY(0)', opacity: '1' }
             },
-            bounceSm: {
-              '0%, 100%': { transform: 'translateY(0)' },
-              '50%': { transform: 'translateY(-4px)' }
+            scanLaser: {
+              '0%, 100%': { top: '0%' },
+              '50%': { top: '95%' }
             }
           }
         }
@@ -89,487 +84,758 @@
   <script src="https://unpkg.com/lucide@latest"></script>
 
   <style>
-    /* Safe-area insets & touch optimization */
     body {
       touch-action: manipulation;
       -webkit-tap-highlight-color: transparent;
       user-select: none;
       -webkit-user-select: none;
+      transition: background-color 0.3s ease, color 0.3s ease;
     }
 
-    input,
-    textarea,
-    select {
+    input, textarea, select {
       user-select: auto;
       -webkit-user-select: auto;
     }
 
-    .scrollbar-none::-webkit-scrollbar {
-      display: none;
+    .scrollbar-none::-webkit-scrollbar { display: none; }
+    .scrollbar-none { -ms-overflow-style: none; scrollbar-width: none; }
+
+    /* Mobile Frame vs Bento Full View Modes */
+    .app-viewport.mode-mobile {
+      max-width: 440px;
+      margin: 0 auto;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(226, 232, 240, 0.8);
+      border-radius: 28px;
     }
 
-    .scrollbar-none {
-      -ms-overflow-style: none;
-      scrollbar-width: none;
+    .app-viewport.mode-bento {
+      max-width: 1200px;
+      margin: 0 auto;
+      border-radius: 28px;
+      box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.15);
     }
 
-    /* Mobile app container centering */
-    .mobile-frame {
-      max-width: 430px;
-      margin-left: auto;
-      margin-right: auto;
-      min-height: 100vh;
-      min-height: 100dvh;
-      display: flex;
-      flex-direction: column;
-      position: relative;
-      background-color: #fafbfc;
-    }
-
-    @media (min-width: 640px) {
-      body {
-        background: radial-gradient(circle at 50% 15%, #ecfdf5 0%, #f1f5f9 50%, #e2e8f0 100%);
-      }
-
-      .mobile-frame {
-        box-shadow: 0 20px 45px -15px rgba(100, 116, 139, 0.15), 0 0 0 1px rgba(226, 232, 240, 0.9);
-      }
-    }
-
-    /* Number stepper styling */
     input[type=number]::-webkit-inner-spin-button,
     input[type=number]::-webkit-outer-spin-button {
       -webkit-appearance: none;
       margin: 0;
     }
-
-    input[type=number] {
-      -moz-appearance: textfield;
-    }
+    input[type=number] { -moz-appearance: textfield; }
   </style>
 </head>
 
-<body class="text-slate-800 antialiased font-sans flex flex-col justify-center items-center min-h-screen">
+<body class="bg-[#F9FAFB] dark:bg-[#0F172A] text-slate-800 dark:text-slate-100 antialiased font-sans min-h-screen py-0 sm:py-6 px-0 sm:px-4 flex flex-col justify-center items-center">
 
-  <!-- Mobile View Container (Max 430px) -->
-  <div class="mobile-frame w-full shadow-2xl overflow-x-hidden pb-24">
+  <!-- MAIN APP CONTAINER -->
+  <div id="mainContainer" class="app-viewport mode-mobile w-full min-h-screen sm:min-h-[92vh] bg-white dark:bg-[#1E293B] flex flex-col relative overflow-hidden transition-all duration-300 pb-24">
 
-    <!-- TOP HEADER: App Title & Supermarket Trolley Companion -->
-    <header
-      class="sticky top-0 z-30 bg-white/90 backdrop-blur-md border-b border-slate-200/90 px-4 pt-3 pb-2.5 shadow-[0_2px_10px_rgba(0,0,0,0.02)]">
+    <!-- ========================================================================= -->
+    <!-- TOP HEADER: App Title, Theme & Emergency Freeze Switch                     -->
+    <!-- ========================================================================= -->
+    <header class="sticky top-0 z-30 bg-white/95 dark:bg-[#1E293B]/95 backdrop-blur-md border-b border-slate-200/90 dark:border-slate-800 px-4 pt-3.5 pb-3 transition-colors">
       <div class="flex items-center justify-between">
         <div class="flex items-center space-x-2.5">
-          <div
-            class="w-9 h-9 rounded-xl bg-gradient-to-tr from-emerald-500 via-teal-400 to-sky-400 flex items-center justify-center shadow-md shadow-emerald-200/80">
-            <i data-lucide="shopping-cart" class="w-5 h-5 text-white"></i>
+          <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-emerald-500 via-teal-500 to-emerald-600 flex items-center justify-center shadow-md shadow-emerald-500/20 text-white">
+            <i data-lucide="shopping-cart" class="w-5 h-5"></i>
           </div>
           <div>
-            <h1 class="text-base font-extrabold tracking-tight text-slate-800 leading-tight">Smart Grocery</h1>
-            <p class="text-[11px] text-slate-500 font-medium">Troli Anak Rantau &bull; <span id="currentDateDisplay"
-                class="text-slate-700 font-semibold">Okt 2026</span></p>
+            <div class="flex items-center gap-1.5">
+              <h1 class="text-base font-extrabold tracking-tight text-slate-900 dark:text-white leading-tight">Smart Grocery</h1>
+              <span class="text-[9px] font-extrabold px-1.5 py-0.5 rounded-md bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">PRO</span>
+            </div>
+            <p class="text-[11px] text-slate-500 dark:text-slate-400 font-medium">FinTech Dapur & Budget Safety</p>
           </div>
         </div>
 
-        <!-- Quick Action: Audio / Sound Feedback & SRS Help -->
+        <!-- Quick Top Controls: Bento Toggle, OCR Scan, Theme, Sound -->
         <div class="flex items-center space-x-1.5">
-          <button id="toggleSoundBtn"
-            class="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 hover:text-slate-800 border border-slate-200/80 active:scale-95 transition"
-            title="Suara Sentuhan">
-            <i data-lucide="volume-2" id="soundIcon" class="w-4 h-4"></i>
+          <!-- AI Receipt Scanner Trigger Button -->
+          <button id="topOcrBtn" class="px-2.5 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold shadow-sm flex items-center gap-1.5 active:scale-95 transition" title="Scan Struk (AI OCR)">
+            <i data-lucide="camera" class="w-3.5 h-3.5"></i>
+            <span class="hidden sm:inline text-[11px]">Scan Struk</span>
           </button>
-          <button id="quickHelpBtn"
-            class="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 hover:text-slate-800 border border-slate-200/80 active:scale-95 transition"
-            title="Info Fitur SRS">
-            <i data-lucide="info" class="w-4 h-4"></i>
+
+          <!-- Bento / Mobile View Switcher -->
+          <button id="toggleLayoutBtn" class="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:text-slate-900 border border-slate-200 dark:border-slate-700 active:scale-95 transition" title="Beralih Layout (Mobile / Bento Grid)">
+            <i data-lucide="layout-grid" id="layoutIcon" class="w-4 h-4"></i>
+          </button>
+
+          <!-- Dark Mode Toggle -->
+          <button id="toggleThemeBtn" class="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:text-slate-900 border border-slate-200 dark:border-slate-700 active:scale-95 transition" title="Mode Terang / Gelap">
+            <i data-lucide="moon" id="themeIcon" class="w-4 h-4"></i>
+          </button>
+
+          <!-- Sound Feedback Toggle -->
+          <button id="toggleSoundBtn" class="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:text-slate-900 border border-slate-200 dark:border-slate-700 active:scale-95 transition" title="Suara Sentuhan">
+            <i data-lucide="volume-2" id="soundIcon" class="w-4 h-4"></i>
           </button>
         </div>
       </div>
 
-      <!-- F-05: SAFETY CAP & BUDGET CONTROLLER COMPONENT (Sticky at Top) -->
-      <div id="budgetSafetyWidget"
-        class="mt-2.5 p-3 rounded-2xl bg-emerald-50/75 border border-emerald-200/90 shadow-sm transition-all duration-300">
-        <!-- Budget Numbers Row -->
-        <div class="flex items-end justify-between mb-1.5">
+      <!-- ========================================================================= -->
+      <!-- DYNAMIC BUDGET SAFETY NET & EMERGENCY FREEZE CONTROLLER WIDGET           -->
+      <!-- ========================================================================= -->
+      <div id="budgetSafetyWidget" class="mt-3 p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/80 shadow-xs transition-all duration-300">
+        <!-- Top Metrics Row -->
+        <div class="flex items-end justify-between mb-2">
           <div>
-            <div class="text-[10px] uppercase font-bold tracking-wider text-slate-500 flex items-center gap-1">
-              <i data-lucide="shield-alert" class="w-3 h-3 text-emerald-600" id="safetyStatusIcon"></i>
-              <span>Total Troli Saat Ini</span>
+            <div class="text-[10px] uppercase font-bold tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1">
+              <i data-lucide="shield-alert" class="w-3.5 h-3.5 text-emerald-500" id="safetyStatusIcon"></i>
+              <span>Total Troli Berjalan</span>
             </div>
-            <div class="text-lg font-extrabold text-slate-900 font-mono tracking-tight flex items-baseline gap-1"
-              id="cartTotalHeader">
+            <div class="text-xl font-black text-slate-900 dark:text-white font-mono tracking-tight flex items-baseline gap-1" id="cartTotalHeader">
               <span class="text-xs text-slate-400 font-sans">Rp</span> 0
             </div>
           </div>
           <div class="text-right">
-            <div class="text-[10px] uppercase font-semibold text-slate-500">Limit Anggaran</div>
-            <div class="text-xs font-bold text-slate-700 font-mono" id="budgetLimitHeader">
+            <div class="text-[10px] uppercase font-semibold text-slate-500 dark:text-slate-400">Pagu Anggaran</div>
+            <div class="text-xs font-bold text-slate-700 dark:text-slate-200 font-mono" id="budgetLimitHeader">
               Rp 800.000
             </div>
           </div>
         </div>
 
-        <!-- Progress Bar & Indicator -->
-        <div class="relative w-full h-3 bg-slate-100 rounded-full overflow-hidden p-0.5 border border-slate-200">
-          <div id="budgetProgressBar" class="h-full rounded-full transition-all duration-500 bg-emerald-400 shadow-sm"
-            style="width: 0%"></div>
+        <!-- Progress Bar Indicator -->
+        <div class="relative w-full h-3 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden p-0.5">
+          <div id="budgetProgressBar" class="h-full rounded-full transition-all duration-500 bg-emerald-500 shadow-sm" style="width: 0%"></div>
         </div>
 
         <!-- Realtime Status & Sisa Anggaran -->
-        <div class="flex items-center justify-between mt-2 pt-1.5 border-t border-slate-100 text-[11px]">
-          <div id="budgetSafetyBadge"
-            class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full font-semibold text-[10px] bg-emerald-50 text-emerald-700 border border-emerald-200">
-            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+        <div class="flex items-center justify-between mt-2.5 pt-2 border-t border-slate-200/70 dark:border-slate-700/60 text-xs">
+          <div id="budgetSafetyBadge" class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full font-bold text-[10px] bg-emerald-100 dark:bg-emerald-950/70 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800">
+            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
             <span id="budgetSafetyText">Aman (0%)</span>
           </div>
-          <div class="text-slate-600 font-medium">
-            <span class="text-slate-400 text-[10px]">Sisa:</span> <span id="budgetRemainingText"
-              class="font-bold font-mono text-emerald-600">Rp 800.000</span>
+          <div class="text-slate-600 dark:text-slate-300 font-medium">
+            <span class="text-slate-400 text-[10px]">Sisa:</span>
+            <span id="budgetRemainingText" class="font-bold font-mono text-emerald-600 dark:text-emerald-400 ml-1">Rp 800.000</span>
           </div>
         </div>
 
-        <!-- OVER BUDGET DANGER ALERT BANNER (Hidden by default, shown when >= 100%) -->
-        <div id="overBudgetBanner"
-          class="hidden mt-2 p-2.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-[11px] flex items-center gap-2">
-          <div class="p-1 rounded-lg bg-rose-100 text-rose-600 shrink-0">
-            <i data-lucide="alert-triangle" class="w-4 h-4 text-rose-500 animate-bounce"></i>
+        <!-- EMERGENCY FREEZE MASTER TOGGLE ROW -->
+        <div class="mt-2.5 pt-2 border-t border-slate-200/70 dark:border-slate-700/60 flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <div id="freezeIconBadge" class="w-6 h-6 rounded-lg bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-slate-600 dark:text-slate-300">
+              <i data-lucide="lock" class="w-3.5 h-3.5"></i>
+            </div>
+            <div>
+              <span class="text-xs font-bold text-slate-800 dark:text-slate-200 block leading-tight">Emergency Freeze</span>
+              <span class="text-[10px] text-slate-500 dark:text-slate-400">Kunci anggaran dari belanja impulsif</span>
+            </div>
           </div>
+
+          <label class="relative inline-flex items-center cursor-pointer">
+            <input type="checkbox" id="emergencyFreezeToggle" class="sr-only peer">
+            <div class="w-11 h-6 bg-slate-300 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-rose-600"></div>
+          </label>
+        </div>
+
+        <!-- DANGER BANNER (Visible on Critical / Overbudget) -->
+        <div id="overBudgetBanner" class="hidden mt-2.5 p-2.5 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900 text-rose-800 dark:text-rose-200 text-xs flex items-center gap-2">
+          <i data-lucide="alert-triangle" class="w-4 h-4 text-rose-600 dark:text-rose-400 shrink-0 animate-bounce"></i>
           <div class="leading-tight">
-            <span class="font-bold text-rose-900 block">PERINGATAN SAFETY CAP!</span>
-            <span id="overBudgetDiffText" class="text-rose-700">Melebihi jatah belanja bulananmu! Segera kurangi barang
-              tersier.</span>
+            <span class="font-bold block">PERINGATAN SAFETY CAP!</span>
+            <span id="overBudgetDiffText" class="text-[11px]">Troli telah melampaui limit bulanan. Batasi belanja non-esensial!</span>
           </div>
         </div>
       </div>
     </header>
 
-    <!-- MAIN VIEWS WRAPPER -->
+    <!-- ========================================================================= -->
+    <!-- MAIN CONTENT VIEWS                                                        -->
+    <!-- ========================================================================= -->
     <main class="flex-1 px-3.5 pt-3">
 
-      <!-- TAB 1: BELANJA (Active Shopping Trolley) -->
+      <!-- TAB 1: TROLI BELANJA (Active Shopping Cart) -->
       <section id="tab-belanja" class="tab-content space-y-3">
-
-        <!-- Category Filter Pills (Horizontal Scroll Touch Friendly) -->
+        <!-- Horizontal Category Filter Pills -->
         <div class="flex items-center gap-1.5 overflow-x-auto scrollbar-none py-1 -mx-3.5 px-3.5">
-          <button
-            class="cat-pill active px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap bg-emerald-500 text-white shadow-sm shadow-emerald-200 transition active:scale-95"
-            data-category="ALL">
+          <button class="cat-pill active px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap bg-emerald-500 text-white shadow-xs transition active:scale-95" data-category="ALL">
             Semua (<span id="catCountAll">0</span>)
           </button>
-          <button
-            class="cat-pill px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap bg-slate-100 text-slate-600 hover:text-slate-800 border border-slate-200/80 transition active:scale-95"
-            data-category="Sembako">
+          <button class="cat-pill px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:text-slate-900 border border-slate-200 dark:border-slate-700 transition active:scale-95" data-category="Sembako">
             🌾 Sembako (<span id="catCountSembako">0</span>)
           </button>
-          <button
-            class="cat-pill px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap bg-slate-100 text-slate-600 hover:text-slate-800 border border-slate-200/80 transition active:scale-95"
-            data-category="Makanan Instan">
+          <button class="cat-pill px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:text-slate-900 border border-slate-200 dark:border-slate-700 transition active:scale-95" data-category="Makanan Instan">
             🍜 Instan (<span id="catCountInstan">0</span>)
           </button>
-          <button
-            class="cat-pill px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap bg-slate-100 text-slate-600 hover:text-slate-800 border border-slate-200/80 transition active:scale-95"
-            data-category="Daging & Sayur">
+          <button class="cat-pill px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:text-slate-900 border border-slate-200 dark:border-slate-700 transition active:scale-95" data-category="Daging & Sayur">
             🥩 Daging/Sayur (<span id="catCountFresh">0</span>)
           </button>
-          <button
-            class="cat-pill px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap bg-slate-100 text-slate-600 hover:text-slate-800 border border-slate-200/80 transition active:scale-95"
-            data-category="Toiletries">
+          <button class="cat-pill px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:text-slate-900 border border-slate-200 dark:border-slate-700 transition active:scale-95" data-category="Toiletries">
             🧼 Toiletries (<span id="catCountToiletries">0</span>)
           </button>
-          <button
-            class="cat-pill px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap bg-slate-100 text-slate-600 hover:text-slate-800 border border-slate-200/80 transition active:scale-95"
-            data-category="Bumbu & Minyak">
+          <button class="cat-pill px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:text-slate-900 border border-slate-200 dark:border-slate-700 transition active:scale-95" data-category="Bumbu & Minyak">
             🧂 Bumbu/Minyak (<span id="catCountBumbu">0</span>)
           </button>
-          <button
-            class="cat-pill px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap bg-slate-100 text-slate-600 hover:text-slate-800 border border-slate-200/80 transition active:scale-95"
-            data-category="Lainnya">
+          <button class="cat-pill px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:text-slate-900 border border-slate-200 dark:border-slate-700 transition active:scale-95" data-category="Camilan">
+            🍪 Camilan (<span id="catCountCamilan">0</span>)
+          </button>
+          <button class="cat-pill px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:text-slate-900 border border-slate-200 dark:border-slate-700 transition active:scale-95" data-category="Lainnya">
             📦 Lainnya (<span id="catCountLainnya">0</span>)
           </button>
         </div>
 
-        <!-- Quick Summary Bar: Total Items & Total Saved from Discounts -->
-        <div class="flex items-center justify-between text-xs px-3 py-2 rounded-xl bg-slate-100/90 border border-slate-200 text-slate-600">
+        <!-- Quick Summary Bar: Item Count & Total Saved -->
+        <div class="flex items-center justify-between text-xs px-3.5 py-2.5 rounded-2xl bg-slate-100/90 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300">
           <div class="flex items-center gap-1.5">
-            <i data-lucide="package" class="w-3.5 h-3.5 text-slate-500"></i>
-            <span>Keranjang: <b class="text-slate-800 font-bold" id="totalItemsCount">0 item</b></span>
+            <i data-lucide="package" class="w-4 h-4 text-slate-500"></i>
+            <span>Keranjang: <b class="text-slate-900 dark:text-white font-bold" id="totalItemsCount">0 item</b></span>
           </div>
-          <div class="text-emerald-700 font-bold flex items-center gap-1" id="totalSavingsTag">
-            <i data-lucide="tag" class="w-3.5 h-3.5 text-emerald-600"></i>
+          <div class="text-emerald-700 dark:text-emerald-400 font-bold flex items-center gap-1" id="totalSavingsTag">
+            <i data-lucide="tag" class="w-3.5 h-3.5"></i>
             <span>Hemat Diskon: <span id="totalSavingsAmount" class="font-mono">Rp 0</span></span>
           </div>
         </div>
 
-        <!-- LIST OF ITEMS IN TROLLEY -->
+        <!-- List of Trolley Items -->
         <div id="cartItemList" class="space-y-2.5">
-          <!-- Item Cards rendered via JavaScript -->
+          <!-- Rendered via JS -->
         </div>
 
-        <!-- EMPTY STATE (Shown when cart has 0 items) -->
-        <div id="emptyCartView"
-          class="py-12 px-4 text-center rounded-2xl bg-slate-50/80 border border-dashed border-slate-200 shadow-sm">
-          <div
-            class="w-16 h-16 mx-auto mb-3 rounded-2xl bg-white border border-slate-200/80 flex items-center justify-center text-slate-400 shadow-2xs">
-            <i data-lucide="shopping-bag" class="w-8 h-8 text-slate-400"></i>
+        <!-- Empty Cart View -->
+        <div id="emptyCartView" class="py-12 px-4 text-center rounded-3xl bg-slate-50 dark:bg-slate-800/40 border border-dashed border-slate-200 dark:border-slate-700">
+          <div class="w-16 h-16 mx-auto mb-3 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-400 shadow-xs">
+            <i data-lucide="shopping-bag" class="w-8 h-8"></i>
           </div>
-          <h3 class="text-sm font-bold text-slate-700">Troli Masih Kosong</h3>
-          <p class="text-xs text-slate-500 mt-1 max-w-[260px] mx-auto">
-            Mulai masukkan barang belanjaanmu sambil berkeliling rak supermarket.
+          <h3 class="text-sm font-bold text-slate-700 dark:text-slate-200">Troli Belanja Masih Kosong</h3>
+          <p class="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-[260px] mx-auto">
+            Scan struk belanja fisik Anda dengan AI OCR atau tambah item secara manual.
           </p>
           <div class="mt-4 flex flex-col gap-2 max-w-[220px] mx-auto">
-            <button id="emptyAddBtn"
-              class="px-4 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold shadow-md shadow-emerald-200 active:scale-95 transition flex items-center justify-center gap-1.5">
+            <button id="emptyScanBtn" class="px-4 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold shadow-md shadow-emerald-500/20 active:scale-95 transition flex items-center justify-center gap-2">
+              <i data-lucide="camera" class="w-4 h-4"></i>
+              <span>Scan Struk Belanja</span>
+            </button>
+            <button id="emptyAddBtn" class="px-4 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-200 text-xs font-bold border border-slate-200 dark:border-slate-700 active:scale-95 transition flex items-center justify-center gap-1.5">
               <i data-lucide="plus-circle" class="w-4 h-4"></i>
-              <span>+ Masukkan Barang Pertama</span>
+              <span>+ Input Manual</span>
             </button>
           </div>
         </div>
 
-        <!-- Action Footer inside Trolley: Checkout / Selesai Belanja -->
+        <!-- Cart Action Footer -->
         <div id="cartActionFooter" class="pt-2 pb-6 space-y-2 hidden">
-          <button id="checkoutTripBtn"
-            class="w-full py-3.5 px-4 rounded-2xl bg-gradient-to-r from-emerald-500 via-teal-500 to-sky-500 hover:from-emerald-600 hover:to-teal-600 text-white font-extrabold text-sm shadow-lg shadow-emerald-200 active:scale-98 transition flex items-center justify-center gap-2">
+          <button id="checkoutTripBtn" class="w-full py-3.5 px-4 rounded-2xl bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-600 hover:from-emerald-600 hover:to-teal-600 text-white font-extrabold text-sm shadow-lg shadow-emerald-500/20 active:scale-98 transition flex items-center justify-center gap-2">
             <i data-lucide="check-circle-2" class="w-5 h-5"></i>
-            <span>Selesaikan & Simpan ke Riwayat</span>
+            <span>Selesaikan & Masukkan ke Pantry</span>
           </button>
-          <div class="flex items-center justify-between px-1 text-[11px] text-slate-500">
-            <span>Data harga akan dijadikan pembanding bulan depan.</span>
+          <div class="flex items-center justify-between px-1 text-[11px] text-slate-500 dark:text-slate-400">
+            <span>Barang otomatis masuk ke Virtual Pantry & Riwayat.</span>
             <button id="clearCartBtn" class="text-rose-500 hover:text-rose-600 font-medium underline">
               Kosongkan Troli
             </button>
           </div>
         </div>
-
       </section>
 
-      <!-- TAB 2: RIWAYAT (Trip History & Spending Analytics) -->
+      <!-- TAB 2: PRICE RADAR & LOCAL DEALS (Komparator 4 Ritel) -->
+      <section id="tab-radar" class="tab-content hidden space-y-4">
+        <div>
+          <h2 class="text-sm font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
+            <i data-lucide="radar" class="w-4 h-4 text-emerald-500"></i>
+            <span>Price Comparison & Local Deals Radar</span>
+          </h2>
+          <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Komparasi total belanja troli Anda di 4 ritel terdekat</p>
+        </div>
+
+        <!-- Winner Retailer Recommendation Card -->
+        <div id="radarWinnerCard" class="p-4 rounded-3xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow-md relative overflow-hidden">
+          <div class="flex items-start justify-between">
+            <div>
+              <span class="text-[10px] font-black uppercase tracking-wider bg-white/20 px-2 py-0.5 rounded-full">Rekomendasi Hemat AI</span>
+              <h3 class="text-xl font-black mt-1" id="radarWinnerName">Pasar Tradisional</h3>
+              <p class="text-xs text-emerald-100 mt-1" id="radarWinnerSavings">Potensi hemat hingga Rp 38.000 untuk troli Anda!</p>
+            </div>
+            <div class="w-12 h-12 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center">
+              <i data-lucide="award" class="w-6 h-6 text-white"></i>
+            </div>
+          </div>
+
+          <!-- Retailer Comparison Multi-Bars -->
+          <div class="mt-4 pt-3 border-t border-white/20 space-y-2.5 text-xs" id="retailerBarsContainer">
+            <!-- Rendered by JS -->
+          </div>
+        </div>
+
+        <!-- Detailed Item Price Breakdown Table -->
+        <div class="p-4 rounded-3xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80 space-y-3">
+          <h4 class="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider">Perbandingan Harga Per Item</h4>
+          <div id="radarItemTable" class="space-y-2 text-xs">
+            <!-- Rendered by JS -->
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 3: SMART PANTRY & ZERO-WASTE TRACKER -->
+      <section id="tab-pantry" class="tab-content hidden space-y-4">
+        <div class="flex items-center justify-between">
+          <div>
+            <h2 class="text-sm font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
+              <i data-lucide="box" class="w-4 h-4 text-emerald-500"></i>
+              <span>Smart Pantry & Expiry Guard</span>
+            </h2>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Inventaris dapur cerdas & pencegah bahan mubazir</p>
+          </div>
+          <button id="suggestRecipeBtn" class="px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold shadow-xs flex items-center gap-1.5 active:scale-95 transition">
+            <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
+            <span>Saran Resep AI</span>
+          </button>
+        </div>
+
+        <!-- Expiry Warning Alert -->
+        <div id="pantryAlertBox" class="p-3.5 rounded-2xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/60 text-xs flex items-start gap-2.5">
+          <i data-lucide="clock" class="w-4 h-4 text-rose-500 shrink-0 mt-0.5"></i>
+          <div>
+            <span class="font-bold text-rose-900 dark:text-rose-200 block" id="pantryAlertTitle">2 Bahan Mendekati Basi</span>
+            <span class="text-rose-700 dark:text-rose-300 text-[11px]" id="pantryAlertDesc">Dada Ayam Fillet & Sawi Hijau segera kedaluwarsa dalam 1-2 hari. Klik 'Saran Resep AI' untuk ide masakan!</span>
+          </div>
+        </div>
+
+        <!-- Pantry Stock List Container -->
+        <div id="pantryStockList" class="space-y-2.5">
+          <!-- Rendered by JS -->
+        </div>
+
+        <!-- Empty Pantry State -->
+        <div id="emptyPantryView" class="py-12 px-4 text-center rounded-3xl bg-slate-50 dark:bg-slate-800/40 border border-dashed border-slate-200 dark:border-slate-700 hidden">
+          <i data-lucide="archive" class="w-10 h-10 mx-auto text-slate-400 mb-2"></i>
+          <h4 class="text-xs font-bold text-slate-700 dark:text-slate-300">Pantry Masih Kosong</h4>
+          <p class="text-[11px] text-slate-500 mt-1">Selesaikan belanjaan di troli Anda untuk otomatis mencatat stok bahan di dapur.</p>
+        </div>
+      </section>
+
+      <!-- TAB 4: GAMIFIKASI & PENCAPAIAN BADGES -->
+      <section id="tab-gamifikasi" class="tab-content hidden space-y-4">
+        <div>
+          <h2 class="text-sm font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
+            <i data-lucide="trophy" class="w-4 h-4 text-amber-500"></i>
+            <span>Gamified Savings & Badges</span>
+          </h2>
+          <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Tingkatkan level dan raih lencana belanja cerdas</p>
+        </div>
+
+        <!-- Level & XP Status Card -->
+        <div class="p-5 rounded-3xl bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 text-white shadow-md">
+          <div class="flex items-center justify-between">
+            <div>
+              <span class="text-[10px] font-black uppercase tracking-wider bg-black/20 px-2 py-0.5 rounded-full">Peringkat Pengguna</span>
+              <h3 class="text-2xl font-black mt-1" id="userLevelTitle">Budget Master Lv. 3</h3>
+              <p class="text-xs text-amber-100 mt-0.5">Hemat cerdas, anti-impulsif & ramah lingkungan</p>
+            </div>
+            <div class="text-right">
+              <span class="text-3xl font-black font-mono" id="userXpTotal">620</span>
+              <span class="text-xs block text-amber-100">Total XP</span>
+            </div>
+          </div>
+
+          <div class="mt-4 pt-3 border-t border-white/20">
+            <div class="flex justify-between text-xs font-bold mb-1">
+              <span>Menuju Level 4</span>
+              <span>620 / 1000 XP</span>
+            </div>
+            <div class="w-full bg-black/20 h-2.5 rounded-full overflow-hidden">
+              <div class="bg-white h-full rounded-full transition-all duration-500" style="width: 62%"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Badges Grid -->
+        <div class="grid grid-cols-2 gap-3" id="badgesGrid">
+          <!-- 1. Budget Master -->
+          <div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-emerald-300 dark:border-emerald-800/60 flex flex-col justify-between">
+            <div class="flex items-start justify-between">
+              <div class="w-9 h-9 rounded-xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center">
+                <i data-lucide="shield-check" class="w-5 h-5"></i>
+              </div>
+              <span class="text-[10px] font-bold text-emerald-600 bg-emerald-100 dark:bg-emerald-950 px-2 py-0.5 rounded-full">Terbuka</span>
+            </div>
+            <div class="mt-2.5">
+              <h4 class="text-xs font-bold text-slate-800 dark:text-slate-100">Budget Master</h4>
+              <p class="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">Surplus sisa anggaran > 15%</p>
+            </div>
+          </div>
+
+          <!-- 2. Zero Waste Hero -->
+          <div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-emerald-300 dark:border-emerald-800/60 flex flex-col justify-between">
+            <div class="flex items-start justify-between">
+              <div class="w-9 h-9 rounded-xl bg-teal-500/10 text-teal-500 flex items-center justify-center">
+                <i data-lucide="sparkles" class="w-5 h-5"></i>
+              </div>
+              <span class="text-[10px] font-bold text-emerald-600 bg-emerald-100 dark:bg-emerald-950 px-2 py-0.5 rounded-full">Terbuka</span>
+            </div>
+            <div class="mt-2.5">
+              <h4 class="text-xs font-bold text-slate-800 dark:text-slate-100">Zero Waste Hero</h4>
+              <p class="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">0 bahan dapur yang basi terbuang</p>
+            </div>
+          </div>
+
+          <!-- 3. Smart Shopper -->
+          <div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-emerald-300 dark:border-emerald-800/60 flex flex-col justify-between">
+            <div class="w-9 h-9 rounded-xl bg-sky-500/10 text-sky-500 flex items-center justify-center">
+              <i data-lucide="trending-down" class="w-5 h-5"></i>
+            </div>
+            <div class="mt-2.5">
+              <h4 class="text-xs font-bold text-slate-800 dark:text-slate-100">Smart Shopper</h4>
+              <p class="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">Membandingkan harga 4 ritel</p>
+            </div>
+          </div>
+
+          <!-- 4. Impulse Shield -->
+          <div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 flex flex-col justify-between opacity-80" id="badgeImpulseShield">
+            <div class="flex items-start justify-between">
+              <div class="w-9 h-9 rounded-xl bg-rose-500/10 text-rose-500 flex items-center justify-center">
+                <i data-lucide="lock" class="w-5 h-5"></i>
+              </div>
+              <span class="text-[10px] font-bold text-slate-400 bg-slate-200 dark:bg-slate-700 px-2 py-0.5 rounded-full" id="impulseBadgeStatus">Terkunci</span>
+            </div>
+            <div class="mt-2.5">
+              <h4 class="text-xs font-bold text-slate-800 dark:text-slate-100">Impulse Shield</h4>
+              <p class="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">Aktifkan Emergency Freeze dan tahan jajan</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 5: RIWAYAT BELANJA (Digital Receipts & Archive) -->
       <section id="tab-riwayat" class="tab-content hidden space-y-3.5">
         <div class="flex items-center justify-between">
           <div>
-            <h2 class="text-sm font-bold text-slate-800">Riwayat Belanja Bulanan</h2>
-            <p class="text-[11px] text-slate-500">Basis data pembanding resmi harga anak rantau</p>
+            <h2 class="text-sm font-bold text-slate-800 dark:text-slate-100">Riwayat Belanja Bulanan</h2>
+            <p class="text-xs text-slate-500 dark:text-slate-400">Arsip struk digital dan basis data harga patokan</p>
           </div>
-          <span
-            class="text-xs px-2.5 py-1 rounded-lg bg-slate-100 text-slate-700 font-mono font-bold border border-slate-200"
-            id="historyTripCount">
+          <span class="text-xs px-2.5 py-1 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-mono font-bold border border-slate-200 dark:border-slate-700" id="historyTripCount">
             0 Transaksi
           </span>
         </div>
 
-        <!-- Spending Summary Card (Soft Pastel Sky Blue) -->
-        <div class="p-3.5 rounded-2xl bg-sky-50/85 border border-sky-200/90 shadow-sm">
-          <div class="grid grid-cols-2 gap-3 divide-x divide-sky-200/70">
+        <div class="p-3.5 rounded-2xl bg-sky-50/85 dark:bg-sky-950/30 border border-sky-200/90 dark:border-sky-900/60 shadow-xs">
+          <div class="grid grid-cols-2 gap-3 divide-x divide-sky-200/70 dark:divide-sky-800">
             <div>
-              <div class="text-[10px] text-sky-800 uppercase font-bold">Total Pengeluaran</div>
-              <div class="text-base font-black text-slate-900 font-mono mt-0.5" id="historyTotalSpend">
+              <div class="text-[10px] text-sky-800 dark:text-sky-300 uppercase font-bold">Total Pengeluaran</div>
+              <div class="text-base font-black text-slate-900 dark:text-white font-mono mt-0.5" id="historyTotalSpend">
                 Rp 0
               </div>
-              <div class="text-[10px] text-sky-700/80 font-medium mt-0.5">Tersimpan di Cloud Firebase</div>
+              <div class="text-[10px] text-sky-700 dark:text-sky-400 font-medium mt-0.5">Tersimpan di Cloud Firebase</div>
             </div>
             <div class="pl-3">
-              <div class="text-[10px] text-sky-800 uppercase font-bold">Item Terdaftar</div>
-              <div class="text-base font-black text-sky-900 font-mono mt-0.5" id="historyBenchmarkCount">
+              <div class="text-[10px] text-sky-800 dark:text-sky-300 uppercase font-bold">Item Terdaftar</div>
+              <div class="text-base font-black text-sky-900 dark:text-sky-200 font-mono mt-0.5" id="historyBenchmarkCount">
                 0 Produk
               </div>
-              <div class="text-[10px] text-sky-700/80 font-medium mt-0.5">Siap dibandingkan realtime</div>
+              <div class="text-[10px] text-sky-700 dark:text-sky-400 font-medium mt-0.5">Siap dibandingkan realtime</div>
             </div>
           </div>
         </div>
 
-        <!-- History Trip List -->
         <div id="historyListContainer" class="space-y-3">
           <!-- Rendered via JS -->
         </div>
 
-        <div id="emptyHistoryView"
-          class="py-12 px-4 text-center rounded-2xl bg-white border border-dashed border-slate-200 shadow-sm hidden">
-          <div
-            class="w-12 h-12 mx-auto mb-2 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-400">
-            <i data-lucide="archive" class="w-6 h-6 text-slate-400"></i>
-          </div>
-          <h4 class="text-xs font-bold text-slate-700">Belum Ada Riwayat Belanja</h4>
-          <p class="text-[11px] text-slate-500 mt-1 max-w-[240px] mx-auto">
-            Selesaikan belanjaan di troli Anda untuk mencatat arsip transaksi bulan ini.
-          </p>
+        <div id="emptyHistoryView" class="py-12 px-4 text-center rounded-2xl bg-white dark:bg-slate-800/40 border border-dashed border-slate-200 dark:border-slate-700 hidden">
+          <i data-lucide="archive" class="w-10 h-10 mx-auto text-slate-400 mb-2"></i>
+          <h4 class="text-xs font-bold text-slate-700 dark:text-slate-300">Belum Ada Riwayat Belanja</h4>
+          <p class="text-[11px] text-slate-500 mt-1">Selesaikan belanjaan di troli Anda untuk mencatat arsip transaksi.</p>
         </div>
       </section>
 
-      <!-- TAB 3: ANGGARAN & PENGATURAN (Budget Settings & Master Catalog) -->
+      <!-- TAB 6: PENGATURAN & KATALOG HARGA -->
       <section id="tab-anggaran" class="tab-content hidden space-y-3.5 pb-6">
         <div>
-          <h2 class="text-sm font-bold text-slate-800">Pengaturan Anggaran & Data</h2>
-          <p class="text-[11px] text-slate-500">Atur safety cap dan kelola referensi harga bulan lalu</p>
+          <h2 class="text-sm font-bold text-slate-800 dark:text-slate-100">Pengaturan Anggaran & Patokan</h2>
+          <p class="text-xs text-slate-500 dark:text-slate-400">Atur safety cap dan kelola referensi harga bulan lalu</p>
         </div>
 
-        <!-- Budget Form Card (Pastel Grey/Slate Card) -->
-        <div class="p-4 rounded-2xl bg-slate-100/90 border border-slate-200 shadow-sm space-y-3">
-          <label class="block text-xs font-bold text-slate-800">
+        <div class="p-4 rounded-3xl bg-slate-100/90 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 space-y-3">
+          <label class="block text-xs font-bold text-slate-800 dark:text-slate-200">
             Batas Maksimal Anggaran Belanja (Safety Cap)
           </label>
           <div class="relative">
-            <span
-              class="absolute left-3.5 top-1/2 -translate-y-1/2 font-mono font-bold text-slate-400 text-sm">Rp</span>
-            <input type="number" id="budgetLimitInput" min="50000" step="50000"
-              class="w-full pl-10 pr-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900 font-mono font-bold text-base focus:outline-none focus:border-emerald-500 transition shadow-2xs"
-              placeholder="800000">
+            <span class="absolute left-3.5 top-1/2 -translate-y-1/2 font-mono font-bold text-slate-400 text-sm">Rp</span>
+            <input type="number" id="budgetLimitInput" min="50000" step="50000" class="w-full pl-10 pr-4 py-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white font-mono font-bold text-base focus:outline-none focus:border-emerald-500 transition" placeholder="800000">
           </div>
-          <p class="text-[11px] text-slate-600">
-            Aplikasi akan memberi peringatan visual jika troli mendekati atau melampaui nominal ini.
-          </p>
           <div class="flex gap-2">
-            <button
-              class="budget-preset-btn flex-1 py-1.5 rounded-lg bg-white hover:bg-slate-50 text-slate-800 text-xs font-bold border border-slate-200 shadow-2xs active:scale-95 transition"
-              data-amount="500000">500 rb</button>
-            <button
-              class="budget-preset-btn flex-1 py-1.5 rounded-lg bg-white hover:bg-slate-50 text-slate-800 text-xs font-bold border border-slate-200 shadow-2xs active:scale-95 transition"
-              data-amount="750000">750 rb</button>
-            <button
-              class="budget-preset-btn flex-1 py-1.5 rounded-lg bg-white hover:bg-slate-50 text-slate-800 text-xs font-bold border border-slate-200 shadow-2xs active:scale-95 transition"
-              data-amount="1000000">1 jt</button>
-            <button
-              class="budget-preset-btn flex-1 py-1.5 rounded-lg bg-white hover:bg-slate-50 text-slate-800 text-xs font-bold border border-slate-200 shadow-2xs active:scale-95 transition"
-              data-amount="1500000">1.5 jt</button>
+            <button class="budget-preset-btn flex-1 py-1.5 rounded-xl bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 text-xs font-bold border border-slate-200 dark:border-slate-700 active:scale-95 transition" data-amount="500000">500 rb</button>
+            <button class="budget-preset-btn flex-1 py-1.5 rounded-xl bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 text-xs font-bold border border-slate-200 dark:border-slate-700 active:scale-95 transition" data-amount="800000">800 rb</button>
+            <button class="budget-preset-btn flex-1 py-1.5 rounded-xl bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 text-xs font-bold border border-slate-200 dark:border-slate-700 active:scale-95 transition" data-amount="1000000">1 jt</button>
+            <button class="budget-preset-btn flex-1 py-1.5 rounded-xl bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 text-xs font-bold border border-slate-200 dark:border-slate-700 active:scale-95 transition" data-amount="1500000">1.5 jt</button>
           </div>
-          <button id="saveBudgetLimitBtn"
-            class="w-full py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold active:scale-95 transition shadow-md shadow-emerald-200">
+          <button id="saveBudgetLimitBtn" class="w-full py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold active:scale-95 transition shadow-sm">
             Simpan Limit Anggaran
           </button>
         </div>
 
-        <!-- Benchmark Price Catalog Overview Card (Pastel Sky Blue Card) -->
-        <div class="p-4 rounded-2xl bg-sky-50/70 border border-sky-200/80 shadow-sm space-y-3">
+        <!-- Catalog Benchmark Preview -->
+        <div class="p-4 rounded-3xl bg-sky-50/70 dark:bg-sky-950/20 border border-sky-200/80 dark:border-sky-900/40 space-y-3">
           <div class="flex items-center justify-between">
             <div class="flex items-center gap-1.5">
               <i data-lucide="database" class="w-4 h-4 text-sky-600"></i>
-              <h3 class="text-xs font-bold text-slate-900">Daftar Harga Bulan Lalu</h3>
+              <h3 class="text-xs font-bold text-slate-900 dark:text-slate-100">Daftar Harga Patokan Bulan Lalu</h3>
             </div>
-            <span class="text-[11px] font-mono text-sky-800 font-bold" id="benchmarkItemCount">0 Produk</span>
+            <span class="text-xs font-mono text-sky-800 dark:text-sky-300 font-bold" id="benchmarkItemCount">0 Produk</span>
           </div>
-          <p class="text-[11px] text-slate-600">
-            Data ini menjadi patokan panah naik (↑), turun (↓), atau setara (=) saat Anda berbelanja di lorong
-            supermarket.
-          </p>
 
-          <!-- Search & Filter in Benchmark List -->
           <div class="relative">
             <i data-lucide="search" class="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
-            <input type="text" id="benchmarkSearchInput" placeholder="Cari data harga bulan lalu..."
-              class="w-full pl-9 pr-3 py-2 rounded-lg bg-white border border-sky-200 text-xs text-slate-800 focus:outline-none focus:border-sky-500 placeholder-slate-400 shadow-2xs">
+            <input type="text" id="benchmarkSearchInput" placeholder="Cari data patokan harga..." class="w-full pl-9 pr-3 py-2 rounded-xl bg-white dark:bg-slate-900 border border-sky-200 dark:border-sky-900/60 text-xs text-slate-800 dark:text-slate-100 focus:outline-none focus:border-sky-500">
           </div>
 
           <div id="benchmarkListPreview" class="max-h-52 overflow-y-auto space-y-1.5 pr-1 scrollbar-none">
             <!-- Rendered by JS -->
           </div>
         </div>
-
-        <!-- App Clean Footer -->
-        <div class="pt-2 pb-4 text-center text-[11px] text-slate-400">
-          <p class="font-semibold text-slate-500">Smart Grocery &bull; Budget Safety Tracker</p>
-        </div>
       </section>
 
     </main>
 
-    <!-- FLOATING ACTION BUTTON (FAB) FOR QUICK ADD ITEM (Thumb Friendly) -->
-    <div id="fabContainer"
-      class="fixed bottom-20 left-1/2 -translate-x-1/2 z-40 w-full max-w-[430px] px-4 pointer-events-none flex justify-end">
-      <button id="openAddModalBtn"
-        class="pointer-events-auto w-14 h-14 rounded-2xl bg-gradient-to-tr from-emerald-500 via-teal-400 to-sky-400 text-white flex items-center justify-center shadow-lg shadow-emerald-200/90 active:scale-90 transition-all border border-emerald-200 group">
+    <!-- FLOATING ACTION BUTTON (FAB) FOR QUICK INPUT -->
+    <div id="fabContainer" class="fixed bottom-20 left-1/2 -translate-x-1/2 z-40 w-full max-w-[440px] px-4 pointer-events-none flex justify-end gap-2">
+      <button id="fabScanBtn" class="pointer-events-auto w-12 h-12 rounded-2xl bg-slate-900 dark:bg-slate-800 text-white flex items-center justify-center shadow-lg active:scale-90 transition-all border border-slate-700" title="Scan Struk AI">
+        <i data-lucide="camera" class="w-5 h-5"></i>
+      </button>
+      <button id="openAddModalBtn" class="pointer-events-auto w-14 h-14 rounded-2xl bg-gradient-to-tr from-emerald-500 to-teal-500 text-white flex items-center justify-center shadow-lg shadow-emerald-500/30 active:scale-90 transition-all group" title="Tambah Barang">
         <i data-lucide="plus" class="w-7 h-7 group-hover:rotate-90 transition-transform duration-200"></i>
       </button>
     </div>
 
-    <!-- FLOATING BOTTOM NAVIGATION BAR (Thumb Ergonomics) -->
-    <nav
-      class="fixed bottom-0 left-1/2 -translate-x-1/2 z-40 w-full max-w-[430px] bg-white/95 backdrop-blur-xl border-t border-slate-200/90 px-3 py-2 shadow-[0_-4px_20px_rgba(0,0,0,0.03)]">
-      <div class="flex items-center justify-around">
-
-        <!-- Tab 1: Belanja (Troli) -->
-        <button
-          class="nav-tab-btn flex-1 flex flex-col items-center py-1 rounded-xl text-emerald-600 font-bold active:scale-95 transition relative"
-          data-target="tab-belanja">
+    <!-- FLOATING BOTTOM NAVIGATION BAR -->
+    <nav class="fixed bottom-0 left-1/2 -translate-x-1/2 z-40 w-full max-w-[440px] bg-white/95 dark:bg-[#1E293B]/95 backdrop-blur-xl border-t border-slate-200/90 dark:border-slate-800 px-2 py-2">
+      <div class="flex items-center justify-around text-slate-400 dark:text-slate-400">
+        <!-- 1. Belanja -->
+        <button class="nav-tab-btn flex-1 flex flex-col items-center py-1 rounded-xl text-emerald-600 dark:text-emerald-400 font-bold active:scale-95 transition" data-target="tab-belanja">
           <div class="relative">
             <i data-lucide="shopping-cart" class="w-5 h-5"></i>
-            <span id="navCartBadge"
-              class="absolute -top-1.5 -right-2 px-1.5 py-0.2 rounded-full text-[9px] font-extrabold bg-emerald-500 text-white min-w-4 text-center shadow-xs">0</span>
+            <span id="navCartBadge" class="absolute -top-1.5 -right-2 px-1.5 py-0.2 rounded-full text-[9px] font-extrabold bg-emerald-500 text-white min-w-4 text-center">0</span>
           </div>
-          <span class="text-[10px] mt-1 tracking-tight">Belanja</span>
+          <span class="text-[9px] mt-1 font-semibold">Troli</span>
         </button>
 
-        <!-- Tab 2: Riwayat -->
-        <button
-          class="nav-tab-btn flex-1 flex flex-col items-center py-1 rounded-xl text-slate-400 hover:text-slate-600 font-medium active:scale-95 transition"
-          data-target="tab-riwayat">
+        <!-- 2. Radar Harga -->
+        <button class="nav-tab-btn flex-1 flex flex-col items-center py-1 rounded-xl hover:text-slate-600 active:scale-95 transition" data-target="tab-radar">
+          <i data-lucide="radar" class="w-5 h-5"></i>
+          <span class="text-[9px] mt-1 font-semibold">Radar</span>
+        </button>
+
+        <!-- 3. Pantry -->
+        <button class="nav-tab-btn flex-1 flex flex-col items-center py-1 rounded-xl hover:text-slate-600 active:scale-95 transition" data-target="tab-pantry">
+          <div class="relative">
+            <i data-lucide="box" class="w-5 h-5"></i>
+            <span id="navPantryAlertBadge" class="hidden absolute -top-1 -right-1 w-2 h-2 rounded-full bg-rose-500"></span>
+          </div>
+          <span class="text-[9px] mt-1 font-semibold">Pantry</span>
+        </button>
+
+        <!-- 4. Gamifikasi -->
+        <button class="nav-tab-btn flex-1 flex flex-col items-center py-1 rounded-xl hover:text-slate-600 active:scale-95 transition" data-target="tab-gamifikasi">
+          <i data-lucide="trophy" class="w-5 h-5"></i>
+          <span class="text-[9px] mt-1 font-semibold">XP & Badges</span>
+        </button>
+
+        <!-- 5. Riwayat -->
+        <button class="nav-tab-btn flex-1 flex flex-col items-center py-1 rounded-xl hover:text-slate-600 active:scale-95 transition" data-target="tab-riwayat">
           <i data-lucide="history" class="w-5 h-5"></i>
-          <span class="text-[10px] mt-1 tracking-tight">Riwayat</span>
+          <span class="text-[9px] mt-1 font-semibold">Riwayat</span>
         </button>
 
-        <!-- Tab 3: Anggaran -->
-        <button
-          class="nav-tab-btn flex-1 flex flex-col items-center py-1 rounded-xl text-slate-400 hover:text-slate-600 font-medium active:scale-95 transition"
-          data-target="tab-anggaran">
+        <!-- 6. Anggaran -->
+        <button class="nav-tab-btn flex-1 flex flex-col items-center py-1 rounded-xl hover:text-slate-600 active:scale-95 transition" data-target="tab-anggaran">
           <i data-lucide="pie-chart" class="w-5 h-5"></i>
-          <span class="text-[10px] mt-1 tracking-tight">Anggaran</span>
+          <span class="text-[9px] mt-1 font-semibold">Anggaran</span>
         </button>
-
       </div>
     </nav>
 
   </div>
 
   <!-- ========================================================================= -->
-  <!-- MODAL / BOTTOM SHEET: INPUT ITEM BELANJA (F-01, F-02, F-03, F-04)        -->
+  <!-- MODAL 1: SMART RECEIPT SCANNER (AI OCR PARSING)                           -->
   <!-- ========================================================================= -->
-  <div id="itemModalBackdrop"
-    class="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm hidden flex items-end sm:items-center justify-center p-0 sm:p-4 transition-opacity">
-    <div id="itemModalCard"
-      class="w-full max-w-[430px] max-h-[92vh] overflow-y-auto bg-white border-t sm:border border-slate-200/90 rounded-t-3xl sm:rounded-3xl shadow-2xl p-4 sm:p-5 flex flex-col space-y-3.5 animate-slide-up scrollbar-none text-slate-800">
-
-      <!-- Modal Header & Close Handle -->
-      <div class="flex items-center justify-between pb-2 border-b border-slate-100">
-        <div class="flex items-center gap-2">
-          <div
-            class="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-600 border border-emerald-200/80 flex items-center justify-center">
-            <i data-lucide="tag" class="w-4 h-4" id="modalHeaderIcon"></i>
+  <div id="ocrModalBackdrop" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-3 transition-opacity">
+    <div class="w-full max-w-[480px] max-h-[92vh] overflow-y-auto bg-white dark:bg-[#1E293B] border border-slate-200 dark:border-slate-700 rounded-3xl shadow-2xl p-5 space-y-4 scrollbar-none text-slate-800 dark:text-slate-100">
+      
+      <!-- Modal Header -->
+      <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+        <div class="flex items-center gap-2.5">
+          <div class="w-9 h-9 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
+            <i data-lucide="camera" class="w-5 h-5"></i>
           </div>
           <div>
-            <h3 class="text-sm font-bold text-slate-800" id="modalTitle">Tambah Item Belanja</h3>
-            <p class="text-[10px] text-slate-500">Catat cepat saat ambil barang di lorong</p>
+            <h3 class="text-sm font-extrabold text-slate-900 dark:text-white">Smart Receipt Scanner (AI OCR)</h3>
+            <p class="text-[11px] text-slate-500 dark:text-slate-400">Ekstrak otomatis struk fisik & screenshot online</p>
           </div>
         </div>
-        <button id="closeModalBtn"
-          class="p-1.5 rounded-full bg-slate-100 text-slate-400 hover:text-slate-600 transition">
+        <button id="closeOcrBtn" class="p-1.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-400 hover:text-slate-600">
           <i data-lucide="x" class="w-4 h-4"></i>
         </button>
       </div>
 
-      <!-- Form Inputs Container -->
+      <!-- File Upload Zone -->
+      <div id="ocrUploadZone" class="border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-2xl p-6 text-center hover:border-emerald-500 transition-colors cursor-pointer bg-slate-50/50 dark:bg-slate-900/30 relative overflow-hidden">
+        <input type="file" id="receiptFileInput" accept="image/*" class="absolute inset-0 opacity-0 cursor-pointer">
+        <div class="w-12 h-12 mx-auto rounded-2xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mb-2">
+          <i data-lucide="upload-cloud" class="w-6 h-6"></i>
+        </div>
+        <p class="text-xs font-bold text-slate-800 dark:text-slate-200">Sentuh untuk Unggah Foto Struk</p>
+        <p class="text-[10px] text-slate-500 dark:text-slate-400 mt-1">Mendukung format JPG, PNG, atau Screenshot Belanja</p>
+      </div>
+
+      <!-- Preset Sample Receipts for Quick Instant Demo -->
+      <div>
+        <span class="text-[11px] font-bold text-slate-500 uppercase tracking-wider block mb-2">Uji Cepat dengan Contoh Struk Realistis:</span>
+        <div class="grid grid-cols-3 gap-2">
+          <button type="button" class="preset-ocr-btn p-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 border border-slate-200 dark:border-slate-700 text-[11px] font-bold text-slate-700 dark:text-slate-300 active:scale-95 transition" data-sample="indomaret">
+            🏪 Indomaret
+          </button>
+          <button type="button" class="preset-ocr-btn p-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 border border-slate-200 dark:border-slate-700 text-[11px] font-bold text-slate-700 dark:text-slate-300 active:scale-95 transition" data-sample="alfamart">
+            🛒 Alfamart
+          </button>
+          <button type="button" class="preset-ocr-btn p-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 border border-slate-200 dark:border-slate-700 text-[11px] font-bold text-slate-700 dark:text-slate-300 active:scale-95 transition" data-sample="shopee">
+            📱 Shopee Mart
+          </button>
+        </div>
+      </div>
+
+      <!-- AI Scanning Laser Animation State (Hidden by default) -->
+      <div id="ocrScanningState" class="hidden p-6 rounded-2xl bg-slate-900 text-white relative overflow-hidden text-center space-y-3">
+        <div class="absolute inset-x-0 h-1 bg-gradient-to-r from-transparent via-emerald-400 to-transparent shadow-[0_0_12px_#34d399] animate-scan-laser"></div>
+        <div class="w-10 h-10 mx-auto rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center animate-spin">
+          <i data-lucide="loader-2" class="w-5 h-5"></i>
+        </div>
+        <p class="text-xs font-bold text-emerald-300">AI Vision OCR sedang memproses...</p>
+        <p class="text-[10px] text-slate-400">Mendeteksi toko, daftar barang, kuantitas, harga, dan kategori esensial vs camilan.</p>
+      </div>
+
+      <!-- Parsed OCR Results Preview (Hidden until extracted) -->
+      <div id="ocrResultContainer" class="hidden space-y-3">
+        <div class="p-3 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 flex items-center justify-between">
+          <div>
+            <span class="text-[10px] uppercase font-bold text-emerald-700 dark:text-emerald-400 block" id="ocrMerchantDetected">Indomaret Point</span>
+            <span class="text-xs text-slate-500 dark:text-slate-400" id="ocrDateDetected">Hari ini</span>
+          </div>
+          <div class="text-right">
+            <span class="text-xs text-slate-400 block">Total Belanja</span>
+            <span class="text-sm font-black font-mono text-emerald-700 dark:text-emerald-400" id="ocrTotalDetected">Rp 0</span>
+          </div>
+        </div>
+
+        <div class="max-h-48 overflow-y-auto space-y-2 pr-1 scrollbar-none" id="ocrExtractedItemsList">
+          <!-- Rendered by JS -->
+        </div>
+
+        <button id="applyOcrToCartBtn" class="w-full py-3 rounded-2xl bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-black shadow-md shadow-emerald-500/20 active:scale-95 transition flex items-center justify-center gap-2">
+          <i data-lucide="plus-circle" class="w-4 h-4"></i>
+          <span>Masukkan Semua Item ke Troli & Pantry</span>
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- MODAL 2: PERSUASIVE EMERGENCY FREEZE BARRIER                              -->
+  <!-- ========================================================================= -->
+  <div id="freezeAlertModalBackdrop" class="fixed inset-0 z-50 bg-slate-900/70 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="w-full max-w-[380px] bg-white dark:bg-[#1E293B] border border-rose-300 dark:border-rose-900 rounded-3xl shadow-2xl p-5 text-center space-y-3.5">
+      <div class="w-14 h-14 mx-auto rounded-full bg-rose-100 dark:bg-rose-950 text-rose-600 dark:text-rose-400 flex items-center justify-center animate-pulse">
+        <i data-lucide="shield-alert" class="w-7 h-7"></i>
+      </div>
+      <div>
+        <h3 class="text-base font-extrabold text-slate-900 dark:text-white">Emergency Freeze Aktif!</h3>
+        <p class="text-xs text-slate-500 dark:text-slate-400 mt-1.5 leading-relaxed">
+          Item ini terdeteksi sebagai <b>Camilan / Belanja Impulsif</b>. Sesuai target hemat bulanan Anda, pembelian non-esensial ditahan sementara untuk mengamankan anggaran.
+        </p>
+      </div>
+      <div class="p-3 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900/60 text-[11px] text-amber-800 dark:text-amber-300 text-left">
+        💡 <b>Tips FinTech:</b> Menunda pembelian camilan selama 24 jam terbukti memangkas 70% pengeluaran impulsif yang tidak terencana.
+      </div>
+      <div class="flex gap-2">
+        <button id="cancelImpulseBtn" class="flex-1 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-xs shadow-sm active:scale-95 transition">
+          Batalkan & Tetap Hemat
+        </button>
+        <button id="forceAddImpulseBtn" class="py-2.5 px-3 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-800 text-xs font-semibold active:scale-95 transition">
+          Paksa Masukkan
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- MODAL 3: ZERO-WASTE RECIPE DETAIL                                         -->
+  <!-- ========================================================================= -->
+  <div id="recipeModalBackdrop" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-3.5">
+    <div class="w-full max-w-[440px] max-h-[88vh] overflow-y-auto bg-white dark:bg-[#1E293B] border border-slate-200 dark:border-slate-700 rounded-3xl shadow-2xl p-5 space-y-4 scrollbar-none text-slate-800 dark:text-slate-100">
+      <div class="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-800">
+        <div class="flex items-center gap-2">
+          <div class="w-8 h-8 rounded-xl bg-amber-500/10 text-amber-500 flex items-center justify-center">
+            <i data-lucide="sparkles" class="w-4 h-4"></i>
+          </div>
+          <h3 class="text-sm font-bold text-slate-900 dark:text-white" id="recipeModalTitle">Tumis Kilat Ayam Sayur Zero-Waste</h3>
+        </div>
+        <button id="closeRecipeBtn" class="p-1.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-400 hover:text-slate-600">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+
+      <div class="p-3 rounded-2xl bg-amber-50/70 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900 text-xs">
+        <span class="font-bold text-amber-900 dark:text-amber-200 block mb-1">Bahan Dapur yang Diselamatkan:</span>
+        <div id="recipeUtilizedItems" class="flex flex-wrap gap-1.5">
+          <!-- Rendered by JS -->
+        </div>
+      </div>
+
+      <div class="space-y-2">
+        <h4 class="text-xs font-bold uppercase tracking-wider text-slate-500">Langkah Memasak Praktis:</h4>
+        <ol id="recipeStepsList" class="space-y-2 text-xs text-slate-600 dark:text-slate-300 list-decimal list-inside leading-relaxed">
+          <!-- Rendered by JS -->
+        </ol>
+      </div>
+
+      <button id="dismissRecipeBtn" class="w-full py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-xs shadow-sm">
+        Siap Masak & Habiskan Stok
+      </button>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- MODAL 4: INPUT ITEM BELANJA MANUAL DENGAN KALKULATOR DISKON TIER          -->
+  <!-- ========================================================================= -->
+  <div id="itemModalBackdrop" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden flex items-end sm:items-center justify-center p-0 sm:p-4 transition-opacity">
+    <div id="itemModalCard" class="w-full max-w-[440px] max-h-[92vh] overflow-y-auto bg-white dark:bg-[#1E293B] border-t sm:border border-slate-200/90 dark:border-slate-700 rounded-t-3xl sm:rounded-3xl shadow-2xl p-4 sm:p-5 flex flex-col space-y-3.5 animate-slide-up scrollbar-none text-slate-800 dark:text-slate-100">
+
+      <div class="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-800">
+        <div class="flex items-center gap-2">
+          <div class="w-8 h-8 rounded-xl bg-emerald-50 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
+            <i data-lucide="tag" class="w-4 h-4" id="modalHeaderIcon"></i>
+          </div>
+          <div>
+            <h3 class="text-sm font-bold text-slate-900 dark:text-white" id="modalTitle">Tambah Item Belanja</h3>
+            <p class="text-[10px] text-slate-500 dark:text-slate-400">Catat cepat saat ambil barang di lorong rak</p>
+          </div>
+        </div>
+        <button id="closeModalBtn" class="p-1.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-400 hover:text-slate-600">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+
       <form id="itemForm" class="space-y-3" onsubmit="return false;">
         <input type="hidden" id="editItemId" value="">
 
-        <!-- F-01: Nama Produk & Auto-Suggestions -->
         <div>
-          <label class="block text-xs font-bold text-slate-700 mb-1">
+          <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
             Nama Produk <span class="text-rose-500">*</span>
           </label>
           <div class="relative">
-            <input type="text" id="inputItemName" required autocomplete="off"
-              placeholder="Contoh: Beras Ramos, Indomie, Minyak 2L..."
-              class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-sm font-semibold text-slate-800 focus:outline-none focus:border-emerald-500 focus:bg-white transition placeholder-slate-400">
-
-            <!-- Quick Suggestion Dropdown -->
-            <div id="suggestionsBox"
-              class="absolute left-0 right-0 top-full mt-1 bg-white border border-slate-200 rounded-xl shadow-xl z-20 max-h-40 overflow-y-auto hidden">
+            <input type="text" id="inputItemName" required autocomplete="off" placeholder="Contoh: Beras Ramos, Indomie, Minyak 2L..." class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-sm font-semibold text-slate-800 dark:text-white focus:outline-none focus:border-emerald-500 transition">
+            <div id="suggestionsBox" class="absolute left-0 right-0 top-full mt-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-xl z-20 max-h-40 overflow-y-auto hidden">
               <!-- Rendered via JS -->
             </div>
           </div>
         </div>
 
-        <!-- F-01: Kategori & Satuan (Two Columns) -->
         <div class="grid grid-cols-2 gap-2.5">
           <div>
-            <label class="block text-[11px] font-bold text-slate-600 mb-1">Kategori</label>
-            <select id="inputItemCategory"
-              class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-800 focus:outline-none focus:border-emerald-500 focus:bg-white">
+            <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-300 mb-1">Kategori</label>
+            <select id="inputItemCategory" class="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-800 dark:text-slate-100 focus:outline-none focus:border-emerald-500">
               <option value="Sembako">🌾 Sembako</option>
               <option value="Makanan Instan">🍜 Makanan Instan</option>
               <option value="Daging & Sayur">🥩 Daging & Sayur</option>
@@ -582,9 +848,8 @@
           </div>
 
           <div>
-            <label class="block text-[11px] font-bold text-slate-600 mb-1">Satuan</label>
-            <select id="inputItemUnit"
-              class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-800 focus:outline-none focus:border-emerald-500 focus:bg-white">
+            <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-300 mb-1">Satuan</label>
+            <select id="inputItemUnit" class="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-800 dark:text-slate-100 focus:outline-none focus:border-emerald-500">
               <option value="pcs">pcs (buah)</option>
               <option value="pack">pack</option>
               <option value="kg">kg</option>
@@ -597,193 +862,113 @@
           </div>
         </div>
 
-        <!-- F-01 & F-02: Kuantitas Beli (Qty) dengan Stepper Ramah Jempol -->
+        <!-- Quantity Stepper -->
         <div>
           <div class="flex items-center justify-between mb-1">
-            <label class="text-[11px] font-bold text-slate-600">Kuantitas (Qty)</label>
-            <!-- Quick Add Chips -->
+            <label class="text-[11px] font-bold text-slate-600 dark:text-slate-300">Kuantitas (Qty)</label>
             <div class="flex gap-1">
-              <button type="button"
-                class="qty-preset px-1.5 py-0.5 rounded bg-slate-100 text-[10px] text-slate-600 hover:text-slate-800 border border-slate-200"
-                data-add="1">+1</button>
-              <button type="button"
-                class="qty-preset px-1.5 py-0.5 rounded bg-slate-100 text-[10px] text-slate-600 hover:text-slate-800 border border-slate-200"
-                data-add="2">+2</button>
-              <button type="button"
-                class="qty-preset px-1.5 py-0.5 rounded bg-slate-100 text-[10px] text-slate-600 hover:text-slate-800 border border-slate-200"
-                data-add="5">+5</button>
+              <button type="button" class="qty-preset px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-[10px] text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700" data-add="1">+1</button>
+              <button type="button" class="qty-preset px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-[10px] text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700" data-add="2">+2</button>
+              <button type="button" class="qty-preset px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-[10px] text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700" data-add="5">+5</button>
             </div>
           </div>
 
           <div class="flex items-center gap-2">
-            <button type="button" id="btnQtyMinus"
-              class="w-11 h-11 rounded-xl bg-slate-100 active:bg-slate-200 text-slate-700 text-lg font-bold flex items-center justify-center border border-slate-200 active:scale-95 transition">
-              -
-            </button>
-            <input type="number" id="inputItemQty" min="1" max="999" value="1" step="1" required
-              class="flex-1 py-2 text-center rounded-xl bg-slate-50 border border-slate-200 text-lg font-extrabold text-slate-900 font-mono focus:outline-none focus:border-emerald-500 focus:bg-white">
-            <button type="button" id="btnQtyPlus"
-              class="w-11 h-11 rounded-xl bg-slate-100 active:bg-slate-200 text-slate-700 text-lg font-bold flex items-center justify-center border border-slate-200 active:scale-95 transition">
-              +
-            </button>
+            <button type="button" id="btnQtyMinus" class="w-11 h-11 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-lg font-bold flex items-center justify-center border border-slate-200 dark:border-slate-700 active:scale-95 transition">-</button>
+            <input type="number" id="inputItemQty" min="1" max="999" value="1" step="1" required class="flex-1 py-2 text-center rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-lg font-extrabold text-slate-900 dark:text-white font-mono focus:outline-none focus:border-emerald-500">
+            <button type="button" id="btnQtyPlus" class="w-11 h-11 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-lg font-bold flex items-center justify-center border border-slate-200 dark:border-slate-700 active:scale-95 transition">+</button>
           </div>
         </div>
 
-        <!-- F-01: Harga Satuan per Item (Rp) & F-04 Komparator Preview -->
+        <!-- Unit Price & Comparator Preview -->
         <div>
           <div class="flex items-center justify-between mb-1">
-            <label class="text-[11px] font-bold text-slate-600">
+            <label class="text-[11px] font-bold text-slate-600 dark:text-slate-300">
               Harga Satuan Normal <span class="text-rose-500">*</span>
             </label>
             <span class="text-[10px] text-slate-400">Sebelum diskon</span>
           </div>
 
           <div class="relative">
-            <span
-              class="absolute left-3.5 top-1/2 -translate-y-1/2 font-mono font-bold text-slate-400 text-sm">Rp</span>
-            <input type="number" id="inputItemPrice" min="0" step="100" required placeholder="0"
-              class="w-full pl-10 pr-3 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-base font-extrabold text-slate-900 font-mono focus:outline-none focus:border-emerald-500 focus:bg-white transition placeholder-slate-400">
+            <span class="absolute left-3.5 top-1/2 -translate-y-1/2 font-mono font-bold text-slate-400 text-sm">Rp</span>
+            <input type="number" id="inputItemPrice" min="0" step="100" required placeholder="0" class="w-full pl-10 pr-3 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-base font-extrabold text-slate-900 dark:text-white font-mono focus:outline-none focus:border-emerald-500 transition">
           </div>
 
-          <!-- F-04: KOMPARATOR HARGA REALTIME VS BULAN LALU (Banner Tampilan Seketika) -->
-          <div id="comparatorBadgeContainer"
-            class="mt-2 p-2 rounded-xl bg-slate-50 border border-slate-200 transition-all">
+          <div id="comparatorBadgeContainer" class="mt-2 p-2 rounded-xl bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700">
             <div class="flex items-center justify-between text-xs">
               <div class="flex items-center gap-1.5" id="compIconAndTitle">
-                <span id="compIcon"
-                  class="w-5 h-5 rounded-md flex items-center justify-center text-xs font-bold bg-slate-200 text-slate-600">=</span>
-                <span id="compText" class="font-bold text-[11px] text-slate-700">Belum ada data pembanding</span>
+                <span id="compIcon" class="w-5 h-5 rounded-md flex items-center justify-center text-xs font-bold bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300">=</span>
+                <span id="compText" class="font-bold text-[11px] text-slate-700 dark:text-slate-300">Belum ada data pembanding</span>
               </div>
-              <div class="text-[10px] text-slate-500 font-mono" id="compRefPrice">
-                Bln Lalu: -
-              </div>
+              <div class="text-[10px] text-slate-500 font-mono" id="compRefPrice">Bln Lalu: -</div>
             </div>
-            <div id="compAnalysisNote" class="text-[10px] text-slate-500 mt-1 hidden">
-              <!-- Calculated diff detail -->
-            </div>
+            <div id="compAnalysisNote" class="text-[10px] text-slate-500 mt-1 hidden"></div>
           </div>
         </div>
 
-        <!-- F-03: KALKULATOR DISKON BERTINGKAT / MULTI-TIER DISCOUNT -->
-        <div class="p-3 rounded-2xl bg-amber-50/50 border border-amber-200/90 space-y-2">
+        <!-- Multi-tier Discount Calculator -->
+        <div class="p-3 rounded-2xl bg-amber-50/50 dark:bg-amber-950/20 border border-amber-200/90 dark:border-amber-900/40 space-y-2">
           <div class="flex items-center justify-between">
-            <label class="text-[11px] font-bold text-amber-900 flex items-center gap-1">
+            <label class="text-[11px] font-bold text-amber-900 dark:text-amber-200 flex items-center gap-1">
               <i data-lucide="percent" class="w-3.5 h-3.5 text-amber-600"></i>
               <span>Kalkulator Diskon Toko</span>
             </label>
-            <span class="text-[10px] text-amber-700">Mendukung Tier 50%+20%</span>
+            <span class="text-[10px] text-amber-700 dark:text-amber-400">Mendukung Tier 50%+20%</span>
           </div>
 
-          <!-- Discount Mode Selector -->
           <div class="grid grid-cols-4 gap-1">
-            <button type="button"
-              class="disc-mode-btn active py-1 rounded-lg text-[10px] font-semibold bg-amber-100 text-amber-900 border border-amber-300"
-              data-mode="none">Tanpa</button>
-            <button type="button"
-              class="disc-mode-btn py-1 rounded-lg text-[10px] font-semibold bg-white text-slate-600 border border-slate-200"
-              data-mode="single">Tunggal %</button>
-            <button type="button"
-              class="disc-mode-btn py-1 rounded-lg text-[10px] font-semibold bg-white text-slate-600 border border-slate-200"
-              data-mode="tier">Bertingkat</button>
-            <button type="button"
-              class="disc-mode-btn py-1 rounded-lg text-[10px] font-semibold bg-white text-slate-600 border border-slate-200"
-              data-mode="nominal">Nominal Rp</button>
+            <button type="button" class="disc-mode-btn active py-1 rounded-lg text-[10px] font-semibold bg-amber-100 dark:bg-amber-900 text-amber-900 dark:text-amber-200 border border-amber-300 dark:border-amber-800" data-mode="none">Tanpa</button>
+            <button type="button" class="disc-mode-btn py-1 rounded-lg text-[10px] font-semibold bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700" data-mode="single">Tunggal %</button>
+            <button type="button" class="disc-mode-btn py-1 rounded-lg text-[10px] font-semibold bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700" data-mode="tier">Bertingkat</button>
+            <button type="button" class="disc-mode-btn py-1 rounded-lg text-[10px] font-semibold bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700" data-mode="nominal">Nominal Rp</button>
           </div>
 
-          <!-- Dynamic Discount Inputs based on Mode -->
-          <!-- 1. Single Mode -->
           <div id="discSingleBox" class="hidden space-y-1.5">
             <div class="flex items-center gap-2">
-              <input type="number" id="inputDiscSingle" min="0" max="99" value="0" placeholder="Contoh: 20"
-                class="w-full px-3 py-1.5 rounded-lg bg-white border border-amber-200 text-xs font-mono font-bold text-amber-900 text-center">
-              <span class="text-xs font-bold text-slate-600">%</span>
-            </div>
-            <!-- Preset Quick buttons -->
-            <div class="flex gap-1">
-              <button type="button"
-                class="disc-quick-btn flex-1 py-0.5 rounded bg-white text-[10px] text-slate-600 hover:bg-amber-100 border border-amber-200/60"
-                data-val="10">10%</button>
-              <button type="button"
-                class="disc-quick-btn flex-1 py-0.5 rounded bg-white text-[10px] text-slate-600 hover:bg-amber-100 border border-amber-200/60"
-                data-val="20">20%</button>
-              <button type="button"
-                class="disc-quick-btn flex-1 py-0.5 rounded bg-white text-[10px] text-slate-600 hover:bg-amber-100 border border-amber-200/60"
-                data-val="30">30%</button>
-              <button type="button"
-                class="disc-quick-btn flex-1 py-0.5 rounded bg-white text-[10px] text-slate-600 hover:bg-amber-100 border border-amber-200/60"
-                data-val="50">50%</button>
+              <input type="number" id="inputDiscSingle" min="0" max="99" value="0" placeholder="20" class="w-full px-3 py-1.5 rounded-lg bg-white dark:bg-slate-900 border border-amber-200 dark:border-amber-900 text-xs font-mono font-bold text-amber-900 dark:text-amber-200 text-center">
+              <span class="text-xs font-bold text-slate-600 dark:text-slate-400">%</span>
             </div>
           </div>
 
-          <!-- 2. Multi-tier Mode (e.g. 50% + 20%) -->
           <div id="discTierBox" class="hidden space-y-1.5">
             <div class="flex items-center gap-1.5">
               <div class="flex-1">
                 <span class="text-[9px] text-slate-500 block">Tier 1 (%)</span>
-                <input type="number" id="inputDiscTier1" min="0" max="99" value="50" placeholder="50"
-                  class="w-full px-2 py-1.5 rounded-lg bg-white border border-amber-200 text-xs font-mono font-bold text-amber-900 text-center">
+                <input type="number" id="inputDiscTier1" min="0" max="99" value="50" class="w-full px-2 py-1.5 rounded-lg bg-white dark:bg-slate-900 border border-amber-200 dark:border-amber-900 text-xs font-mono font-bold text-center">
               </div>
               <span class="text-xs font-bold text-slate-400 mt-3">+</span>
               <div class="flex-1">
                 <span class="text-[9px] text-slate-500 block">Tier 2 (%)</span>
-                <input type="number" id="inputDiscTier2" min="0" max="99" value="20" placeholder="20"
-                  class="w-full px-2 py-1.5 rounded-lg bg-white border border-amber-200 text-xs font-mono font-bold text-amber-900 text-center">
+                <input type="number" id="inputDiscTier2" min="0" max="99" value="20" class="w-full px-2 py-1.5 rounded-lg bg-white dark:bg-slate-900 border border-amber-200 dark:border-amber-900 text-xs font-mono font-bold text-center">
               </div>
-            </div>
-            <!-- Tier presets -->
-            <div class="flex gap-1">
-              <button type="button"
-                class="tier-quick-btn flex-1 py-0.5 rounded bg-white text-[10px] text-slate-600 hover:bg-amber-100 border border-amber-200/60"
-                data-t1="50" data-t2="20">50% + 20%</button>
-              <button type="button"
-                class="tier-quick-btn flex-1 py-0.5 rounded bg-white text-[10px] text-slate-600 hover:bg-amber-100 border border-amber-200/60"
-                data-t1="30" data-t2="10">30% + 10%</button>
-              <button type="button"
-                class="tier-quick-btn flex-1 py-0.5 rounded bg-white text-[10px] text-slate-600 hover:bg-amber-100 border border-amber-200/60"
-                data-t1="70" data-t2="10">70% + 10%</button>
             </div>
           </div>
 
-          <!-- 3. Nominal Mode -->
           <div id="discNominalBox" class="hidden">
             <div class="relative">
               <span class="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-mono text-slate-400">Rp</span>
-              <input type="number" id="inputDiscNominal" min="0" step="500" value="0" placeholder="Potongan langsung..."
-                class="w-full pl-9 pr-3 py-1.5 rounded-lg bg-white border border-amber-200 text-xs font-mono font-bold text-amber-900">
+              <input type="number" id="inputDiscNominal" min="0" step="500" value="0" placeholder="5000" class="w-full pl-9 pr-3 py-1.5 rounded-lg bg-white dark:bg-slate-900 border border-amber-200 dark:border-amber-900 text-xs font-mono font-bold">
             </div>
           </div>
 
-          <!-- Calculated Discount Breakdown Note -->
-          <div id="discountExplanation"
-            class="text-[10px] text-amber-800 pt-1 border-t border-amber-200/70 hidden leading-relaxed">
-            <!-- Math calculation: e.g. 50% + 20% -> Efektif 60% -->
-          </div>
+          <div id="discountExplanation" class="text-[10px] text-amber-800 dark:text-amber-300 pt-1 border-t border-amber-200/70 dark:border-amber-900/40 hidden"></div>
         </div>
 
-        <!-- F-02: TOTAL AKHIR REALTIME PREVIEW (Line Item Summary) -->
-        <div class="p-3 rounded-2xl bg-slate-50 border border-slate-200/90 flex items-center justify-between">
+        <!-- Row Total Preview -->
+        <div class="p-3 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 flex items-center justify-between">
           <div>
             <div class="text-[10px] text-slate-500 font-semibold uppercase">Total Baris Item</div>
             <div class="text-[10px] text-slate-500 font-mono" id="formCalculationDetail">1 × Rp 0</div>
           </div>
           <div class="text-right">
-            <div class="text-base font-extrabold text-emerald-600 font-mono" id="formFinalRowTotal">
-              Rp 0
-            </div>
-            <div class="text-[9px] text-emerald-600 font-semibold" id="formSavingBadge">
-              Hemat: Rp 0
-            </div>
+            <div class="text-base font-extrabold text-emerald-600 dark:text-emerald-400 font-mono" id="formFinalRowTotal">Rp 0</div>
+            <div class="text-[9px] text-emerald-600 dark:text-emerald-400 font-semibold" id="formSavingBadge">Hemat: Rp 0</div>
           </div>
         </div>
 
-        <!-- Submit & Cancel Buttons -->
         <div class="pt-1 flex gap-2">
-          <button type="button" id="cancelModalBtn"
-            class="flex-1 py-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold active:scale-95 transition border border-slate-200">
-            Batal
-          </button>
-          <button type="submit" id="saveItemBtn"
-            class="flex-2 w-2/3 py-3 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-extrabold shadow-md shadow-emerald-200 active:scale-95 transition flex items-center justify-center gap-1.5">
+          <button type="button" id="cancelModalBtn" class="flex-1 py-3 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-bold active:scale-95 transition">Batal</button>
+          <button type="submit" id="saveItemBtn" class="flex-2 w-2/3 py-3 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-extrabold shadow-md shadow-emerald-500/20 active:scale-95 transition flex items-center justify-center gap-1.5">
             <i data-lucide="check" class="w-4 h-4"></i>
             <span id="saveBtnText">Simpan ke Troli</span>
           </button>
@@ -794,22 +979,18 @@
   </div>
 
   <!-- ========================================================================= -->
-  <!-- MODAL: DETAIL STRUK DIGITAL RIWAYAT BELANJA (F-06 Digital Receipt)       -->
+  <!-- MODAL 5: DETAIL STRUK DIGITAL RIWAYAT BELANJA                             -->
   <!-- ========================================================================= -->
-  <div id="receiptModalBackdrop"
-    class="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm hidden flex items-center justify-center p-3.5 transition-opacity">
-    <div
-      class="w-full max-w-[400px] max-h-[90vh] overflow-y-auto bg-white border border-slate-200 rounded-3xl shadow-2xl p-4 flex flex-col space-y-3 scrollbar-none text-slate-800">
-
-      <div class="flex items-center justify-between pb-2 border-b border-slate-100">
+  <div id="receiptModalBackdrop" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-3.5">
+    <div class="w-full max-w-[420px] max-h-[90vh] overflow-y-auto bg-white dark:bg-[#1E293B] border border-slate-200 dark:border-slate-700 rounded-3xl shadow-2xl p-4 flex flex-col space-y-3 scrollbar-none text-slate-800 dark:text-slate-100">
+      <div class="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-800">
         <div class="flex items-center gap-2">
-          <div
-            class="w-7 h-7 rounded-lg bg-sky-50 text-sky-600 border border-sky-200/80 flex items-center justify-center">
+          <div class="w-7 h-7 rounded-lg bg-sky-50 dark:bg-sky-950 text-sky-600 dark:text-sky-400 flex items-center justify-center">
             <i data-lucide="receipt" class="w-4 h-4"></i>
           </div>
-          <h3 class="text-xs font-bold text-slate-800">Struk Digital Belanja</h3>
+          <h3 class="text-xs font-bold text-slate-800 dark:text-white">Struk Digital Belanja</h3>
         </div>
-        <button id="closeReceiptBtn" class="p-1 rounded-full bg-slate-100 text-slate-400 hover:text-slate-600">
+        <button id="closeReceiptBtn" class="p-1 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-400 hover:text-slate-600">
           <i data-lucide="x" class="w-4 h-4"></i>
         </button>
       </div>
@@ -819,75 +1000,19 @@
       </div>
 
       <div class="pt-2 flex gap-2">
-        <button id="copyReceiptTextBtn"
-          class="flex-1 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold flex items-center justify-center gap-1.5 active:scale-95 transition border border-slate-200">
+        <button id="copyReceiptTextBtn" class="flex-1 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-bold flex items-center justify-center gap-1.5 active:scale-95 transition">
           <i data-lucide="copy" class="w-3.5 h-3.5"></i>
-          <span>Salin ke WA / Catatan</span>
+          <span>Salin ke WhatsApp</span>
         </button>
-        <button id="dismissReceiptBtn"
-          class="py-2.5 px-4 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold active:scale-95 transition shadow-sm shadow-emerald-200">
+        <button id="dismissReceiptBtn" class="py-2.5 px-4 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold active:scale-95 transition">
           Tutup
         </button>
       </div>
     </div>
   </div>
 
-  <!-- ========================================================================= -->
-  <!-- MODAL: SRS INFO & PETUNJUK PENGGUNAAN                                     -->
-  <!-- ========================================================================= -->
-  <div id="helpModalBackdrop"
-    class="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm hidden flex items-center justify-center p-3.5">
-    <div
-      class="w-full max-w-[400px] max-h-[85vh] overflow-y-auto bg-white border border-slate-200 rounded-3xl shadow-2xl p-4 space-y-3 text-xs scrollbar-none text-slate-800">
-      <div class="flex items-center justify-between pb-2 border-b border-slate-100">
-        <h3 class="font-bold text-slate-800 flex items-center gap-1.5">
-          <i data-lucide="shield-check" class="w-4 h-4 text-emerald-600"></i>
-          <span>Checklist Standar SRS (F-01 s/d F-06)</span>
-        </h3>
-        <button id="closeHelpBtn" class="p-1 rounded-full bg-slate-100 text-slate-400 hover:text-slate-600">
-          <i data-lucide="x" class="w-4 h-4"></i>
-        </button>
-      </div>
-
-      <div class="space-y-2 text-slate-600 leading-relaxed text-[11px]">
-        <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-200/80">
-          <b class="text-emerald-700 block mb-0.5">F-01: Pencatatan Item Lengkap</b>
-          Produk, Kategori (Sembako, Instan, dll), Satuan (kg, pcs, pack), Qty, dan Harga Satuan.
-        </div>
-        <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-200/80">
-          <b class="text-emerald-700 block mb-0.5">F-02: Perhitungan Kuantitas Otomatis</b>
-          Total baris langsung mengalikan Qty dan Harga Satuan secara realtime tanpa reload.
-        </div>
-        <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-200/80">
-          <b class="text-emerald-700 block mb-0.5">F-03: Kalkulator Diskon Bertingkat</b>
-          Mendukung diskon tunggal (25%) dan multi-tier (50% + 20%) dengan rumus matematis akurat.
-        </div>
-        <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-200/80">
-          <b class="text-emerald-700 block mb-0.5">F-04: Komparator Harga Realtime vs Bulan Lalu</b>
-          <span class="text-rose-600 font-bold">↑ Panah Merah</span> (Lebih mahal), <span
-            class="text-emerald-600 font-bold">↓ Panah Hijau</span> (Lebih murah), <span
-            class="text-slate-600 font-bold">= Setara</span>.
-        </div>
-        <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-200/80">
-          <b class="text-emerald-700 block mb-0.5">F-05: Pengendali Anggaran / Safety Cap</b>
-          Visual progress bar berubah ke merah menyala saat mendekati / melampaui limit.
-        </div>
-        <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-200/80">
-          <b class="text-emerald-700 block mb-0.5">F-06: Riwayat & Database Belanja</b>
-          LocalStorage otomatis, menyimpan riwayat transaksi dan memperbarui database harga bulan lalu.
-        </div>
-      </div>
-
-      <button id="dismissHelpBtn"
-        class="w-full py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-xs mt-2 shadow-sm shadow-emerald-200">
-        Mengerti & Lanjutkan Belanja
-      </button>
-    </div>
-  </div>
-
   <!-- TOAST NOTIFICATION CONTAINER -->
-  <div id="toastNotification"
-    class="fixed top-5 left-1/2 -translate-x-1/2 z-50 px-4 py-2.5 rounded-xl bg-white/95 border border-slate-200 text-slate-800 text-xs font-semibold shadow-xl transition-all duration-300 pointer-events-none opacity-0 -translate-y-4 max-w-[360px] flex items-center gap-2">
+  <div id="toastNotification" class="fixed top-5 left-1/2 -translate-x-1/2 z-50 px-4 py-2.5 rounded-2xl bg-white/95 dark:bg-slate-800/95 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 text-xs font-semibold shadow-2xl transition-all duration-300 pointer-events-none opacity-0 -translate-y-4 max-w-[360px] flex items-center gap-2">
     <i data-lucide="check-circle" id="toastIcon" class="w-4 h-4 text-emerald-500 shrink-0"></i>
     <span id="toastMessage">Pemberitahuan</span>
   </div>

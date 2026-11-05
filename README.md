@@ -1,45 +1,81 @@
-# 🛒 Smart Grocery & Budget Safety Tracker (PWA)
+# 🛒 Smart Grocery & Budget Safety Tracker (PWA & Bento Grid)
 
-Aplikasi Web Mobile (Progressive Web App) bergaya Native App yang dirancang khusus untuk mendampingi **siswa rantau** saat berbelanja bulanan di supermarket sambil mendorong troli belanja dengan satu tangan.
-
----
-
-## 📱 Arsitektur & Standar Tampilan Mobile
-1. **Format Layar Smartphone (Mobile-First):**
-   - Batas lebar maksimal `430px` (*centered* dengan bayangan estetik saat dibuka di peramban desktop).
-   - Tampilan penuh (100% viewport) saat dibuka di layar smartphone.
-2. **Navigasi Bawah (Floating Bottom Navigation Bar):**
-   - Menu navigasi melayang ramah jempol dengan ikon Lucide untuk 3 tab utama:
-     - 🛒 **Belanja:** Keranjang aktif, filter kategori, pengontrol safety cap realtime.
-     - 📜 **Riwayat:** Arsip riwayat belanja bulanan & struk digital.
-     - ⚙️ **Anggaran:** Penyetelan limit anggaran bulanan & katalog harga pembanding.
-3. **Ergonomi Sentuh Ramah Jempol:**
-   - Tombol *stepper* kuantitas besar (`-` dan `+`).
-   - *Bottom Sheet Drawer* meluncur halus dari bawah untuk input cepat tanpa menggeser jari ke atas layar.
-   - Input harga angka besar dengan format Rupiah otomatis.
-4. **Dukungan PWA (Progressive Web App):**
-   - Dilengkapi `manifest.json`, icon maskable SVG, dan `sw.js` (Service Worker) untuk instalasi langsung ke Layar Utama (*Add to Home Screen*) dan dapat berjalan tanpa koneksi internet (*offline ready*).
+Platform Web FinTech Rumah Tangga & Smart Pantry yang menggabungkan **AI-Powered OCR Receipt Scanning**, **Dynamic Budget Safety Net**, **Emergency Freeze Anti-Impulsif**, **Price Comparison Radar (4 Ritel)**, **Virtual Pantry & Expiry Guard (Zero-Waste)**, serta **Gamified Badges & XP**.
 
 ---
 
-## 📋 Checklist Kebutuhan Fungsional SRS
+## 🌟 Fitur Utama & Spesifikasi Fungsional
 
-| Kode | Fitur | Status | Deskripsi & Implementasi |
-| :--- | :--- | :---: | :--- |
-| **F-01** | **Pencatatan Item Belanja Lengkap** | ✅ Selesai | Form modal memuat Nama Produk (dengan *auto-suggest* cepat), Kategori (Sembako, Makanan Instan, Daging/Sayur, Toiletries, Bumbu/Minyak, Minuman, Camilan, Lainnya), Satuan (`pcs`, `pack`, `kg`, `liter`, `bungkus`, `botol`, dll.), Kuantitas (Qty), dan Harga Satuan. |
-| **F-02** | **Perhitungan Kuantitas Otomatis** | ✅ Selesai | Perubahan Qty atau harga satuan mengalikan total baris item dan total belanja secara realtime seketika tanpa reload. |
-| **F-03** | **Kalkulator Diskon Bertingkat** | ✅ Selesai | Mendukung diskon tunggal (contoh: `25%`), potongan nominal langsung (`-Rp 5.000`), dan **diskon bertumpuk/multi-tier** (contoh: `50% + 20%`) dengan rumus matematis tepat: `Harga_Akhir = Harga_Awal × (1 - T1/100) × (1 - T2/100)`. Menampilkan label diskon efektif dan total rupiah yang dihemat. |
-| **F-04** | **Komparator Harga Realtime vs Bulan Lalu** | ✅ Selesai | Indikator visual seketika saat nama/harga diinput: <br>• **Panah Merah Naik (↑)**: Lebih mahal dibanding bulan lalu (+selisih nominal & %).<br>• **Panah Hijau Turun (↓)**: Lebih murah dibanding bulan lalu (-selisih nominal & %).<br>• **Tanda Setara (=)**: Harga stabil/sama.<br>• **Tanda Bintang (✨)**: Produk baru jika belum ada riwayat. |
-| **F-05** | **Pengendali Anggaran (Safety Cap)** | ✅ Selesai | Batas maksimal anggaran bulanan dapat diatur. Dilengkapi *progress bar* dinamis & badge status warna adaptif: <br>• **Hijau Aman** (< 75%)<br>• **Kuning Waspada** (75% - 89%)<br>• **Oranye Kritis** (90% - 99%)<br>• **Merah Menyala Pulsa (🚨 OVER BUDGET)** (≥ 100%) dengan alarm visual dan kalkulasi sisa saldo/defisit realtime. |
-| **F-06** | **Riwayat & Database Belanja** | ✅ Selesai | Penyimpanan otomatis via `LocalStorage`. Fitur *"Selesaikan & Simpan ke Riwayat"* mengarsipkan transaksi ke struk digital (dapat disalin ke WhatsApp/catatan kost) dan **secara otomatis memperbarui harga patokan bulan lalu** untuk perbandingan belanja berikutnya. |
+### 1. 📷 Smart Receipt Scanner (AI-Powered OCR)
+- **Ekstraksi Cerdas:** Unggah foto struk belanja supermarket (Indomaret, Alfamart, Hypermart) atau tangkapan layar e-commerce (Shopee, Tokopedia).
+- **Auto-Categorization:** AI otomatis mengklasifikasikan item ke dalam *Bahan Pokok*, *Kebutuhan Rumah Tangga*, *Makanan Segar*, atau *Camilan/Non-Esensial*.
+- **Quick Demo Preset:** Dilengkapi tombol uji cepat struk Indomaret, Alfamart, dan Shopee Mart dengan animasi scanning laser real-time.
+- **1-Klik Transfer:** Masukkan seluruh item hasil ekstraksi ke troli belanja dan virtual pantry sekaligus.
+
+### 2. 🛡️ Dynamic Budget Safety Net & "Emergency Freeze"
+- **Safety Gauge Bulanan:**
+  - 🟢 **Aman (< 70%):** Indikator hijau, status finansial stabil.
+  - 🟡 **Waspada (70% - 89%):** Peringatan dini agar memprioritaskan barang kebutuhan pokok.
+  - 🔴 **Kritis (≥ 90%):** Banner peringatan overbudget menyala dengan kalkulasi sisa saldo/defisit.
+- **Sakelar "Emergency Freeze" Anti-Impulsif:**
+  - Jika sakelar diaktifkan, sistem mengunci sisa anggaran belanja.
+  - Saat pengguna mencoba menambahkan barang kategori camilan/non-esensial, sistem memblokir pencatatan dan menampilkan **Persuasive Psychological Friction Barrier** (Tips FinTech penunda belanja impulsif).
+  - Pengguna mendapatkan **+30 XP & Achievement Badge "Impulse Shield"** saat berhasil menahan diri.
+
+### 3. 📡 Price Comparison & Local Deals Radar
+- **Multi-Retailer Benchmark:** Membandingkan total biaya troli belanja di **Indomaret**, **Alfamart**, **Hypermart**, dan **Pasar Tradisional**.
+- **AI Savings Recommendation:** Menampilkan supermarket termurah dan menghitung potensi penghematan nominal Rupiah secara seketika.
+- **Breakdown Harga Per Item:** Memetakan komparasi harga satuan produk antar ritel.
+
+### 4. 🧊 Smart Pantry & Expiry Tracker (Zero-Waste)
+- **Inventaris Virtual Otomatis:** Setiap transaksi belanja yang diselesaikan langsung memindahkan stok bahan ke Virtual Pantry.
+- **Shelf-Life Matrix:** Menghitung sisa hari kesegaran secara presisi (Daging 3 hari, Sayur 5 hari, Susu 7 hari, Sembako 90 hari, Instan 180 hari).
+- **Zero-Waste Recipe Generator (AI Chef):** Tombol *"Saran Resep AI"* memberikan resep masakan praktis langkah demi langkah untuk menyelamatkan bahan-bahan yang mendekati basi.
+
+### 5. 🏆 Gamified Savings & Achievement Badges
+- **Sistem Level & XP:** Pengguna mengumpulkan XP dari aktivitas hemat:
+  - Scan Struk AI OCR: `+50 XP`
+  - Sukses Menahan Belanja Impulsif: `+30 XP`
+  - Selesai Belanja dengan Surplus Anggaran: `+100 XP`
+  - Menghabiskan Bahan Pantry Tanpa Basi: `+30 XP`
+- **Lencana Prestasi:** *Budget Master*, *Zero Waste Hero*, *Smart Shopper*, dan *Impulse Shield*.
 
 ---
 
-## 🚀 Cara Menjalankan Aplikasi
+## 🎨 Desain UI/UX & Tampilan Modern
 
-Aplikasi dibangun menggunakan struktur web modern murni (HTML5, Tailwind CSS, Lucide Icons, Vanilla JavaScript) tanpa dependensi rumit:
+- **Bento Grid & Mobile Switcher:** Tombol layout di bilah atas memungkinkan beralih instan antara **Mode Smartphone 440px (Mobile-First Thumb-Friendly)** dan **Mode Desktop Bento Grid 1200px (Modular Dashboard)**.
+- **Dark Mode & Light Mode:** Palet warna *Emerald Green* (`#10B981`) & *Slate Dark* (`#0F172A` / `#1E293B`) dengan persistensi preferensi.
+- **Ergonomi Sentuh:** Stepper kuantitas besar (`-` dan `+`), kalkulator diskon bertingkat (misal `50% + 20%`), serta feedback audio Web Audio API.
 
-### Opsi 1: Menjalankan dengan Node.js (Server Lokal Sudah Siap)
+---
+
+## 🏗️ Struktur Basis Data & Arsitektur Backend
+
+1. **Skema Basis Data PostgreSQL (`schema.sql`):**
+   - `users`: Data pengguna, XP, dan level.
+   - `budgets`: Pagu bulanan dan status emergency freeze.
+   - `transactions`: Arsip struk belanja dan metadata OCR.
+   - `grocery_items`: Baris produk, harga normal, harga akhir diskon, kategori, dan status esensial.
+   - `pantry_stock`: Pelacak masa simpan bahan dapur, tanggal kedaluwarsa, dan status konsumsi zero-waste.
+   - `price_benchmarks`: Patokan harga multi-ritel untuk radar komparator.
+   - `achievement_badges`: Katalog lencana gamifikasi.
+
+2. **REST API Server (`server.js`):**
+   - `POST /api/ocr/receipt` - Memproses ekstraksi data struk belanja.
+   - `POST /api/budget/evaluate` - Mengevaluasi ambang batas anggaran & status freeze.
+   - `POST /api/radar/compare` - Komparator harga antar ritel.
+   - `POST /api/pantry/suggest-recipes` - Generator saran resep zero-waste.
+   - `GET /api/badges` - Mengambil status milestone gamifikasi.
+
+---
+
+## 🚀 Cara Menjalankan
+
+### Opsi 1: Buka Langsung di Peramban Web (Tanpa Install Apapun)
+Cukup klik ganda file **`index.html`** langsung di browser (Chrome, Edge, Safari, Firefox). Seluruh modul (OCR Scanner, Radar, Pantry, Gamifikasi, Dark Mode) berjalan 100% mandiri di peramban.
+
+### Opsi 2: Jalankan dengan Server Node.js
 ```bash
 npm start
 # atau
@@ -47,45 +83,7 @@ node server.js
 ```
 Akses di browser: **`http://localhost:3000/`**
 
-### Opsi 2: Buka Langsung di Browser
-Cukup klik ganda (double click) file **`index.html`** langsung di peramban (Chrome, Edge, Safari, Firefox).
-
-### Opsi 3: Pasang di Smartphone (PWA)
-1. Buka URL aplikasi di peramban smartphone (misal Chrome di Android atau Safari di iOS).
-2. Tekan menu opsi peramban (ikon titik tiga atau tombol Share).
-3. Pilih **"Tambahkan ke Layar Utama" / "Add to Home Screen"**.
-4. Aplikasi akan terpasang sebagai aplikasi mandiri (*standalone*) tanpa bilah URL peramban.
-
----
-
-## ⚡ Realtime Shared Database (1 Tempat, 1 Data Bersama)
-
-Aplikasi terhubung ke proyek **Firebase Firestore**: `smartgrocery-1f9cb` dengan arsitektur **Single Shared Realtime State**:
-* **Tanpa ID Pengguna:** Semua perangkat (HP, laptop, tablet) langsung terhubung ke database yang sama tanpa login atau input akun.
-* **Sinkronisasi Realtime (`onSnapshot`):** Saat ada barang ditambah atau diubah di HP A, layar HP B dan laptop langsung terbarui secara otomatis seketika dalam hitungan detik.
-* **Struktur Dokumen Firestore:**
-  * `grocery_data/active_cart` : Keranjang belanja aktif bersama.
-  * `grocery_data/settings` : Batas limit anggaran & preferensi audio bersama.
-  * `grocery_data/price_benchmarks` : Kamus patokan harga bulan lalu bersama.
-  * `grocery_data/shopping_history` : Arsip riwayat struk belanja bersama.
-
-> 💡 **Pengaturan Security Rules Firebase:**
-> Pastikan di [Firebase Console](https://console.firebase.google.com/) > Firestore Database > Tab Rules telah diaktifkan untuk mode pengembangan:
-> ```javascript
-> rules_version = '2';
-> service cloud.firestore {
->   match /databases/{database}/documents {
->     match /{document=**} {
->       allow read, write: if true;
->     }
->   }
-> }
-> ```
-
----
-
-## 💡 Fitur Unggulan Tambahan
-- **Realtime Live Collaboration:** Perubahan barang di keranjang belanja langsung tersinkronisasi otomatis antar semua perangkat secara langsung (live update).
-- **Contoh Data Anak Rantau (Preload Seed Data):** Tersedia tombol satu kali klik untuk memuat keranjang dan riwayat bulan lalu yang realistis (Beras, Telur, Indomie, Minyak Sania, Sabun Lifebuoy) agar Anda bisa langsung menguji komparator dan safety cap seketika.
-- **Audio Feedback Synthesizer (Web Audio API):** Memberikan umpan balik suara klik saat memasukkan item dan suara nada alarm saat keranjang *over budget* (dapat dimatikan melalui tombol di header).
-- **Struk Belanja Digital:** Format struk rapi dengan tombol salin otomatis ke format pesan teks WhatsApp.
+### Opsi 3: Pasang sebagai PWA di Smartphone
+1. Buka aplikasi di peramban smartphone.
+2. Pilih menu **"Tambahkan ke Layar Utama" (Add to Home Screen)**.
+3. Aplikasi akan terpasang sebagai Progressive Web App tanpa bilah URL peramban dan siap digunakan offline.
