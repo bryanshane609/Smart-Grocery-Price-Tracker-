@@ -260,9 +260,11 @@ export default function SmartGroceryApp() {
 
   // Centang / Batal Centang Item (Reactive Checklist)
   const toggleCheck = (id) => {
-    setCartItems(prev => prev.map(item =>
-      item.id === id ? { ...item, checked: item.checked === false ? true : false } : item
-    ));
+    setCartItems(prev => prev.map(item => {
+      if (item.id !== id) return item;
+      const currentlyChecked = item.checked !== false;
+      return { ...item, checked: !currentlyChecked };
+    }));
   };
 
   return (

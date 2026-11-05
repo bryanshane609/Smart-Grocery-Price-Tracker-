@@ -330,7 +330,8 @@ class AppState {
         price: 74000,
         discount: { mode: 'none', singlePercent: 0, tier1: 0, tier2: 0, nominalAmount: 0 },
         store: "Super Indo",
-        isEssential: true
+        isEssential: true,
+        checked: true
       },
       {
         id: 'cart_' + Date.now() + '_2',
@@ -342,7 +343,8 @@ class AppState {
         // Contoh Diskon Bertingkat 50% + 20%
         discount: { mode: 'tier', singlePercent: 0, tier1: 50, tier2: 20, nominalAmount: 0 },
         store: "Indomaret",
-        isEssential: true
+        isEssential: true,
+        checked: true
       },
       {
         id: 'cart_' + Date.now() + '_3',
@@ -353,7 +355,8 @@ class AppState {
         price: 33500,
         discount: { mode: 'none', singlePercent: 0, tier1: 0, tier2: 0, nominalAmount: 0 },
         store: "Alfamart",
-        isEssential: true
+        isEssential: true,
+        checked: true
       }
     ];
   }
@@ -1116,7 +1119,8 @@ function attachCartEventListeners() {
       const id = btn.getAttribute('data-id');
       const item = state.cart.find(i => i.id === id);
       if (item) {
-        item.checked = item.checked === false ? true : false;
+        const currentlyChecked = item.checked !== false;
+        item.checked = !currentlyChecked;
         state.saveCart();
         renderCartItems();
         sounds.playClick();
@@ -1282,7 +1286,8 @@ function validateAndAddItemToCart(itemData) {
       price: itemData.price,
       discount: itemData.discount || { mode: 'none' },
       store: itemData.store || 'Super Indo',
-      isEssential: !isImpulse
+      isEssential: !isImpulse,
+      checked: true
     });
   }
 
