@@ -499,7 +499,7 @@ export default function KeranjangPintarApp() {
             className="flex-1 py-3 px-4 rounded-2xl bg-amber-400 hover:bg-amber-500 text-slate-950 text-xs font-black shadow-sm active:scale-95 transition flex items-center justify-center gap-2"
           >
             <Plus className="w-4 h-4 stroke-[3]" />
-            <span>+ Tambah Barang Belanja Bebas</span>
+            <span>Tambah Barang Belanja Bebas</span>
           </button>
         </div>
 
