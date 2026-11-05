@@ -11,7 +11,7 @@
 // -----------------------------------------------------------------------------
 // 1. DATA PRESETS, BARCODE CATALOG, VOUCHERS & RETAILERS
 // -----------------------------------------------------------------------------
-const DEFAULT_BUDGET_LIMIT = 800000;
+const DEFAULT_BUDGET_LIMIT = 350000;
 
 // Database Voucher & Kupon Belanja
 const VOUCHER_DATABASE = {
@@ -576,6 +576,98 @@ function renderGuardianAndEnvelopes() {
   } else if (spentPct >= 70) {
     statusTier = 'warning';
   }
+
+  // ---------------------------------------------------------------------------
+  // 0. UPDATE KERANJANGPINTAR PRO TOP HEADER & DARK CHARCOAL HERO CARD
+  // ---------------------------------------------------------------------------
+  const headerQuickBudgetAmount = document.getElementById('headerQuickBudgetAmount');
+  const headerQuickBudgetAmountMobile = document.getElementById('headerQuickBudgetAmountMobile');
+  const formattedCapK = Math.round(limit / 1000) + 'k';
+  if (headerQuickBudgetAmount) headerQuickBudgetAmount.textContent = `Rp ${formattedCapK}`;
+  if (headerQuickBudgetAmountMobile) headerQuickBudgetAmountMobile.textContent = `Rp ${formattedCapK}`;
+
+  // Date picker default
+  const headerDatePicker = document.getElementById('headerDatePicker');
+  if (headerDatePicker && !headerDatePicker.value) {
+    const today = new Date().toISOString().split('T')[0];
+    headerDatePicker.value = today;
+  }
+
+  // Hero Card Status Pill
+  const heroBudgetStatusPill = document.getElementById('heroBudgetStatusPill');
+  const heroBudgetStatusText = document.getElementById('heroBudgetStatusText');
+  if (heroBudgetStatusPill && heroBudgetStatusText) {
+    if (statusTier === 'safe') {
+      heroBudgetStatusPill.className = 'inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 font-mono text-[11px] font-extrabold tracking-wider shadow-xs';
+      heroBudgetStatusText.textContent = '• STATUS: AMAN';
+    } else if (statusTier === 'warning') {
+      heroBudgetStatusPill.className = 'inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-400 font-mono text-[11px] font-extrabold tracking-wider shadow-xs';
+      heroBudgetStatusText.textContent = '• STATUS: WASPADA';
+    } else {
+      heroBudgetStatusPill.className = 'inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-500/20 border border-rose-500/40 text-rose-300 font-mono text-[11px] font-extrabold tracking-wider shadow-xs animate-pulse';
+      heroBudgetStatusText.textContent = totals.finalCartTotal > limit ? '• STATUS: OVER LIMIT' : '• STATUS: KRITIS';
+    }
+  }
+
+  // Hero Card Savings Badge
+  const heroSavingsText = document.getElementById('heroSavingsText');
+  const totalCombinedSavings = (totals.totalSavings || 0) + (totals.voucherDiscount || 0);
+  if (heroSavingsText) {
+    heroSavingsText.textContent = `HEMAT RP ${Math.round(totalCombinedSavings).toLocaleString('id-ID')}`;
+  }
+
+  // Hero Card Big Numbers
+  const heroCartTotalNumber = document.getElementById('heroCartTotalNumber');
+  if (heroCartTotalNumber) {
+    heroCartTotalNumber.textContent = totals.finalCartTotal.toLocaleString('id-ID');
+  }
+
+  const heroUsageCapText = document.getElementById('heroUsageCapText');
+  if (heroUsageCapText) {
+    heroUsageCapText.textContent = `${spentPct}% CAP`;
+  }
+
+  const heroRemainingNumber = document.getElementById('heroRemainingNumber');
+  const heroRemainingSub = document.getElementById('heroRemainingSub');
+  if (heroRemainingNumber) {
+    if (remaining >= 0) {
+      heroRemainingNumber.textContent = formatRupiah(remaining);
+      heroRemainingNumber.className = 'text-amber-400 font-mono font-bold ml-1';
+    } else {
+      heroRemainingNumber.textContent = `Defisit ${formatRupiah(Math.abs(remaining))}`;
+      heroRemainingNumber.className = 'text-rose-400 font-mono font-bold ml-1';
+    }
+  }
+  if (heroRemainingSub) {
+    if (remaining >= 0) {
+      heroRemainingSub.textContent = `${Math.max(0, 100 - spentPct)}% Tersedia`;
+      heroRemainingSub.className = 'text-[10px] font-mono font-bold text-slate-400 bg-slate-800/90 border border-slate-700/60 px-2 py-0.5 rounded-lg';
+    } else {
+      heroRemainingSub.textContent = 'Defisit Anggaran';
+      heroRemainingSub.className = 'text-[10px] font-mono font-bold text-rose-400 bg-rose-950/80 border border-rose-800/60 px-2 py-0.5 rounded-lg';
+    }
+  }
+
+  // Hero Segmented Progress Bar (10 Blocks)
+  const heroMaxLabel = document.getElementById('heroMaxLabel');
+  if (heroMaxLabel) heroMaxLabel.textContent = `Max ${formattedCapK}`;
+
+  const activeSegmentCount = totals.finalCartTotal === 0 ? 0 : Math.min(10, Math.ceil(spentPct / 10));
+  const segBlocks = document.querySelectorAll('#heroSegmentedBar .seg-block');
+  segBlocks.forEach((block, idx) => {
+    const blockNum = idx + 1;
+    if (blockNum <= activeSegmentCount) {
+      if (statusTier === 'safe') {
+        block.className = 'seg-block h-2.5 sm:h-3 rounded-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)] border border-emerald-400 transition-all duration-300';
+      } else if (statusTier === 'warning') {
+        block.className = 'seg-block h-2.5 sm:h-3 rounded-full bg-amber-400 shadow-[0_0_10px_rgba(245,158,11,0.5)] border border-amber-300 transition-all duration-300';
+      } else {
+        block.className = 'seg-block h-2.5 sm:h-3 rounded-full bg-rose-500 shadow-[0_0_10px_rgba(244,63,94,0.6)] border border-rose-400 transition-all duration-300 animate-pulse';
+      }
+    } else {
+      block.className = 'seg-block h-2.5 sm:h-3 rounded-full bg-slate-800/90 border border-slate-700/50 shadow-none transition-all duration-300';
+    }
+  });
 
   // 1. UPDATE INTERACTIVE VISUAL BUDGET DASHBOARD (SVG GAUGE & 3 STAT CARDS)
   const gaugeCircle = document.getElementById('budgetGaugeCircle');
