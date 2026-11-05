@@ -2176,6 +2176,7 @@ document.addEventListener('DOMContentLoaded', () => {
       localStorage.setItem('sg_cart_items', remoteJson);
       renderCartItems();
       renderGuardianAndEnvelopes();
+      showToast('Troli diperbarui dari cloud ☁️', 'cloud');
     }
   });
 
@@ -2359,6 +2360,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (val >= 50000) {
       state.budgetLimit = val;
       localStorage.setItem('sg_budget_limit', val.toString());
+      if (window.FirebaseSync) window.FirebaseSync.syncSettings({ budgetLimit: val, soundEnabled: state.soundEnabled });
       renderGuardianAndEnvelopes();
       sounds.playClick();
       showToast('Batas anggaran bulanan berhasil disimpan!');
