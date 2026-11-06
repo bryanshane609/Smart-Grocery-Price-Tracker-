@@ -2294,14 +2294,6 @@ function openCustomItemModalForEdit(item) {
     badgeEl.textContent = `Kategori: ${item.category} • Satuan: ${item.unit || 'pcs'}`;
   }
 
-  state.itemFormDiscount = item.discount || { mode: 'none', singlePercent: 0, tier1: 50, tier2: 20, nominalAmount: 0 };
-  updateDiscountModeButtonsUI();
-  updateCustomPreview();
-  updatePriceFluctuationBadge();
-
-  if (modal) modal.classList.remove('hidden');
-}
-
   if (badgeEl) {
     badgeEl.classList.remove('hidden');
     badgeEl.textContent = `Kategori: ${item.category} • Satuan: ${item.unit || 'pcs'}`;
@@ -2310,6 +2302,7 @@ function openCustomItemModalForEdit(item) {
   state.itemFormDiscount = item.discount || { mode: 'none', singlePercent: 0, tier1: 50, tier2: 20, nominalAmount: 0 };
   updateDiscountModeButtonsUI();
   updateCustomPreview();
+  updatePriceFluctuationBadge();
 
   if (modal) modal.classList.remove('hidden');
 }
