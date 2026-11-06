@@ -85,9 +85,17 @@ class PriceFluctuationEngine {
   saveHistory() {
     try {
       localStorage.setItem(this.storageKey, JSON.stringify(this.history));
-      if (window.FirebaseSync && typeof window.FirebaseSync.syncBenchmarks === 'function') {
-        window.FirebaseSync.syncBenchmarks(this.history);
+      if (window.FirebaseSync && typeof window.FirebaseSync.syncPriceHistory === 'function') {
+        window.FirebaseSync.syncPriceHistory(this.history);
       }
+    } catch (_) {}
+  }
+
+  mergeRemoteHistory(remoteHistory) {
+    if (!remoteHistory || typeof remoteHistory !== 'object') return;
+    this.history = { ...this.history, ...remoteHistory };
+    try {
+      localStorage.setItem(this.storageKey, JSON.stringify(this.history));
     } catch (_) {}
   }
 
@@ -567,34 +575,102 @@ class AppState {
 
   saveCart() {
     localStorage.setItem('sg_cart_items', JSON.stringify(this.cart));
-    if (window.FirebaseSync) window.FirebaseSync.syncCart(this.cart);
+    if (window.FirebaseSync?.syncCart) {
+      window.FirebaseSync.syncCart(this.cart);
+    }
   }
 
   saveHistory() {
     localStorage.setItem('sg_history_trips', JSON.stringify(this.history));
-    if (window.FirebaseSync) window.FirebaseSync.syncHistory(this.history);
+    if (window.FirebaseSync?.syncShoppingHistory) {
+      window.FirebaseSync.syncShoppingHistory(this.history);
+    }
   }
 
   savePantry() {
     localStorage.setItem('sg_pantry_items', JSON.stringify(this.pantry));
+    if (window.FirebaseSync?.syncPantry) {
+      window.FirebaseSync.syncPantry(this.pantry);
+    }
+  }
+
+  saveSettings() {
+    localStorage.setItem('sg_budget_limit', this.budgetLimit.toString());
+    localStorage.setItem('sg_emergency_freeze', this.isFrozen.toString());
+    localStorage.setItem('sg_applied_voucher', JSON.stringify(this.appliedVoucher));
+    localStorage.setItem('sg_sound_enabled', this.soundEnabled.toString());
+    localStorage.setItem('sg_color_theme', this.colorTheme);
+    localStorage.setItem('sg_light_mode', this.lightMode);
+    localStorage.setItem('sg_layout_mode', this.isBentoFluid ? 'fluid' : 'standard');
+    if (window.FirebaseSync?.syncSettings) {
+      window.FirebaseSync.syncSettings({
+        budgetLimit: this.budgetLimit,
+        isFrozen: this.isFrozen,
+        appliedVoucher: this.appliedVoucher,
+        soundEnabled: this.soundEnabled,
+        colorTheme: this.colorTheme,
+        lightMode: this.lightMode,
+        isBentoFluid: this.isBentoFluid
+      });
+    }
   }
 
   saveFreezeState() {
-    localStorage.setItem('sg_emergency_freeze', this.isFrozen.toString());
+    this.saveSettings();
   }
 
   saveVoucherState() {
-    localStorage.setItem('sg_applied_voucher', JSON.stringify(this.appliedVoucher));
+    this.saveSettings();
+  }
+
+  saveBudgetLimit(limit) {
+    this.budgetLimit = Number(limit) || DEFAULT_BUDGET_LIMIT;
+    this.saveSettings();
+  }
+
+  saveSessionState() {
+    localStorage.setItem('sg_selected_store', this.selectedStore);
+    localStorage.setItem('sg_selected_date', this.selectedDate);
+    if (this.liveNearbyStores && this.liveNearbyStores.length > 0) {
+      localStorage.setItem('sg_cached_stores', JSON.stringify({
+        stores: this.liveNearbyStores,
+        coords: this.userCoords,
+        timestamp: Date.now()
+      }));
+    }
+    if (window.FirebaseSync?.syncSessionState) {
+      window.FirebaseSync.syncSessionState({
+        selectedStore: this.selectedStore,
+        selectedDate: this.selectedDate,
+        userCoords: this.userCoords,
+        liveNearbyStores: this.liveNearbyStores,
+        activeCategoryFilter: this.activeCategoryFilter
+      });
+    }
   }
 
   saveSelectedStore(store) {
     this.selectedStore = store;
-    localStorage.setItem('sg_selected_store', store);
+    this.saveSessionState();
   }
 
   saveSelectedDate(date) {
     this.selectedDate = date;
-    localStorage.setItem('sg_selected_date', date);
+    this.saveSessionState();
+  }
+
+  saveNearbyStores(stores, coords = null) {
+    this.liveNearbyStores = stores;
+    if (coords) this.userCoords = coords;
+    this.saveSessionState();
+  }
+
+  saveCustomQuickItems(items) {
+    this.customQuickItems = items;
+    localStorage.setItem('sg_quick_select', JSON.stringify(items));
+    if (window.FirebaseSync?.syncQuickSelect) {
+      window.FirebaseSync.syncQuickSelect(items);
+    }
   }
 }
 
@@ -1846,14 +1922,7 @@ async function fetchNearbySupermarketsOverpass(latitude, longitude, areaName, ra
 
       if (liveStores.length > 0) {
         liveStores.sort((a, b) => a.defaultDistanceMeters - b.defaultDistanceMeters);
-        state.liveNearbyStores = liveStores;
-        localStorage.setItem('sg_cached_stores', JSON.stringify({
-          coords: { latitude, longitude },
-          areaName,
-          radius,
-          stores: liveStores,
-          timestamp: Date.now()
-        }));
+        state.saveNearbyStores(liveStores, { latitude, longitude });
 
         updateHeaderStoreSelector(liveStores);
         if (statusEl) {
@@ -2917,122 +2986,109 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // ---------------------------------------------------------------------------
-  // FIREBASE REALTIME DATABASE SYNC & STATUS LISTENERS
+  // SILENT & SEAMLESS BI-DIRECTIONAL REAL-TIME SYNCHRONIZATION (ZERO-CLOUD UI)
   // ---------------------------------------------------------------------------
-  const cloudStatusDot = document.getElementById('cloudStatusDot');
-  const cloudStatusText = document.getElementById('cloudStatusText');
-  const cloudSyncHeaderBtn = document.getElementById('cloudSyncHeaderBtn');
-  const settingsFirebaseBadge = document.getElementById('settingsFirebaseBadge');
-  const settingsFirebaseDesc = document.getElementById('settingsFirebaseStatusDesc');
 
-  window.addEventListener('firebase-status-change', (e) => {
-    const { status, message } = e.detail || {};
+  // ⚡ 1. Handler saat koneksi Firebase siap (Hydration & Auto-Sync)
+  window.addEventListener('firebase-ready', async () => {
+    if (!window.FirebaseSync) return;
 
-    // 1. Update Header Status Pill
-    if (cloudStatusDot && cloudStatusText) {
-      if (status === 'connected') {
-        cloudStatusDot.className = 'w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse';
-        cloudStatusText.textContent = 'LIVE SYNC';
-        cloudStatusText.className = 'text-emerald-600 dark:text-emerald-400 font-extrabold';
-      } else if (status === 'syncing') {
-        cloudStatusDot.className = 'w-1.5 h-1.5 rounded-full bg-sky-400 animate-ping';
-        cloudStatusText.textContent = 'SYNCING...';
-        cloudStatusText.className = 'text-sky-500 dark:text-sky-400 font-extrabold';
-      } else if (status === 'offline') {
-        cloudStatusDot.className = 'w-1.5 h-1.5 rounded-full bg-slate-400';
-        cloudStatusText.textContent = 'OFFLINE (LOKAL)';
-        cloudStatusText.className = 'text-slate-500 dark:text-slate-400 font-extrabold';
-      } else if (status === 'error') {
-        cloudStatusDot.className = 'w-1.5 h-1.5 rounded-full bg-amber-500';
-        cloudStatusText.textContent = 'MODE LOKAL';
-        cloudStatusText.className = 'text-amber-600 dark:text-amber-400 font-extrabold';
-      }
-    }
+    try {
+      // Tarik data shared cloud secara diam-diam di background
+      const cloudData = await window.FirebaseSync.pullAllSharedData();
+      if (cloudData) {
+        let hasUpdatedUI = false;
 
-    // 2. Update Settings Tab Badge
-    if (settingsFirebaseBadge) {
-      if (status === 'connected') {
-        settingsFirebaseBadge.className = 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 whitespace-nowrap';
-        settingsFirebaseBadge.textContent = 'Realtime Aktif';
-      } else if (status === 'syncing') {
-        settingsFirebaseBadge.className = 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-sky-500/20 text-sky-500 dark:text-sky-400 border border-sky-500/30 animate-pulse whitespace-nowrap';
-        settingsFirebaseBadge.textContent = 'Menyinkronkan...';
-      } else if (status === 'offline') {
-        settingsFirebaseBadge.className = 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-500 dark:text-slate-400 border border-slate-300 dark:border-slate-600 whitespace-nowrap';
-        settingsFirebaseBadge.textContent = 'Offline (Penyimpanan Lokal)';
-      } else {
-        settingsFirebaseBadge.className = 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/30 whitespace-nowrap';
-        settingsFirebaseBadge.textContent = message || 'Mode Lokal';
-      }
-    }
-    if (settingsFirebaseDesc && message) {
-      settingsFirebaseDesc.textContent = message;
-    }
-  });
-
-  // Header quick sync button
-  cloudSyncHeaderBtn?.addEventListener('click', async () => {
-    if (window.FirebaseSync) {
-      sounds.playClick();
-      showToast('Menyinkronkan data secara realtime...', 'refresh-cw');
-      const pulled = await window.FirebaseSync.pullAllSharedData();
-      if (pulled?.cart) {
-        state.cart = pulled.cart;
-        state.saveCart();
-        renderCartItems();
-      }
-      await window.FirebaseSync.syncCart(state.cart);
-      await window.FirebaseSync.syncSettings({ budgetLimit: state.budgetLimit, soundEnabled: state.soundEnabled });
-      showToast('Sinkronisasi data selesai!', 'check-circle');
-    } else {
-      showToast('Modul sinkronisasi sedang diinisialisasi...', 'clock');
-    }
-  });
-
-  // Settings Manual Push & Pull buttons
-  document.getElementById('btnManualPushCloud')?.addEventListener('click', async () => {
-    if (window.FirebaseSync) {
-      sounds.playClick();
-      showToast('Menyimpan seluruh data ke database...', 'upload');
-      await window.FirebaseSync.syncCart(state.cart);
-      await window.FirebaseSync.syncSettings({ budgetLimit: state.budgetLimit, soundEnabled: state.soundEnabled });
-      await window.FirebaseSync.syncHistory(state.history);
-      showToast('Data berhasil disimpan ke database!', 'check-circle');
-    }
-  });
-
-  document.getElementById('btnManualPullCloud')?.addEventListener('click', async () => {
-    if (window.FirebaseSync) {
-      sounds.playClick();
-      showToast('Mengambil data terbaru dari database...', 'download');
-      const data = await window.FirebaseSync.pullAllSharedData();
-      if (data) {
-        if (data.cart) { state.cart = data.cart; state.saveCart(); }
-        if (data.settings?.budgetLimit) {
-          state.budgetLimit = Number(data.settings.budgetLimit);
-          localStorage.setItem('sg_budget_limit', state.budgetLimit.toString());
+        // Hydrate Cart
+        if (Array.isArray(cloudData.cart) && cloudData.cart.length > 0) {
+          state.cart = cloudData.cart.map(it => ({ ...it, checked: true }));
+          localStorage.setItem('sg_cart_items', JSON.stringify(state.cart));
+          hasUpdatedUI = true;
+        } else if (state.cart && state.cart.length > 0) {
+          window.FirebaseSync.syncCart(state.cart);
         }
-        if (data.history) { state.history = data.history; state.saveHistory(); }
-        renderCartItems();
-        renderGuardianAndEnvelopes();
-        showToast('Data terbaru berhasil dimuat!', 'check-circle');
+
+        // Hydrate Session Context (Store, Date, Nearby Stores)
+        if (cloudData.session) {
+          if (cloudData.session.selectedStore) {
+            state.selectedStore = cloudData.session.selectedStore;
+            localStorage.setItem('sg_selected_store', state.selectedStore);
+            if (headerStoreSelector) headerStoreSelector.value = state.selectedStore;
+          }
+          if (cloudData.session.selectedDate) {
+            state.selectedDate = cloudData.session.selectedDate;
+            localStorage.setItem('sg_selected_date', state.selectedDate);
+            if (headerDatePicker) headerDatePicker.value = state.selectedDate;
+          }
+          if (Array.isArray(cloudData.session.liveNearbyStores) && cloudData.session.liveNearbyStores.length > 0) {
+            state.liveNearbyStores = cloudData.session.liveNearbyStores;
+            updateHeaderStoreSelector(state.liveNearbyStores);
+            renderRealWorldRadar();
+          }
+        } else if (state.selectedStore || (state.liveNearbyStores && state.liveNearbyStores.length > 0)) {
+          state.saveSessionState();
+        }
+
+        // Hydrate Price History & Fluctuation Engine
+        if (cloudData.priceHistory && typeof cloudData.priceHistory === 'object') {
+          priceFluctuationEngine.mergeRemoteHistory(cloudData.priceHistory);
+        } else if (priceFluctuationEngine.history && Object.keys(priceFluctuationEngine.history).length > 0) {
+          window.FirebaseSync.syncPriceHistory(priceFluctuationEngine.history);
+        }
+
+        // Hydrate Settings & Budget Target
+        if (cloudData.settings) {
+          if (cloudData.settings.budgetLimit) {
+            state.budgetLimit = Number(cloudData.settings.budgetLimit);
+            localStorage.setItem('sg_budget_limit', state.budgetLimit.toString());
+            const budgetInput = document.getElementById('budgetLimitInput');
+            if (budgetInput) budgetInput.value = state.budgetLimit;
+          }
+          if (typeof cloudData.settings.isFrozen === 'boolean') {
+            state.isFrozen = cloudData.settings.isFrozen;
+            localStorage.setItem('sg_emergency_freeze', state.isFrozen.toString());
+          }
+          if (cloudData.settings.appliedVoucher !== undefined) {
+            state.appliedVoucher = cloudData.settings.appliedVoucher;
+            localStorage.setItem('sg_applied_voucher', JSON.stringify(state.appliedVoucher));
+          }
+          hasUpdatedUI = true;
+        } else {
+          state.saveSettings();
+        }
+
+        // Hydrate Shopping History (Completed Trips)
+        if (Array.isArray(cloudData.history) && cloudData.history.length > 0) {
+          state.history = cloudData.history;
+          localStorage.setItem('sg_history_trips', JSON.stringify(state.history));
+          renderHistoryView();
+        } else if (state.history && state.history.length > 0) {
+          window.FirebaseSync.syncShoppingHistory(state.history);
+        }
+
+        // Hydrate Pantry Stock
+        if (Array.isArray(cloudData.pantry) && cloudData.pantry.length > 0) {
+          state.pantry = cloudData.pantry;
+          localStorage.setItem('sg_pantry_items', JSON.stringify(state.pantry));
+          renderPantryStock();
+        } else if (state.pantry && state.pantry.length > 0) {
+          window.FirebaseSync.syncPantry(state.pantry);
+        }
+
+        if (hasUpdatedUI) {
+          renderCartItems();
+          renderGuardianAndEnvelopes();
+          safeCreateIcons();
+        }
       }
-    }
+    } catch (_) {}
   });
 
-  // ⚡ Handler saat koneksi Firebase siap
-  window.addEventListener('firebase-ready', () => {
-    if (window.FirebaseSync && state.cart && state.cart.length > 0) {
-      window.FirebaseSync.syncCart(state.cart);
-    }
-  });
-
-  // ⚡ Realtime listener: Perangkat lain mengubah troli
+  // ⚡ 2. Realtime Listener: Troli Belanja Aktif (Cart Mirroring)
   window.addEventListener('cloud-cart-update', (e) => {
     let remoteItems = e.detail?.items;
     if (!Array.isArray(remoteItems)) return;
 
-    // Jaminan Realtime: Item dari perangkat lain selalu otomatis terpilih/tercentang (checked: true)
     remoteItems = remoteItems.map(item => ({
       ...item,
       checked: true
@@ -3045,29 +3101,134 @@ document.addEventListener('DOMContentLoaded', () => {
       localStorage.setItem('sg_cart_items', remoteJson);
       renderCartItems();
       renderGuardianAndEnvelopes();
-      showToast('Troli diperbarui secara realtime', 'refresh-cw');
+      safeCreateIcons();
     }
   });
 
-  // ⚡ Realtime listener: Pengaturan batas anggaran dari cloud
+  // ⚡ 3. Realtime Listener: Konteks Sesi Toko & Lokasi GPS
+  window.addEventListener('cloud-session-update', (e) => {
+    const detail = e.detail || {};
+    let shouldUpdateUI = false;
+
+    if (detail.selectedStore && detail.selectedStore !== state.selectedStore) {
+      state.selectedStore = detail.selectedStore;
+      localStorage.setItem('sg_selected_store', state.selectedStore);
+      if (headerStoreSelector) headerStoreSelector.value = state.selectedStore;
+      const customStoreInput = document.getElementById('customInputStore');
+      if (customStoreInput) customStoreInput.value = state.selectedStore;
+      shouldUpdateUI = true;
+    }
+
+    if (detail.selectedDate && detail.selectedDate !== state.selectedDate) {
+      state.selectedDate = detail.selectedDate;
+      localStorage.setItem('sg_selected_date', state.selectedDate);
+      if (headerDatePicker) headerDatePicker.value = state.selectedDate;
+    }
+
+    if (Array.isArray(detail.liveNearbyStores) && detail.liveNearbyStores.length > 0) {
+      const currJson = JSON.stringify(state.liveNearbyStores);
+      const newJson = JSON.stringify(detail.liveNearbyStores);
+      if (currJson !== newJson) {
+        state.liveNearbyStores = detail.liveNearbyStores;
+        updateHeaderStoreSelector(state.liveNearbyStores);
+        renderRealWorldRadar();
+        shouldUpdateUI = true;
+      }
+    }
+
+    if (shouldUpdateUI) {
+      renderCartItems();
+      safeCreateIcons();
+    }
+  });
+
+  // ⚡ 4. Realtime Listener: Database Fluktuasi Harga Toko
+  window.addEventListener('cloud-price-history-update', (e) => {
+    const remoteHistory = e.detail?.history;
+    if (remoteHistory && typeof remoteHistory === 'object') {
+      priceFluctuationEngine.mergeRemoteHistory(remoteHistory);
+      renderCartItems();
+      updatePriceFluctuationBadge();
+      safeCreateIcons();
+    }
+  });
+
+  // ⚡ 5. Realtime Listener: Pengaturan Anggaran & Emergency Freeze
   window.addEventListener('cloud-settings-update', (e) => {
-    const remoteBudget = e.detail?.budgetLimit;
-    if (remoteBudget && remoteBudget !== state.budgetLimit) {
-      state.budgetLimit = Number(remoteBudget);
+    const detail = e.detail || {};
+    let shouldUpdate = false;
+
+    if (detail.budgetLimit && detail.budgetLimit !== state.budgetLimit) {
+      state.budgetLimit = Number(detail.budgetLimit);
       localStorage.setItem('sg_budget_limit', state.budgetLimit.toString());
-      renderGuardianAndEnvelopes();
       const budgetInput = document.getElementById('budgetLimitInput');
       if (budgetInput) budgetInput.value = state.budgetLimit;
+      shouldUpdate = true;
+    }
+
+    if (typeof detail.isFrozen === 'boolean' && detail.isFrozen !== state.isFrozen) {
+      state.isFrozen = detail.isFrozen;
+      localStorage.setItem('sg_emergency_freeze', state.isFrozen.toString());
+      const freezeToggleEl = document.getElementById('emergencyFreezeToggle');
+      if (freezeToggleEl) freezeToggleEl.checked = state.isFrozen;
+      shouldUpdate = true;
+    }
+
+    if (detail.appliedVoucher !== undefined) {
+      const currV = JSON.stringify(state.appliedVoucher);
+      const newV = JSON.stringify(detail.appliedVoucher);
+      if (currV !== newV) {
+        state.appliedVoucher = detail.appliedVoucher;
+        localStorage.setItem('sg_applied_voucher', newV);
+        shouldUpdate = true;
+      }
+    }
+
+    if (shouldUpdate) {
+      renderGuardianAndEnvelopes();
+      renderCartItems();
+      safeCreateIcons();
     }
   });
 
-  // ⚡ Realtime listener: Riwayat transaksi dari cloud
+  // ⚡ 6. Realtime Listener: Riwayat Struk Transaksi Selesai
   window.addEventListener('cloud-history-update', (e) => {
     const remoteTrips = e.detail?.trips;
     if (Array.isArray(remoteTrips)) {
-      state.history = remoteTrips;
-      localStorage.setItem('sg_history_trips', JSON.stringify(remoteTrips));
-      renderHistoryView();
+      const curJ = JSON.stringify(state.history);
+      const remJ = JSON.stringify(remoteTrips);
+      if (curJ !== remJ) {
+        state.history = remoteTrips;
+        localStorage.setItem('sg_history_trips', remJ);
+        renderHistoryView();
+        safeCreateIcons();
+      }
+    }
+  });
+
+  // ⚡ 7. Realtime Listener: Inventaris Pantry Rumah Tangga
+  window.addEventListener('cloud-pantry-update', (e) => {
+    const remotePantry = e.detail?.items;
+    if (Array.isArray(remotePantry)) {
+      const curJ = JSON.stringify(state.pantry);
+      const remJ = JSON.stringify(remotePantry);
+      if (curJ !== remJ) {
+        state.pantry = remotePantry;
+        localStorage.setItem('sg_pantry_items', remJ);
+        renderPantryStock();
+        safeCreateIcons();
+      }
+    }
+  });
+
+  // ⚡ 8. Realtime Listener: Quick-Select Items & Custom Catalog
+  window.addEventListener('cloud-quick-select-update', (e) => {
+    const customItems = e.detail?.customItems;
+    if (Array.isArray(customItems)) {
+      state.customQuickItems = customItems;
+      localStorage.setItem('sg_quick_select', JSON.stringify(customItems));
+      renderQuickSelectCarousel();
+      safeCreateIcons();
     }
   });
 
@@ -3227,9 +3388,7 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('saveBudgetLimitBtn')?.addEventListener('click', () => {
     const val = Number(document.getElementById('budgetLimitInput')?.value);
     if (val >= 50000) {
-      state.budgetLimit = val;
-      localStorage.setItem('sg_budget_limit', val.toString());
-      if (window.FirebaseSync) window.FirebaseSync.syncSettings({ budgetLimit: val, soundEnabled: state.soundEnabled });
+      state.saveBudgetLimit(val);
       renderGuardianAndEnvelopes();
       sounds.playClick();
       showToast('Batas anggaran bulanan berhasil disimpan!');

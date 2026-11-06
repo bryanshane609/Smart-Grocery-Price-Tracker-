@@ -105,13 +105,21 @@ class FirebaseSharedService {
 
     // Melacak timestamp dokumen cloud terakhir yang diketahui
     this.lastKnownCartUpdatedAt = null;
+    this.lastKnownSessionUpdatedAt = null;
+    this.lastKnownPriceHistoryUpdatedAt = null;
     this.lastKnownSettingsUpdatedAt = null;
     this.lastKnownHistoryUpdatedAt = null;
+    this.lastKnownPantryUpdatedAt = null;
+    this.lastKnownQuickSelectUpdatedAt = null;
 
     // Antrean tulis jika dipanggil sebelum Firebase siap
     this.pendingCartSync = null;
+    this.pendingSessionSync = null;
+    this.pendingPriceHistorySync = null;
     this.pendingSettingsSync = null;
     this.pendingHistorySync = null;
+    this.pendingPantrySync = null;
+    this.pendingQuickSelectSync = null;
 
     // Heartbeat timer untuk mengatasi sleep mode di mobile browser
     this.heartbeatTimer = null;
@@ -210,6 +218,16 @@ class FirebaseSharedService {
       this.pendingCartSync = null;
       this.syncCart(q);
     }
+    if (this.pendingSessionSync) {
+      const q = this.pendingSessionSync;
+      this.pendingSessionSync = null;
+      this.syncSessionState(q);
+    }
+    if (this.pendingPriceHistorySync) {
+      const q = this.pendingPriceHistorySync;
+      this.pendingPriceHistorySync = null;
+      this.syncPriceHistory(q);
+    }
     if (this.pendingSettingsSync) {
       const q = this.pendingSettingsSync;
       this.pendingSettingsSync = null;
@@ -219,6 +237,16 @@ class FirebaseSharedService {
       const q = this.pendingHistorySync;
       this.pendingHistorySync = null;
       this.syncHistory(q);
+    }
+    if (this.pendingPantrySync) {
+      const q = this.pendingPantrySync;
+      this.pendingPantrySync = null;
+      this.syncPantry(q);
+    }
+    if (this.pendingQuickSelectSync) {
+      const q = this.pendingQuickSelectSync;
+      this.pendingQuickSelectSync = null;
+      this.syncQuickSelect(q);
     }
   }
 
@@ -301,7 +329,61 @@ class FirebaseSharedService {
       this.handleFirestoreError(e, 'setupListener', 'grocery_data/active_cart');
     }
 
-    // 2. Realtime Listener: Pengaturan Anggaran
+    // 2. Realtime Listener: Lokasi Toko & Konteks Sesi Belanja (Session State)
+    try {
+      const sessionDocRef = doc(this.db, 'grocery_data', 'session_state');
+      const unsubSession = onSnapshot(sessionDocRef, { includeMetadataChanges: false }, (snap) => {
+        if (!snap.exists()) return;
+        const data = snap.data();
+        if (data.senderDeviceId === this.deviceId) {
+          this.lastKnownSessionUpdatedAt = data.updatedAt;
+          return;
+        }
+        if (data.updatedAt && data.updatedAt === this.lastKnownSessionUpdatedAt) return;
+        this.lastKnownSessionUpdatedAt = data.updatedAt;
+
+        window.dispatchEvent(new CustomEvent('cloud-session-update', {
+          detail: {
+            selectedStore: data.selectedStore,
+            selectedDate: data.selectedDate,
+            userCoords: data.userCoords,
+            liveNearbyStores: data.liveNearbyStores,
+            activeCategoryFilter: data.activeCategoryFilter,
+            updatedAt: data.updatedAt
+          }
+        }));
+      }, (err) => this.handleFirestoreError(err, 'onSnapshot', 'grocery_data/session_state'));
+      this.unsubscribers.push(unsubSession);
+    } catch (e) {
+      this.handleFirestoreError(e, 'setupListener', 'grocery_data/session_state');
+    }
+
+    // 3. Realtime Listener: Database Riwayat Fluktuasi Harga Toko (Price History)
+    try {
+      const priceDocRef = doc(this.db, 'grocery_data', 'price_history');
+      const unsubPrice = onSnapshot(priceDocRef, { includeMetadataChanges: false }, (snap) => {
+        if (!snap.exists()) return;
+        const data = snap.data();
+        if (data.senderDeviceId === this.deviceId) {
+          this.lastKnownPriceHistoryUpdatedAt = data.updatedAt;
+          return;
+        }
+        if (data.updatedAt && data.updatedAt === this.lastKnownPriceHistoryUpdatedAt) return;
+        this.lastKnownPriceHistoryUpdatedAt = data.updatedAt;
+
+        window.dispatchEvent(new CustomEvent('cloud-price-history-update', {
+          detail: {
+            history: data.history || {},
+            updatedAt: data.updatedAt
+          }
+        }));
+      }, (err) => this.handleFirestoreError(err, 'onSnapshot', 'grocery_data/price_history'));
+      this.unsubscribers.push(unsubPrice);
+    } catch (e) {
+      this.handleFirestoreError(e, 'setupListener', 'grocery_data/price_history');
+    }
+
+    // 4. Realtime Listener: Pengaturan Anggaran & Emergency Freeze
     try {
       const settingsDocRef = doc(this.db, 'grocery_data', 'settings');
       const unsubSettings = onSnapshot(settingsDocRef, { includeMetadataChanges: false }, (snap) => {
@@ -317,7 +399,12 @@ class FirebaseSharedService {
         window.dispatchEvent(new CustomEvent('cloud-settings-update', {
           detail: {
             budgetLimit: data.budgetLimit,
+            isFrozen: data.isFrozen,
+            appliedVoucher: data.appliedVoucher,
             soundEnabled: data.soundEnabled,
+            colorTheme: data.colorTheme,
+            lightMode: data.lightMode,
+            isBentoFluid: data.isBentoFluid,
             updatedAt: data.updatedAt
           }
         }));
@@ -327,22 +414,7 @@ class FirebaseSharedService {
       this.handleFirestoreError(e, 'setupListener', 'grocery_data/settings');
     }
 
-    // 3. Realtime Listener: Patokan Harga Bulan Lalu
-    try {
-      const benchDocRef = doc(this.db, 'grocery_data', 'price_benchmarks');
-      const unsubBench = onSnapshot(benchDocRef, { includeMetadataChanges: false }, (snap) => {
-        if (!snap.exists()) return;
-        const data = snap.data();
-        window.dispatchEvent(new CustomEvent('cloud-benchmarks-update', {
-          detail: { catalog: data.catalog || {} }
-        }));
-      }, (err) => this.handleFirestoreError(err, 'onSnapshot', 'grocery_data/price_benchmarks'));
-      this.unsubscribers.push(unsubBench);
-    } catch (e) {
-      this.handleFirestoreError(e, 'setupListener', 'grocery_data/price_benchmarks');
-    }
-
-    // 4. Realtime Listener: Riwayat Struk Belanja
+    // 5. Realtime Listener: Riwayat Struk Belanja & Transaksi Selesai
     try {
       const historyDocRef = doc(this.db, 'grocery_data', 'shopping_history');
       const unsubHistory = onSnapshot(historyDocRef, { includeMetadataChanges: false }, (snap) => {
@@ -363,6 +435,50 @@ class FirebaseSharedService {
     } catch (e) {
       this.handleFirestoreError(e, 'setupListener', 'grocery_data/shopping_history');
     }
+
+    // 6. Realtime Listener: Stok Pantry Rumah Tangga
+    try {
+      const pantryDocRef = doc(this.db, 'grocery_data', 'pantry_items');
+      const unsubPantry = onSnapshot(pantryDocRef, { includeMetadataChanges: false }, (snap) => {
+        if (!snap.exists()) return;
+        const data = snap.data();
+        if (data.senderDeviceId === this.deviceId) {
+          this.lastKnownPantryUpdatedAt = data.updatedAt;
+          return;
+        }
+        if (data.updatedAt && data.updatedAt === this.lastKnownPantryUpdatedAt) return;
+        this.lastKnownPantryUpdatedAt = data.updatedAt;
+
+        window.dispatchEvent(new CustomEvent('cloud-pantry-update', {
+          detail: { items: Array.isArray(data.items) ? data.items : [] }
+        }));
+      }, (err) => this.handleFirestoreError(err, 'onSnapshot', 'grocery_data/pantry_items'));
+      this.unsubscribers.push(unsubPantry);
+    } catch (e) {
+      this.handleFirestoreError(e, 'setupListener', 'grocery_data/pantry_items');
+    }
+
+    // 7. Realtime Listener: Quick-Select Items & Custom Catalog
+    try {
+      const quickDocRef = doc(this.db, 'grocery_data', 'quick_select');
+      const unsubQuick = onSnapshot(quickDocRef, { includeMetadataChanges: false }, (snap) => {
+        if (!snap.exists()) return;
+        const data = snap.data();
+        if (data.senderDeviceId === this.deviceId) {
+          this.lastKnownQuickSelectUpdatedAt = data.updatedAt;
+          return;
+        }
+        if (data.updatedAt && data.updatedAt === this.lastKnownQuickSelectUpdatedAt) return;
+        this.lastKnownQuickSelectUpdatedAt = data.updatedAt;
+
+        window.dispatchEvent(new CustomEvent('cloud-quick-select-update', {
+          detail: { customItems: Array.isArray(data.customItems) ? data.customItems : [] }
+        }));
+      }, (err) => this.handleFirestoreError(err, 'onSnapshot', 'grocery_data/quick_select'));
+      this.unsubscribers.push(unsubQuick);
+    } catch (e) {
+      this.handleFirestoreError(e, 'setupListener', 'grocery_data/quick_select');
+    }
   }
 
   /**
@@ -380,7 +496,7 @@ class FirebaseSharedService {
     });
 
     window.addEventListener('online', () => {
-      console.log('[FirebaseSync] Jaringan terdeteksi online kembali. Menghubungkan ulang...');
+      console.log('[FirebaseSync] Jaringan online kembali. Menghubungkan ulang...');
       this.updateStatus('connecting', 'Menyambungkan kembali...');
       this.checkAndPullLatest();
       this.flushPendingSyncs();
@@ -405,32 +521,111 @@ class FirebaseSharedService {
   async checkAndPullLatest() {
     if (!this.isInitialized || !this.db) return;
     try {
-      const cartRef = doc(this.db, 'grocery_data', 'active_cart');
-      const snap = await getDoc(cartRef);
-      if (snap.exists()) {
-        const data = snap.data();
+      const [cartSnap, sessionSnap, priceSnap, settingsSnap, historySnap, pantrySnap, quickSnap] = await Promise.all([
+        getDoc(doc(this.db, 'grocery_data', 'active_cart')),
+        getDoc(doc(this.db, 'grocery_data', 'session_state')),
+        getDoc(doc(this.db, 'grocery_data', 'price_history')),
+        getDoc(doc(this.db, 'grocery_data', 'settings')),
+        getDoc(doc(this.db, 'grocery_data', 'shopping_history')),
+        getDoc(doc(this.db, 'grocery_data', 'pantry_items')),
+        getDoc(doc(this.db, 'grocery_data', 'quick_select'))
+      ]);
+
+      if (cartSnap.exists()) {
+        const data = cartSnap.data();
         if (data.senderDeviceId !== this.deviceId && data.updatedAt && data.updatedAt !== this.lastKnownCartUpdatedAt) {
           this.lastKnownCartUpdatedAt = data.updatedAt;
           const cleanItems = this.sanitizeCart(data.items || []);
           window.dispatchEvent(new CustomEvent('cloud-cart-update', {
+            detail: { items: cleanItems, updatedAt: data.updatedAt }
+          }));
+        }
+      }
+
+      if (sessionSnap.exists()) {
+        const data = sessionSnap.data();
+        if (data.senderDeviceId !== this.deviceId && data.updatedAt && data.updatedAt !== this.lastKnownSessionUpdatedAt) {
+          this.lastKnownSessionUpdatedAt = data.updatedAt;
+          window.dispatchEvent(new CustomEvent('cloud-session-update', {
             detail: {
-              items: cleanItems,
-              updatedAt: data.updatedAt,
-              senderDeviceId: data.senderDeviceId
+              selectedStore: data.selectedStore,
+              selectedDate: data.selectedDate,
+              userCoords: data.userCoords,
+              liveNearbyStores: data.liveNearbyStores,
+              activeCategoryFilter: data.activeCategoryFilter,
+              updatedAt: data.updatedAt
             }
           }));
         }
       }
+
+      if (priceSnap.exists()) {
+        const data = priceSnap.data();
+        if (data.senderDeviceId !== this.deviceId && data.updatedAt && data.updatedAt !== this.lastKnownPriceHistoryUpdatedAt) {
+          this.lastKnownPriceHistoryUpdatedAt = data.updatedAt;
+          window.dispatchEvent(new CustomEvent('cloud-price-history-update', {
+            detail: { history: data.history || {}, updatedAt: data.updatedAt }
+          }));
+        }
+      }
+
+      if (settingsSnap.exists()) {
+        const data = settingsSnap.data();
+        if (data.senderDeviceId !== this.deviceId && data.updatedAt && data.updatedAt !== this.lastKnownSettingsUpdatedAt) {
+          this.lastKnownSettingsUpdatedAt = data.updatedAt;
+          window.dispatchEvent(new CustomEvent('cloud-settings-update', {
+            detail: {
+              budgetLimit: data.budgetLimit,
+              isFrozen: data.isFrozen,
+              appliedVoucher: data.appliedVoucher,
+              soundEnabled: data.soundEnabled,
+              colorTheme: data.colorTheme,
+              lightMode: data.lightMode,
+              isBentoFluid: data.isBentoFluid,
+              updatedAt: data.updatedAt
+            }
+          }));
+        }
+      }
+
+      if (historySnap.exists()) {
+        const data = historySnap.data();
+        if (data.senderDeviceId !== this.deviceId && data.updatedAt && data.updatedAt !== this.lastKnownHistoryUpdatedAt) {
+          this.lastKnownHistoryUpdatedAt = data.updatedAt;
+          window.dispatchEvent(new CustomEvent('cloud-history-update', {
+            detail: { trips: Array.isArray(data.trips) ? data.trips : [] }
+          }));
+        }
+      }
+
+      if (pantrySnap.exists()) {
+        const data = pantrySnap.data();
+        if (data.senderDeviceId !== this.deviceId && data.updatedAt && data.updatedAt !== this.lastKnownPantryUpdatedAt) {
+          this.lastKnownPantryUpdatedAt = data.updatedAt;
+          window.dispatchEvent(new CustomEvent('cloud-pantry-update', {
+            detail: { items: Array.isArray(data.items) ? data.items : [] }
+          }));
+        }
+      }
+
+      if (quickSnap.exists()) {
+        const data = quickSnap.data();
+        if (data.senderDeviceId !== this.deviceId && data.updatedAt && data.updatedAt !== this.lastKnownQuickSelectUpdatedAt) {
+          this.lastKnownQuickSelectUpdatedAt = data.updatedAt;
+          window.dispatchEvent(new CustomEvent('cloud-quick-select-update', {
+            detail: { customItems: Array.isArray(data.customItems) ? data.customItems : [] }
+          }));
+        }
+      }
     } catch (err) {
-      // Background pull error ditangani tanpa blocking UI
       if (err?.code === 'permission-denied') {
-        this.handleFirestoreError(err, 'getDoc', 'grocery_data/active_cart');
+        this.handleFirestoreError(err, 'checkAndPullLatest', 'grocery_data/*');
       }
     }
   }
 
   /**
-   * 📤 SIMPAN DATA TROLI KE 1 TEMPAT BERSAMA
+   * 📤 SIMPAN DATA TROLI KE CLOUD
    */
   async syncCart(cart) {
     if (!this.isInitialized || !this.db) {
@@ -463,6 +658,76 @@ class FirebaseSharedService {
     }
   }
 
+  /**
+   * 📤 SIMPAN KONTEKS SESI TOKO & LOKASI
+   */
+  async syncSessionState(session) {
+    if (!this.isInitialized || !this.db) {
+      this.pendingSessionSync = session;
+      return true;
+    }
+
+    try {
+      this.updateStatus('syncing', 'Menyinkronkan Sesi Toko...');
+      const nowIso = new Date().toISOString();
+      this.lastKnownSessionUpdatedAt = nowIso;
+
+      const payload = deepSanitize({
+        selectedStore: String(session?.selectedStore || ''),
+        selectedDate: String(session?.selectedDate || ''),
+        userCoords: session?.userCoords || null,
+        liveNearbyStores: Array.isArray(session?.liveNearbyStores) ? session.liveNearbyStores : [],
+        activeCategoryFilter: String(session?.activeCategoryFilter || 'ALL'),
+        senderDeviceId: this.deviceId,
+        updatedAt: nowIso
+      });
+
+      const sessionRef = doc(this.db, 'grocery_data', 'session_state');
+      await setDoc(sessionRef, payload, { merge: true });
+
+      this.updateStatus('connected', 'Sinkronisasi Realtime Aktif');
+      return true;
+    } catch (err) {
+      this.handleFirestoreError(err, 'setDoc', 'grocery_data/session_state');
+      return false;
+    }
+  }
+
+  /**
+   * 📤 SIMPAN RIWAYAT FLUKTUASI HARGA
+   */
+  async syncPriceHistory(priceHistory) {
+    if (!this.isInitialized || !this.db) {
+      this.pendingPriceHistorySync = priceHistory;
+      return true;
+    }
+
+    try {
+      this.updateStatus('syncing', 'Menyinkronkan Riwayat Harga...');
+      const nowIso = new Date().toISOString();
+      this.lastKnownPriceHistoryUpdatedAt = nowIso;
+
+      const payload = deepSanitize({
+        history: (priceHistory && typeof priceHistory === 'object') ? priceHistory : {},
+        itemCount: Object.keys(priceHistory || {}).length,
+        senderDeviceId: this.deviceId,
+        updatedAt: nowIso
+      });
+
+      const priceRef = doc(this.db, 'grocery_data', 'price_history');
+      await setDoc(priceRef, payload, { merge: true });
+
+      this.updateStatus('connected', 'Sinkronisasi Realtime Aktif');
+      return true;
+    } catch (err) {
+      this.handleFirestoreError(err, 'setDoc', 'grocery_data/price_history');
+      return false;
+    }
+  }
+
+  /**
+   * 📤 SIMPAN PENGATURAN ANGGARAN & FITUR
+   */
   async syncSettings(settings) {
     if (!this.isInitialized || !this.db) {
       this.pendingSettingsSync = settings;
@@ -476,7 +741,12 @@ class FirebaseSharedService {
 
       const payload = deepSanitize({
         budgetLimit: Number(settings?.budgetLimit) || 800000,
+        isFrozen: Boolean(settings?.isFrozen),
+        appliedVoucher: settings?.appliedVoucher || null,
         soundEnabled: settings?.soundEnabled !== false,
+        colorTheme: String(settings?.colorTheme || 'emerald'),
+        lightMode: String(settings?.lightMode || 'dark'),
+        isBentoFluid: Boolean(settings?.isBentoFluid),
         senderDeviceId: this.deviceId,
         updatedAt: nowIso
       });
@@ -492,28 +762,10 @@ class FirebaseSharedService {
     }
   }
 
-  async syncBenchmarks(benchmarks) {
-    if (!this.isInitialized || !this.db) return false;
-    try {
-      this.updateStatus('syncing', 'Menyinkronkan Patokan Harga...');
-      const payload = deepSanitize({
-        catalog: benchmarks || {},
-        itemCount: Object.keys(benchmarks || {}).length,
-        senderDeviceId: this.deviceId,
-        updatedAt: new Date().toISOString()
-      });
-
-      const benchRef = doc(this.db, 'grocery_data', 'price_benchmarks');
-      await setDoc(benchRef, payload, { merge: true });
-      this.updateStatus('connected', 'Sinkronisasi Realtime Aktif');
-      return true;
-    } catch (err) {
-      this.handleFirestoreError(err, 'setDoc', 'grocery_data/price_benchmarks');
-      return false;
-    }
-  }
-
-  async syncHistory(trips) {
+  /**
+   * 📤 SIMPAN RIWAYAT STRUK BELANJA
+   */
+  async syncShoppingHistory(trips) {
     if (!this.isInitialized || !this.db) {
       this.pendingHistorySync = trips;
       return true;
@@ -543,18 +795,94 @@ class FirebaseSharedService {
   }
 
   /**
-   * Tarik manual seluruh data dari Database
+   * 📤 SIMPAN INVENTARIS PANTRY
+   */
+  async syncPantry(pantryItems) {
+    if (!this.isInitialized || !this.db) {
+      this.pendingPantrySync = pantryItems;
+      return true;
+    }
+
+    try {
+      this.updateStatus('syncing', 'Menyinkronkan Pantry...');
+      const nowIso = new Date().toISOString();
+      this.lastKnownPantryUpdatedAt = nowIso;
+
+      const payload = deepSanitize({
+        items: Array.isArray(pantryItems) ? pantryItems : [],
+        totalItems: (pantryItems || []).length,
+        senderDeviceId: this.deviceId,
+        updatedAt: nowIso
+      });
+
+      const pantryRef = doc(this.db, 'grocery_data', 'pantry_items');
+      await setDoc(pantryRef, payload, { merge: true });
+
+      this.updateStatus('connected', 'Sinkronisasi Realtime Aktif');
+      return true;
+    } catch (err) {
+      this.handleFirestoreError(err, 'setDoc', 'grocery_data/pantry_items');
+      return false;
+    }
+  }
+
+  /**
+   * 📤 SIMPAN QUICK-SELECT & TEMPLATE KATALOG
+   */
+  async syncQuickSelect(customItems) {
+    if (!this.isInitialized || !this.db) {
+      this.pendingQuickSelectSync = customItems;
+      return true;
+    }
+
+    try {
+      this.updateStatus('syncing', 'Menyinkronkan Pilihan Cepat...');
+      const nowIso = new Date().toISOString();
+      this.lastKnownQuickSelectUpdatedAt = nowIso;
+
+      const payload = deepSanitize({
+        customItems: Array.isArray(customItems) ? customItems : [],
+        totalItems: (customItems || []).length,
+        senderDeviceId: this.deviceId,
+        updatedAt: nowIso
+      });
+
+      const quickRef = doc(this.db, 'grocery_data', 'quick_select');
+      await setDoc(quickRef, payload, { merge: true });
+
+      this.updateStatus('connected', 'Sinkronisasi Realtime Aktif');
+      return true;
+    } catch (err) {
+      this.handleFirestoreError(err, 'setDoc', 'grocery_data/quick_select');
+      return false;
+    }
+  }
+
+  // Alias kompatibilitas
+  async syncBenchmarks(benchmarks) {
+    return this.syncPriceHistory(benchmarks);
+  }
+
+  async syncHistory(trips) {
+    return this.syncShoppingHistory(trips);
+  }
+
+  /**
+   * Tarik seluruh data dari Cloud (Hydration)
    */
   async pullAllSharedData() {
     if (!this.isInitialized || !this.db) return null;
     try {
-      this.updateStatus('syncing', 'Mengambil data database...');
+      this.updateStatus('syncing', 'Mengambil data cloud...');
 
-      const [cartSnap, settingsSnap, benchSnap, historySnap] = await Promise.all([
+      const [cartSnap, sessionSnap, priceSnap, settingsSnap, historySnap, pantrySnap, quickSnap] = await Promise.all([
         getDoc(doc(this.db, 'grocery_data', 'active_cart')),
+        getDoc(doc(this.db, 'grocery_data', 'session_state')),
+        getDoc(doc(this.db, 'grocery_data', 'price_history')),
         getDoc(doc(this.db, 'grocery_data', 'settings')),
-        getDoc(doc(this.db, 'grocery_data', 'price_benchmarks')),
-        getDoc(doc(this.db, 'grocery_data', 'shopping_history'))
+        getDoc(doc(this.db, 'grocery_data', 'shopping_history')),
+        getDoc(doc(this.db, 'grocery_data', 'pantry_items')),
+        getDoc(doc(this.db, 'grocery_data', 'quick_select'))
       ]);
 
       this.updateStatus('connected', 'Sinkronisasi Realtime Aktif');
@@ -562,11 +890,32 @@ class FirebaseSharedService {
       const cartData = cartSnap.exists() ? cartSnap.data() : null;
       if (cartData?.updatedAt) this.lastKnownCartUpdatedAt = cartData.updatedAt;
 
+      const sessionData = sessionSnap.exists() ? sessionSnap.data() : null;
+      if (sessionData?.updatedAt) this.lastKnownSessionUpdatedAt = sessionData.updatedAt;
+
+      const priceData = priceSnap.exists() ? priceSnap.data() : null;
+      if (priceData?.updatedAt) this.lastKnownPriceHistoryUpdatedAt = priceData.updatedAt;
+
+      const settingsData = settingsSnap.exists() ? settingsSnap.data() : null;
+      if (settingsData?.updatedAt) this.lastKnownSettingsUpdatedAt = settingsData.updatedAt;
+
+      const historyData = historySnap.exists() ? historySnap.data() : null;
+      if (historyData?.updatedAt) this.lastKnownHistoryUpdatedAt = historyData.updatedAt;
+
+      const pantryData = pantrySnap.exists() ? pantrySnap.data() : null;
+      if (pantryData?.updatedAt) this.lastKnownPantryUpdatedAt = pantryData.updatedAt;
+
+      const quickData = quickSnap.exists() ? quickSnap.data() : null;
+      if (quickData?.updatedAt) this.lastKnownQuickSelectUpdatedAt = quickData.updatedAt;
+
       return {
         cart: cartData ? this.sanitizeCart(cartData.items || []) : null,
-        settings: settingsSnap.exists() ? settingsSnap.data() : null,
-        benchmarks: benchSnap.exists() ? benchSnap.data().catalog : null,
-        history: historySnap.exists() ? historySnap.data().trips : null
+        session: sessionData,
+        priceHistory: priceData?.history || null,
+        settings: settingsData,
+        history: historyData?.trips || null,
+        pantry: pantryData?.items || null,
+        quickSelect: quickData?.customItems || null
       };
     } catch (err) {
       this.handleFirestoreError(err, 'pullAllSharedData', 'grocery_data/*');
