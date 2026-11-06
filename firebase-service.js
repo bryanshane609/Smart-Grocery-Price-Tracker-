@@ -1,10 +1,19 @@
 /**
- * Firebase Integration Service - BI-DIRECTIONAL REALTIME SYNCHRONIZATION
- * Menjamin sinkronisasi dua arah (Laptop <-> HP) berjalan secara realtime,
- * bebas tabrakan data (race condition), serta kebal pemutusan koneksi mobile (heartbeat & wake-up fallback).
+ * =============================================================================
+ * FIREBASE INTEGRATION SERVICE - PRODUCTION GRADE MODULAR SDK (v10.12.0)
+ * =============================================================================
+ * Fitur Utama:
+ * 1. Environment Variable & Runtime Config Detection (Vite, Next.js, CRA, Window, Fallback)
+ * 2. Singleton Initialization Pattern (Kebal crash HMR / duplicate app instance)
+ * 3. Modular SDK Pure Architecture (Tree-shakeable, bebas sintaks v8 namespace)
+ * 4. Anonymous Auth Gatekeeper (Memenuhi Security Rules tanpa login paksa)
+ * 5. Deep Payload Sanitization (Mencegah runtime exception "Unsupported field value: undefined")
+ * 6. Structured Error Diagnostics & Security Rules Logging
+ * 7. Long Polling Auto-detection & Mobile Wake-up Resilience (Anti-stuck UI)
  */
 
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import { 
   getFirestore, 
   initializeFirestore,
@@ -14,29 +23,84 @@ import {
   onSnapshot
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-// Konfigurasi Firebase Proyek
-const firebaseConfig = {
-  apiKey: "AIzaSyC82Gdng1O2o1IluxYMekduvX1PnoTI1PE",
-  authDomain: "smartgrocery-1f9cb.firebaseapp.com",
-  projectId: "smartgrocery-1f9cb",
-  storageBucket: "smartgrocery-1f9cb.firebasestorage.app",
-  messagingSenderId: "522355385292",
-  appId: "1:522355385292:web:6bec97bc5e8caf1c18b369"
-};
+// -----------------------------------------------------------------------------
+// 1. CONFIG RESOLUTION & RUNTIME VALIDATION
+// -----------------------------------------------------------------------------
+function resolveFirebaseConfig() {
+  const runtimeEnv = (typeof window !== 'undefined' && window.__ENV__) || {};
+  const procEnv = (typeof process !== 'undefined' && process.env) || {};
+  let viteEnv = {};
+  try {
+    if (typeof import.meta !== 'undefined' && import.meta.env) {
+      viteEnv = import.meta.env;
+    }
+  } catch (_) {}
 
+  return {
+    apiKey: viteEnv.VITE_FIREBASE_API_KEY || procEnv.NEXT_PUBLIC_FIREBASE_API_KEY || procEnv.REACT_APP_FIREBASE_API_KEY || runtimeEnv.FIREBASE_API_KEY || "AIzaSyC82Gdng1O2o1IluxYMekduvX1PnoTI1PE",
+    authDomain: viteEnv.VITE_FIREBASE_AUTH_DOMAIN || procEnv.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN || procEnv.REACT_APP_FIREBASE_AUTH_DOMAIN || runtimeEnv.FIREBASE_AUTH_DOMAIN || "smartgrocery-1f9cb.firebaseapp.com",
+    projectId: viteEnv.VITE_FIREBASE_PROJECT_ID || procEnv.NEXT_PUBLIC_FIREBASE_PROJECT_ID || procEnv.REACT_APP_FIREBASE_PROJECT_ID || runtimeEnv.FIREBASE_PROJECT_ID || "smartgrocery-1f9cb",
+    storageBucket: viteEnv.VITE_FIREBASE_STORAGE_BUCKET || procEnv.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || procEnv.REACT_APP_FIREBASE_STORAGE_BUCKET || runtimeEnv.FIREBASE_STORAGE_BUCKET || "smartgrocery-1f9cb.firebasestorage.app",
+    messagingSenderId: viteEnv.VITE_FIREBASE_MESSAGING_SENDER_ID || procEnv.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID || procEnv.REACT_APP_FIREBASE_MESSAGING_SENDER_ID || runtimeEnv.FIREBASE_MESSAGING_SENDER_ID || "522355385292",
+    appId: viteEnv.VITE_FIREBASE_APP_ID || procEnv.NEXT_PUBLIC_FIREBASE_APP_ID || procEnv.REACT_APP_FIREBASE_APP_ID || runtimeEnv.FIREBASE_APP_ID || "1:522355385292:web:6bec97bc5e8caf1c18b369"
+  };
+}
+
+function validateConfig(config) {
+  const required = ['apiKey', 'authDomain', 'projectId', 'appId'];
+  const missing = required.filter(k => !config[k] || typeof config[k] !== 'string' || !config[k].trim());
+  if (missing.length > 0) {
+    console.warn(`[FirebaseConfig] ⚠️ PERINGATAN: Konfigurasi Firebase tidak lengkap! Key yang kosong: ${missing.join(', ')}`);
+    return false;
+  }
+  return true;
+}
+
+// -----------------------------------------------------------------------------
+// 2. RECURSIVE DATA SANITIZATION (PREVENT "UNDEFINED" VALUE CRASHES)
+// -----------------------------------------------------------------------------
+function deepSanitize(val) {
+  if (val === undefined) return null;
+  if (val === null) return null;
+  if (typeof val === 'number') return isNaN(val) ? 0 : val;
+  if (typeof val === 'string' || typeof val === 'boolean') return val;
+  if (Array.isArray(val)) {
+    return val.map(item => deepSanitize(item));
+  }
+  if (typeof val === 'object') {
+    const res = {};
+    for (const key of Object.keys(val)) {
+      const cleaned = deepSanitize(val[key]);
+      res[key] = cleaned === undefined ? null : cleaned;
+    }
+    return res;
+  }
+  return null;
+}
+
+// -----------------------------------------------------------------------------
+// 3. FIREBASE SINGLETON SERVICE CLASS
+// -----------------------------------------------------------------------------
 class FirebaseSharedService {
   constructor() {
     this.app = null;
     this.db = null;
+    this.auth = null;
+    this.currentUser = null;
     this.isInitialized = false;
+    this.isAuthReady = Promise.resolve(null);
     this.syncStatus = 'connecting'; // 'connected' | 'syncing' | 'offline' | 'error'
     this.unsubscribers = [];
     
     // Identifikasi unik setiap sesi perangkat untuk mencegah self-echo loop
-    this.deviceId = sessionStorage.getItem('sg_device_id');
+    this.deviceId = (typeof sessionStorage !== 'undefined' && sessionStorage.getItem('sg_device_id')) || '';
     if (!this.deviceId) {
       this.deviceId = 'dev_' + Date.now() + '_' + Math.random().toString(36).substring(2, 8);
-      sessionStorage.setItem('sg_device_id', this.deviceId);
+      try {
+        if (typeof sessionStorage !== 'undefined') {
+          sessionStorage.setItem('sg_device_id', this.deviceId);
+        }
+      } catch (_) {}
     }
 
     // Melacak timestamp dokumen cloud terakhir yang diketahui
@@ -53,53 +117,108 @@ class FirebaseSharedService {
     this.heartbeatTimer = null;
   }
 
+  /**
+   * Inisialisasi Singleton dengan Validasi & Fallback Stabilitas
+   */
   async init() {
+    if (this.isInitialized && this.db) {
+      return true;
+    }
+
     this.updateStatus('connecting', 'Menghubungkan ke Realtime Database...');
+    const config = resolveFirebaseConfig();
+
+    if (!validateConfig(config)) {
+      this.updateStatus('error', 'Konfigurasi Firebase Tidak Lengkap');
+      return false;
+    }
 
     try {
-      this.app = initializeApp(firebaseConfig);
+      // 1. Singleton App Initialization (Mencegah duplicate app crash)
+      const existingApps = getApps();
+      this.app = existingApps.length > 0 ? getApp() : initializeApp(config);
 
-      // Konfigurasi Firestore dengan Auto-detect Long Polling untuk stabilitas jaringan seluler HP & browser laptop
+      // 2. Singleton Firestore Initialization dengan Auto-detect Long Polling
       try {
         this.db = initializeFirestore(this.app, {
           experimentalAutoDetectLongPolling: true
         });
-      } catch (e) {
+      } catch (_) {
         this.db = getFirestore(this.app);
       }
+
+      // 3. Singleton Auth & Gatekeeper Resolving
+      try {
+        this.auth = getAuth(this.app);
+        this.isAuthReady = new Promise((resolve) => {
+          onAuthStateChanged(this.auth, (user) => {
+            this.currentUser = user;
+            if (user) {
+              console.log(`[FirebaseSync] Terautentikasi (UID: ${user.uid})`);
+              resolve(user);
+            } else {
+              signInAnonymously(this.auth)
+                .then(cred => {
+                  this.currentUser = cred.user;
+                  console.log(`[FirebaseSync] Berhasil masuk sebagai Anonim (UID: ${cred.user.uid})`);
+                  resolve(cred.user);
+                })
+                .catch(authErr => {
+                  console.warn('[FirebaseSync] Mode Anonim tidak aktif di console (berjalan dalam mode publik/tamu):', authErr.message);
+                  resolve(null);
+                });
+            }
+          });
+        });
+      } catch (authInitErr) {
+        console.warn('[FirebaseSync] Auth initialization fallback:', authInitErr.message);
+        this.isAuthReady = Promise.resolve(null);
+      }
+
+      // Tunggu hingga status auth awal teratasi
+      await this.isAuthReady;
 
       this.isInitialized = true;
       this.updateStatus('connected', 'Sinkronisasi Realtime Aktif');
       console.log(`[FirebaseSync] Terhubung sebagai Client ID: ${this.deviceId}`);
 
-      // 1. Jalankan realtime listener (WebSocket / onSnapshot)
+      // Dispatch event bahwa Firebase siap digunakan oleh modul lain
+      window.dispatchEvent(new CustomEvent('firebase-ready', {
+        detail: { deviceId: this.deviceId, user: this.currentUser }
+      }));
+
+      // 4. Jalankan realtime listener (WebSocket / onSnapshot)
       this.startRealtimeSync();
 
-      // 2. Jalankan background fallback & wake-up handler untuk HP
+      // 5. Jalankan background fallback & wake-up handler untuk HP
       this.setupMobileWakeupHandlers();
 
-      // 3. Eksekusi antrean pending jika ada
-      if (this.pendingCartSync) {
-        const queue = this.pendingCartSync;
-        this.pendingCartSync = null;
-        this.syncCart(queue);
-      }
-      if (this.pendingSettingsSync) {
-        const queue = this.pendingSettingsSync;
-        this.pendingSettingsSync = null;
-        this.syncSettings(queue);
-      }
-      if (this.pendingHistorySync) {
-        const queue = this.pendingHistorySync;
-        this.pendingHistorySync = null;
-        this.syncHistory(queue);
-      }
+      // 6. Eksekusi antrean pending jika ada
+      this.flushPendingSyncs();
 
       return true;
     } catch (error) {
       console.warn('[FirebaseSync] Inisialisasi error:', error);
-      this.handleFirestoreError(error);
+      this.handleFirestoreError(error, 'init', 'system');
       return false;
+    }
+  }
+
+  flushPendingSyncs() {
+    if (this.pendingCartSync) {
+      const q = this.pendingCartSync;
+      this.pendingCartSync = null;
+      this.syncCart(q);
+    }
+    if (this.pendingSettingsSync) {
+      const q = this.pendingSettingsSync;
+      this.pendingSettingsSync = null;
+      this.syncSettings(q);
+    }
+    if (this.pendingHistorySync) {
+      const q = this.pendingHistorySync;
+      this.pendingHistorySync = null;
+      this.syncHistory(q);
     }
   }
 
@@ -117,20 +236,20 @@ class FirebaseSharedService {
   sanitizeCart(cart) {
     if (!Array.isArray(cart)) return [];
     return cart.map(item => ({
-      id: String(item.id || ('cart_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6))),
-      name: String(item.name || 'Barang'),
-      category: String(item.category || 'LAINNYA'),
-      unit: String(item.unit || 'Satuan'),
-      qty: Math.max(1, Number(item.qty) || 1),
-      price: Math.max(0, Number(item.price) || 0),
-      discount: (item.discount && typeof item.discount === 'object') ? {
+      id: String(item?.id || ('cart_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6))),
+      name: String(item?.name || 'Barang'),
+      category: String(item?.category || 'LAINNYA'),
+      unit: String(item?.unit || 'Satuan'),
+      qty: Math.max(1, Number(item?.qty) || 1),
+      price: Math.max(0, Number(item?.price) || 0),
+      discount: (item?.discount && typeof item.discount === 'object') ? {
         mode: String(item.discount.mode || 'none'),
         value: Number(item.discount.value) || 0,
         buyQty: Number(item.discount.buyQty) || 0,
         freeQty: Number(item.discount.freeQty) || 0
       } : { mode: 'none' },
-      store: String(item.store || 'Super Indo'),
-      isEssential: item.isEssential !== false,
+      store: String(item?.store || 'Super Indo'),
+      isEssential: item?.isEssential !== false,
       checked: true
     }));
   }
@@ -149,111 +268,135 @@ class FirebaseSharedService {
     this.unsubscribers = [];
 
     // 1. Realtime Listener: Troli Belanja Aktif
-    const cartDocRef = doc(this.db, 'grocery_data', 'active_cart');
-    const unsubCart = onSnapshot(cartDocRef, { includeMetadataChanges: false }, (snap) => {
-      if (!snap.exists()) return;
-      const data = snap.data();
+    try {
+      const cartDocRef = doc(this.db, 'grocery_data', 'active_cart');
+      const unsubCart = onSnapshot(cartDocRef, { includeMetadataChanges: false }, (snap) => {
+        if (!snap.exists()) return;
+        const data = snap.data();
 
-      // Abaikan echo dari perangkat ini sendiri
-      if (data.senderDeviceId === this.deviceId) {
-        this.lastKnownCartUpdatedAt = data.updatedAt;
-        return;
-      }
-
-      // Hindari proses berulang jika timestamp sama
-      if (data.updatedAt && data.updatedAt === this.lastKnownCartUpdatedAt) {
-        return;
-      }
-
-      this.lastKnownCartUpdatedAt = data.updatedAt;
-      const cleanItems = this.sanitizeCart(data.items || []);
-
-      window.dispatchEvent(new CustomEvent('cloud-cart-update', {
-        detail: {
-          items: cleanItems,
-          updatedAt: data.updatedAt,
-          senderDeviceId: data.senderDeviceId
+        // Abaikan echo dari perangkat ini sendiri
+        if (data.senderDeviceId === this.deviceId) {
+          this.lastKnownCartUpdatedAt = data.updatedAt;
+          return;
         }
-      }));
-    }, (err) => this.handleFirestoreError(err));
-    this.unsubscribers.push(unsubCart);
+
+        // Hindari proses berulang jika timestamp sama
+        if (data.updatedAt && data.updatedAt === this.lastKnownCartUpdatedAt) {
+          return;
+        }
+
+        this.lastKnownCartUpdatedAt = data.updatedAt;
+        const cleanItems = this.sanitizeCart(data.items || []);
+
+        window.dispatchEvent(new CustomEvent('cloud-cart-update', {
+          detail: {
+            items: cleanItems,
+            updatedAt: data.updatedAt,
+            senderDeviceId: data.senderDeviceId
+          }
+        }));
+      }, (err) => this.handleFirestoreError(err, 'onSnapshot', 'grocery_data/active_cart'));
+      this.unsubscribers.push(unsubCart);
+    } catch (e) {
+      this.handleFirestoreError(e, 'setupListener', 'grocery_data/active_cart');
+    }
 
     // 2. Realtime Listener: Pengaturan Anggaran
-    const settingsDocRef = doc(this.db, 'grocery_data', 'settings');
-    const unsubSettings = onSnapshot(settingsDocRef, { includeMetadataChanges: false }, (snap) => {
-      if (!snap.exists()) return;
-      const data = snap.data();
-      if (data.senderDeviceId === this.deviceId) {
-        this.lastKnownSettingsUpdatedAt = data.updatedAt;
-        return;
-      }
-      if (data.updatedAt && data.updatedAt === this.lastKnownSettingsUpdatedAt) return;
-      this.lastKnownSettingsUpdatedAt = data.updatedAt;
-
-      window.dispatchEvent(new CustomEvent('cloud-settings-update', {
-        detail: {
-          budgetLimit: data.budgetLimit,
-          soundEnabled: data.soundEnabled,
-          updatedAt: data.updatedAt
+    try {
+      const settingsDocRef = doc(this.db, 'grocery_data', 'settings');
+      const unsubSettings = onSnapshot(settingsDocRef, { includeMetadataChanges: false }, (snap) => {
+        if (!snap.exists()) return;
+        const data = snap.data();
+        if (data.senderDeviceId === this.deviceId) {
+          this.lastKnownSettingsUpdatedAt = data.updatedAt;
+          return;
         }
-      }));
-    }, (err) => this.handleFirestoreError(err));
-    this.unsubscribers.push(unsubSettings);
+        if (data.updatedAt && data.updatedAt === this.lastKnownSettingsUpdatedAt) return;
+        this.lastKnownSettingsUpdatedAt = data.updatedAt;
+
+        window.dispatchEvent(new CustomEvent('cloud-settings-update', {
+          detail: {
+            budgetLimit: data.budgetLimit,
+            soundEnabled: data.soundEnabled,
+            updatedAt: data.updatedAt
+          }
+        }));
+      }, (err) => this.handleFirestoreError(err, 'onSnapshot', 'grocery_data/settings'));
+      this.unsubscribers.push(unsubSettings);
+    } catch (e) {
+      this.handleFirestoreError(e, 'setupListener', 'grocery_data/settings');
+    }
 
     // 3. Realtime Listener: Patokan Harga Bulan Lalu
-    const benchDocRef = doc(this.db, 'grocery_data', 'price_benchmarks');
-    const unsubBench = onSnapshot(benchDocRef, { includeMetadataChanges: false }, (snap) => {
-      if (!snap.exists()) return;
-      const data = snap.data();
-      window.dispatchEvent(new CustomEvent('cloud-benchmarks-update', {
-        detail: { catalog: data.catalog || {} }
-      }));
-    }, (err) => this.handleFirestoreError(err));
-    this.unsubscribers.push(unsubBench);
+    try {
+      const benchDocRef = doc(this.db, 'grocery_data', 'price_benchmarks');
+      const unsubBench = onSnapshot(benchDocRef, { includeMetadataChanges: false }, (snap) => {
+        if (!snap.exists()) return;
+        const data = snap.data();
+        window.dispatchEvent(new CustomEvent('cloud-benchmarks-update', {
+          detail: { catalog: data.catalog || {} }
+        }));
+      }, (err) => this.handleFirestoreError(err, 'onSnapshot', 'grocery_data/price_benchmarks'));
+      this.unsubscribers.push(unsubBench);
+    } catch (e) {
+      this.handleFirestoreError(e, 'setupListener', 'grocery_data/price_benchmarks');
+    }
 
     // 4. Realtime Listener: Riwayat Struk Belanja
-    const historyDocRef = doc(this.db, 'grocery_data', 'shopping_history');
-    const unsubHistory = onSnapshot(historyDocRef, { includeMetadataChanges: false }, (snap) => {
-      if (!snap.exists()) return;
-      const data = snap.data();
-      if (data.senderDeviceId === this.deviceId) {
+    try {
+      const historyDocRef = doc(this.db, 'grocery_data', 'shopping_history');
+      const unsubHistory = onSnapshot(historyDocRef, { includeMetadataChanges: false }, (snap) => {
+        if (!snap.exists()) return;
+        const data = snap.data();
+        if (data.senderDeviceId === this.deviceId) {
+          this.lastKnownHistoryUpdatedAt = data.updatedAt;
+          return;
+        }
+        if (data.updatedAt && data.updatedAt === this.lastKnownHistoryUpdatedAt) return;
         this.lastKnownHistoryUpdatedAt = data.updatedAt;
-        return;
-      }
-      if (data.updatedAt && data.updatedAt === this.lastKnownHistoryUpdatedAt) return;
-      this.lastKnownHistoryUpdatedAt = data.updatedAt;
 
-      window.dispatchEvent(new CustomEvent('cloud-history-update', {
-        detail: { trips: Array.isArray(data.trips) ? data.trips : [] }
-      }));
-    }, (err) => this.handleFirestoreError(err));
-    this.unsubscribers.push(unsubHistory);
+        window.dispatchEvent(new CustomEvent('cloud-history-update', {
+          detail: { trips: Array.isArray(data.trips) ? data.trips : [] }
+        }));
+      }, (err) => this.handleFirestoreError(err, 'onSnapshot', 'grocery_data/shopping_history'));
+      this.unsubscribers.push(unsubHistory);
+    } catch (e) {
+      this.handleFirestoreError(e, 'setupListener', 'grocery_data/shopping_history');
+    }
   }
 
   /**
    * 🛡️ WAKE-UP & HEARTBEAT FALLBACK UNTUK BROWSER MOBILE (HP)
-   * Mengatasi masalah suspensi WebSocket di Android Chrome & Safari iOS ketika tab non-aktif / layar mati.
    */
   setupMobileWakeupHandlers() {
-    // Tarik data saat tab HP dibuka kembali dari background
     document.addEventListener('visibilitychange', () => {
       if (document.visibilityState === 'visible') {
         this.checkAndPullLatest();
       }
     });
 
-    // Tarik data saat jendela HP mendapatkan fokus
     window.addEventListener('focus', () => {
       this.checkAndPullLatest();
     });
 
-    // Heartbeat ringan berkala (setiap 2.5 detik) untuk menjamin pembaruan instan
+    window.addEventListener('online', () => {
+      console.log('[FirebaseSync] Jaringan terdeteksi online kembali. Menghubungkan ulang...');
+      this.updateStatus('connecting', 'Menyambungkan kembali...');
+      this.checkAndPullLatest();
+      this.flushPendingSyncs();
+    });
+
+    window.addEventListener('offline', () => {
+      this.updateStatus('offline', 'Offline (Disimpan di Lokal)');
+    });
+
+    // Heartbeat berkala (setiap 3 detik) untuk menjamin pembaruan cepat
     if (this.heartbeatTimer) clearInterval(this.heartbeatTimer);
     this.heartbeatTimer = setInterval(() => {
       if (this.isInitialized && this.db && document.visibilityState === 'visible') {
         this.checkAndPullLatest();
       }
-    }, 2500);
+    }, 3000);
   }
 
   /**
@@ -278,14 +421,16 @@ class FirebaseSharedService {
           }));
         }
       }
-    } catch (_) {
-      // Abaikan error pada pengecekan background
+    } catch (err) {
+      // Background pull error ditangani tanpa blocking UI
+      if (err?.code === 'permission-denied') {
+        this.handleFirestoreError(err, 'getDoc', 'grocery_data/active_cart');
+      }
     }
   }
 
   /**
    * 📤 SIMPAN DATA TROLI KE 1 TEMPAT BERSAMA
-   * Menggantikan dokumen secara atomik (merge: false) agar penghapusan item terdistribusi sempurna.
    */
   async syncCart(cart) {
     if (!this.isInitialized || !this.db) {
@@ -299,19 +444,21 @@ class FirebaseSharedService {
       const nowIso = new Date().toISOString();
       this.lastKnownCartUpdatedAt = nowIso;
 
-      const cartRef = doc(this.db, 'grocery_data', 'active_cart');
-      await setDoc(cartRef, {
+      const payload = deepSanitize({
         items: cleanCart,
         totalItems: cleanCart.length,
         totalQty: cleanCart.reduce((sum, it) => sum + (it.qty || 1), 0),
         senderDeviceId: this.deviceId,
         updatedAt: nowIso
-      }, { merge: false });
+      });
+
+      const cartRef = doc(this.db, 'grocery_data', 'active_cart');
+      await setDoc(cartRef, payload, { merge: false });
 
       this.updateStatus('connected', 'Sinkronisasi Realtime Aktif');
       return true;
     } catch (err) {
-      this.handleFirestoreError(err);
+      this.handleFirestoreError(err, 'setDoc', 'grocery_data/active_cart');
       return false;
     }
   }
@@ -327,18 +474,20 @@ class FirebaseSharedService {
       const nowIso = new Date().toISOString();
       this.lastKnownSettingsUpdatedAt = nowIso;
 
-      const settingsRef = doc(this.db, 'grocery_data', 'settings');
-      await setDoc(settingsRef, {
-        budgetLimit: Number(settings.budgetLimit) || 800000,
-        soundEnabled: settings.soundEnabled !== false,
+      const payload = deepSanitize({
+        budgetLimit: Number(settings?.budgetLimit) || 800000,
+        soundEnabled: settings?.soundEnabled !== false,
         senderDeviceId: this.deviceId,
         updatedAt: nowIso
-      }, { merge: true });
+      });
+
+      const settingsRef = doc(this.db, 'grocery_data', 'settings');
+      await setDoc(settingsRef, payload, { merge: true });
 
       this.updateStatus('connected', 'Sinkronisasi Realtime Aktif');
       return true;
     } catch (err) {
-      this.handleFirestoreError(err);
+      this.handleFirestoreError(err, 'setDoc', 'grocery_data/settings');
       return false;
     }
   }
@@ -347,17 +496,19 @@ class FirebaseSharedService {
     if (!this.isInitialized || !this.db) return false;
     try {
       this.updateStatus('syncing', 'Menyinkronkan Patokan Harga...');
-      const benchRef = doc(this.db, 'grocery_data', 'price_benchmarks');
-      await setDoc(benchRef, {
+      const payload = deepSanitize({
         catalog: benchmarks || {},
         itemCount: Object.keys(benchmarks || {}).length,
         senderDeviceId: this.deviceId,
         updatedAt: new Date().toISOString()
-      }, { merge: true });
+      });
+
+      const benchRef = doc(this.db, 'grocery_data', 'price_benchmarks');
+      await setDoc(benchRef, payload, { merge: true });
       this.updateStatus('connected', 'Sinkronisasi Realtime Aktif');
       return true;
     } catch (err) {
-      this.handleFirestoreError(err);
+      this.handleFirestoreError(err, 'setDoc', 'grocery_data/price_benchmarks');
       return false;
     }
   }
@@ -373,18 +524,20 @@ class FirebaseSharedService {
       const nowIso = new Date().toISOString();
       this.lastKnownHistoryUpdatedAt = nowIso;
 
-      const historyRef = doc(this.db, 'grocery_data', 'shopping_history');
-      await setDoc(historyRef, {
+      const payload = deepSanitize({
         trips: Array.isArray(trips) ? trips : [],
         totalTrips: (trips || []).length,
         senderDeviceId: this.deviceId,
         updatedAt: nowIso
-      }, { merge: true });
+      });
+
+      const historyRef = doc(this.db, 'grocery_data', 'shopping_history');
+      await setDoc(historyRef, payload, { merge: true });
 
       this.updateStatus('connected', 'Sinkronisasi Realtime Aktif');
       return true;
     } catch (err) {
-      this.handleFirestoreError(err);
+      this.handleFirestoreError(err, 'setDoc', 'grocery_data/shopping_history');
       return false;
     }
   }
@@ -416,31 +569,74 @@ class FirebaseSharedService {
         history: historySnap.exists() ? historySnap.data().trips : null
       };
     } catch (err) {
-      this.handleFirestoreError(err);
+      this.handleFirestoreError(err, 'pullAllSharedData', 'grocery_data/*');
       return null;
     }
   }
 
-  handleFirestoreError(err) {
+  /**
+   * 🛡️ DIAGNOSTIC LOGGER & SECURITY RULES ADVISOR
+   */
+  handleFirestoreError(err, operation = 'unknown', targetDoc = '') {
+    const code = err?.code || 'unknown';
     const msg = err?.message || String(err);
-    console.warn('[FirebaseSync] Error ditangani:', msg);
-    if (msg.includes('permission-denied') || msg.includes('Missing or insufficient permissions')) {
-      this.updateStatus('error', 'Izin Ditolak (Cek Security Rules)');
-    } else if (msg.includes('NOT_FOUND') || msg.includes('does not exist')) {
-      this.updateStatus('error', 'Database Belum Dibuat di Console');
-    } else if (msg.includes('unavailable') || msg.includes('network') || msg.includes('Failed to fetch')) {
+    const authStatus = this.currentUser ? `Authenticated (UID: ${this.currentUser.uid})` : 'Unauthenticated (Guest)';
+
+    console.group(`[Firebase Diagnostic] ⚠️ Masalah pada operasi '${operation}'`);
+    console.warn(`Target Document : ${targetDoc || 'N/A'}`);
+    console.warn(`Error Code      : ${code}`);
+    console.warn(`Error Message   : ${msg}`);
+    console.warn(`Auth State      : ${authStatus}`);
+
+    if (code === 'permission-denied' || msg.includes('permission-denied') || msg.includes('Missing or insufficient permissions')) {
+      console.error(
+        `[Firebase Security Rules Alert]\n` +
+        `Operasi ke '${targetDoc}' ditolak oleh Security Rules!\n` +
+        `• Status Autentikasi Pengguna: ${authStatus}\n` +
+        `• Catatan: Jika masa berlaku 30 hari test mode Firestore telah habis (misal: if request.time < timestamp.date(...)),\n` +
+        `  buka Firebase Console > Firestore Database > Rules, dan perbarui aturannya.`
+      );
+      this.updateStatus('error', 'Izin Ditolak (Periksa Security Rules)');
+    } else if (code === 'unavailable' || msg.includes('network') || msg.includes('Failed to fetch')) {
+      console.warn('[Firebase Offline] Koneksi jaringan terputus atau diblokir. Menyimpan perubahan secara offline.');
       this.updateStatus('offline', 'Offline (Disimpan di Lokal)');
+    } else if (code === 'not-found') {
+      this.updateStatus('error', 'Dokumen Belum Dibuat');
     } else {
       this.updateStatus('error', 'Gagal Sinkronisasi');
     }
+    console.groupEnd();
+
+    window.dispatchEvent(new CustomEvent('firebase-diagnostic', {
+      detail: { operation, targetDoc, code, message: msg, authStatus }
+    }));
+  }
+
+  /**
+   * Cleanup method untuk unmount / refresh
+   */
+  destroy() {
+    if (this.heartbeatTimer) {
+      clearInterval(this.heartbeatTimer);
+      this.heartbeatTimer = null;
+    }
+    this.unsubscribers.forEach(unsub => {
+      try { if (typeof unsub === 'function') unsub(); } catch (_) {}
+    });
+    this.unsubscribers = [];
+    this.isInitialized = false;
   }
 }
 
-// Inisialisasi Singleton
+// -----------------------------------------------------------------------------
+// 4. SINGLETON INSTANCE EXPORT & AUTO-BOOT
+// -----------------------------------------------------------------------------
 const firebaseSync = new FirebaseSharedService();
-window.FirebaseSync = firebaseSync;
+if (typeof window !== 'undefined') {
+  window.FirebaseSync = firebaseSync;
+}
 
-// Otomatis aktifkan saat modul dimuat
+// Otomatis jalankan inisialisasi
 firebaseSync.init();
 
 export default firebaseSync;

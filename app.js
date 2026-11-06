@@ -2581,6 +2581,13 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
+  // ⚡ Handler saat koneksi Firebase siap
+  window.addEventListener('firebase-ready', () => {
+    if (window.FirebaseSync && state.cart && state.cart.length > 0) {
+      window.FirebaseSync.syncCart(state.cart);
+    }
+  });
+
   // ⚡ Realtime listener: Perangkat lain mengubah troli
   window.addEventListener('cloud-cart-update', (e) => {
     let remoteItems = e.detail?.items;
