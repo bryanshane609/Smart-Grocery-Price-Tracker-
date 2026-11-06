@@ -772,14 +772,14 @@ function renderGuardianAndEnvelopes() {
 
   if (visualStatusBadge) {
     if (statusTier === 'safe') {
-      visualStatusBadge.className = 'text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800';
+      visualStatusBadge.className = 'shrink-0 whitespace-nowrap text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800';
       visualStatusBadge.textContent = '🟢 Anggaran Aman';
     } else if (statusTier === 'warning') {
-      visualStatusBadge.className = 'text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border border-amber-300 dark:border-amber-800';
-      visualStatusBadge.textContent = '🟡 Waspada Pengeluaran';
+      visualStatusBadge.className = 'shrink-0 whitespace-nowrap text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border border-amber-300 dark:border-amber-800';
+      visualStatusBadge.textContent = '🟡 Waspada';
     } else {
-      visualStatusBadge.className = 'text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-rose-100 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 border border-rose-300 dark:border-rose-800 animate-pulse';
-      visualStatusBadge.textContent = totals.finalCartTotal > limit ? '🔴 Over Budget Defisit' : '🔴 Anggaran Kritis';
+      visualStatusBadge.className = 'shrink-0 whitespace-nowrap text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-rose-100 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 border border-rose-300 dark:border-rose-800 animate-pulse';
+      visualStatusBadge.textContent = totals.finalCartTotal > limit ? '🔴 Defisit' : '🔴 Kritis';
     }
   }
 

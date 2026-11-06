@@ -221,12 +221,6 @@
             </p>
           </div>
         </div>
-
-        <!-- Quick Status Indicator: Connected with Firebase Realtime Sync -->
-        <button id="cloudSyncHeaderBtn" class="shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 text-[10px] font-extrabold text-emerald-600 dark:text-emerald-400 shadow-xs cursor-pointer active:scale-95 transition whitespace-nowrap" title="Status Sinkronisasi Realtime (Klik untuk Sync Ulang)">
-          <span id="cloudStatusDot" class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-          <span id="cloudStatusText">LIVE SYNC</span>
-        </button>
       </div>
 
       <!-- Sub-Header Info: Toko Selector & Picker Tanggal (Tetap Dipertahankan Sesuai Pengecualian) -->
@@ -528,17 +522,17 @@
         <!-- INTERACTIVE VISUAL BUDGET DASHBOARD (GAUGE & 3 STAT CARDS)               -->
         <!-- ========================================================================= -->
         <div class="p-4 sm:p-5 rounded-3xl bg-white dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700 shadow-sm space-y-4">
-          <div class="flex items-center justify-between">
-            <div class="flex items-center gap-2">
-              <div class="w-8 h-8 rounded-xl bg-brand-50 dark:bg-slate-700 text-brand-600 dark:text-brand-400 flex items-center justify-center">
+          <div class="flex items-center justify-between gap-2.5">
+            <div class="flex items-center gap-2 min-w-0">
+              <div class="w-8 h-8 rounded-xl bg-brand-50 dark:bg-slate-700 text-brand-600 dark:text-brand-400 flex items-center justify-center shrink-0">
                 <i data-lucide="pie-chart" class="w-4 h-4"></i>
               </div>
-              <div>
-                <h3 class="text-sm font-bold text-slate-900 dark:text-white">Dashboard Sisa Anggaran Real-Time</h3>
-                <p class="text-[10px] text-slate-500 dark:text-slate-400">Monitoring visual sisa anggaran & indikator dinamis</p>
+              <div class="min-w-0">
+                <h3 class="text-xs sm:text-sm font-bold text-slate-900 dark:text-white whitespace-nowrap">Dashboard Sisa Anggaran</h3>
+                <p class="text-[10px] text-slate-500 dark:text-slate-400 whitespace-nowrap">Monitoring visual sisa anggaran & indikator</p>
               </div>
             </div>
-            <span id="budgetVisualStatusBadge" class="text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800">
+            <span id="budgetVisualStatusBadge" class="shrink-0 whitespace-nowrap text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800">
               🟢 Anggaran Aman
             </span>
           </div>
@@ -1015,35 +1009,6 @@
           <button id="saveBudgetLimitBtn" class="w-full py-2.5 rounded-xl bg-brand-500 hover:bg-brand-600 text-white text-xs font-bold active:scale-95 transition shadow-sm">
             Simpan Batas Anggaran
           </button>
-        </div>
-
-        <!-- 6. KONEKSI & DATABASE REALTIME (FIREBASE) -->
-        <div class="p-4 rounded-3xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 space-y-3">
-          <div class="flex items-center justify-between">
-            <div class="flex items-center gap-2.5">
-              <div class="w-9 h-9 rounded-xl bg-emerald-50 dark:bg-slate-800 text-emerald-500 flex items-center justify-center">
-                <i data-lucide="refresh-cw" class="w-5 h-5"></i>
-              </div>
-              <div>
-                <h3 class="text-xs font-bold text-slate-900 dark:text-white">Sinkronisasi Realtime Firebase</h3>
-                <p id="settingsFirebaseStatusDesc" class="text-[10px] text-slate-500 dark:text-slate-400">Hubungkan data belanja secara realtime lintas perangkat</p>
-              </div>
-            </div>
-            <span id="settingsFirebaseBadge" class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 whitespace-nowrap">
-              Realtime Aktif
-            </span>
-          </div>
-
-          <div class="grid grid-cols-2 gap-2 pt-1">
-            <button id="btnManualPushCloud" class="py-2.5 px-3 rounded-xl bg-slate-900 dark:bg-slate-700 hover:bg-slate-800 text-white text-xs font-bold flex items-center justify-center gap-1.5 active:scale-95 transition whitespace-nowrap">
-              <i data-lucide="upload" class="w-4 h-4 text-emerald-400 shrink-0"></i>
-              <span>Simpan ke Database</span>
-            </button>
-            <button id="btnManualPullCloud" class="py-2.5 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold flex items-center justify-center gap-1.5 active:scale-95 transition shadow-sm whitespace-nowrap">
-              <i data-lucide="download" class="w-4 h-4 shrink-0"></i>
-              <span>Tarik dari Database</span>
-            </button>
-          </div>
         </div>
 
       </section>
@@ -1571,10 +1536,10 @@
   </div>
 
   <!-- Firebase Service Module -->
-  <script type="module" src="./firebase-service.js?v=22"></script>
+  <script type="module" src="./firebase-service.js?v=23"></script>
 
   <!-- Application Script -->
-  <script src="./app.js?v=22"></script>
+  <script src="./app.js?v=23"></script>
 
   <!-- PWA Service Worker Registration -->
   <script>
