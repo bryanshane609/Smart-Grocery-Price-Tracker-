@@ -54,7 +54,7 @@ class FirebaseSharedService {
   }
 
   async init() {
-    this.updateStatus('connecting', 'Menghubungkan ke Realtime Cloud...');
+    this.updateStatus('connecting', 'Menghubungkan ke Realtime Database...');
 
     try {
       this.app = initializeApp(firebaseConfig);
@@ -69,7 +69,7 @@ class FirebaseSharedService {
       }
 
       this.isInitialized = true;
-      this.updateStatus('connected', 'Cloud Realtime Aktif ☁️');
+      this.updateStatus('connected', 'Sinkronisasi Realtime Aktif');
       console.log(`[FirebaseSync] Terhubung sebagai Client ID: ${this.deviceId}`);
 
       // 1. Jalankan realtime listener (WebSocket / onSnapshot)
@@ -308,7 +308,7 @@ class FirebaseSharedService {
         updatedAt: nowIso
       }, { merge: false });
 
-      this.updateStatus('connected', 'Cloud Realtime Aktif ☁️');
+      this.updateStatus('connected', 'Sinkronisasi Realtime Aktif');
       return true;
     } catch (err) {
       this.handleFirestoreError(err);
@@ -335,7 +335,7 @@ class FirebaseSharedService {
         updatedAt: nowIso
       }, { merge: true });
 
-      this.updateStatus('connected', 'Cloud Realtime Aktif ☁️');
+      this.updateStatus('connected', 'Sinkronisasi Realtime Aktif');
       return true;
     } catch (err) {
       this.handleFirestoreError(err);
@@ -354,7 +354,7 @@ class FirebaseSharedService {
         senderDeviceId: this.deviceId,
         updatedAt: new Date().toISOString()
       }, { merge: true });
-      this.updateStatus('connected', 'Cloud Realtime Aktif ☁️');
+      this.updateStatus('connected', 'Sinkronisasi Realtime Aktif');
       return true;
     } catch (err) {
       this.handleFirestoreError(err);
@@ -381,7 +381,7 @@ class FirebaseSharedService {
         updatedAt: nowIso
       }, { merge: true });
 
-      this.updateStatus('connected', 'Cloud Realtime Aktif ☁️');
+      this.updateStatus('connected', 'Sinkronisasi Realtime Aktif');
       return true;
     } catch (err) {
       this.handleFirestoreError(err);
@@ -390,12 +390,12 @@ class FirebaseSharedService {
   }
 
   /**
-   * Tarik manual seluruh data dari Cloud
+   * Tarik manual seluruh data dari Database
    */
   async pullAllSharedData() {
     if (!this.isInitialized || !this.db) return null;
     try {
-      this.updateStatus('syncing', 'Mengambil data cloud...');
+      this.updateStatus('syncing', 'Mengambil data database...');
 
       const [cartSnap, settingsSnap, benchSnap, historySnap] = await Promise.all([
         getDoc(doc(this.db, 'grocery_data', 'active_cart')),
@@ -404,7 +404,7 @@ class FirebaseSharedService {
         getDoc(doc(this.db, 'grocery_data', 'shopping_history'))
       ]);
 
-      this.updateStatus('connected', 'Cloud Realtime Aktif ☁️');
+      this.updateStatus('connected', 'Sinkronisasi Realtime Aktif');
 
       const cartData = cartSnap.exists() ? cartSnap.data() : null;
       if (cartData?.updatedAt) this.lastKnownCartUpdatedAt = cartData.updatedAt;
@@ -431,7 +431,7 @@ class FirebaseSharedService {
     } else if (msg.includes('unavailable') || msg.includes('network') || msg.includes('Failed to fetch')) {
       this.updateStatus('offline', 'Offline (Disimpan di Lokal)');
     } else {
-      this.updateStatus('error', 'Gagal Sync Cloud');
+      this.updateStatus('error', 'Gagal Sinkronisasi');
     }
   }
 }
