@@ -60,63 +60,204 @@ const BARCODE_CATALOG = {
   "8996001410111": { name: "Telur Ayam Negeri 1kg", category: "Daging & Sayur", unit: "kg", price: 28500, isEssential: true }
 };
 
-// Database Toko Fisik Nyata di Dunia Nyata
-const REAL_WORLD_STORES = [
-  {
-    id: "pasar_tradisional",
-    name: "Pasar Tradisional / Pasar Jaya",
-    type: "Pasar Rakyat",
-    defaultDistanceMeters: 850,
-    multiplier: 0.88,
-    badge: "Harga Paling Murah",
-    address: "Jl. Pasar Lama No. 14"
-  },
-  {
-    id: "super_indo",
-    name: "Super Indo Supermarket",
-    type: "Supermarket Segar",
-    defaultDistanceMeters: 1200,
-    multiplier: 0.94,
-    badge: "Spesialis Makanan Segar",
-    address: "Mall Village GF Floor"
-  },
-  {
-    id: "hypermart",
-    name: "Hypermart",
-    type: "Hypermarket",
-    defaultDistanceMeters: 2800,
-    multiplier: 0.96,
-    badge: "Lengkap Bulanan",
-    address: "Central Town Square"
-  },
-  {
-    id: "indomaret",
-    name: "Indomaret Minimarket",
-    type: "Minimarket Terdekat",
-    defaultDistanceMeters: 250,
-    multiplier: 1.00,
-    badge: "Paling Dekat",
-    address: "Jl. Pemuda No. 4B"
-  },
-  {
-    id: "alfamart",
-    name: "Alfamart",
-    type: "Minimarket",
-    defaultDistanceMeters: 400,
-    multiplier: 1.02,
-    badge: "Banyak Promo Poin",
-    address: "Jl. Melati Raya No. 19"
-  },
-  {
-    id: "lotte_mart",
-    name: "Lotte Mart Wholesale",
-    type: "Grosir Ritel",
-    defaultDistanceMeters: 4100,
-    multiplier: 0.95,
-    badge: "Cocok Grosir",
-    address: "Boulevard Raya Kav. 8"
+// -----------------------------------------------------------------------------
+// 1.4. REAL-TIME PRICE FLUCTUATION DETECTION ENGINE (STORE & ITEM ISOLATION)
+// -----------------------------------------------------------------------------
+class PriceFluctuationEngine {
+  constructor() {
+    this.storageKey = 'sg_store_price_history';
+    this.history = this.loadHistory();
+    this.seedBaselineCatalog();
   }
-];
+
+  normalizeKey(str = '') {
+    return String(str).toLowerCase().trim().replace(/[\s\-_]+/g, ' ');
+  }
+
+  loadHistory() {
+    try {
+      const raw = localStorage.getItem(this.storageKey);
+      return raw ? JSON.parse(raw) : {};
+    } catch (_) {
+      return {};
+    }
+  }
+
+  saveHistory() {
+    try {
+      localStorage.setItem(this.storageKey, JSON.stringify(this.history));
+      if (window.FirebaseSync && typeof window.FirebaseSync.syncBenchmarks === 'function') {
+        window.FirebaseSync.syncBenchmarks(this.history);
+      }
+    } catch (_) {}
+  }
+
+  seedBaselineCatalog() {
+    if (Object.keys(this.history).length > 0) return;
+
+    // Seed baseline historical pricing dari katalog untuk demonstrasi instant
+    if (typeof SUPERMARKET_CATALOG !== 'undefined' && Array.isArray(SUPERMARKET_CATALOG)) {
+      SUPERMARKET_CATALOG.forEach(item => {
+        const store = item.store || 'Super Indo Supermarket';
+        const sNorm = this.normalizeKey(store);
+        const iNorm = this.normalizeKey(item.name);
+        const key = `${sNorm}__${iNorm}`;
+        const basePrice = item.price;
+
+        this.history[key] = {
+          storeId: 'seed_' + Math.random().toString(36).substring(2, 6),
+          storeName: store,
+          itemName: item.name,
+          itemKey: iNorm,
+          lastPrice: basePrice,
+          averagePrice: basePrice,
+          lowestPrice: Math.round(basePrice * 0.93),
+          highestPrice: Math.round(basePrice * 1.07),
+          lastUpdated: new Date(Date.now() - 7 * 86400000).toISOString(),
+          history: [
+            { price: Math.round(basePrice * 0.95), timestamp: new Date(Date.now() - 14 * 86400000).toISOString() },
+            { price: basePrice, timestamp: new Date(Date.now() - 7 * 86400000).toISOString() }
+          ]
+        };
+      });
+      this.saveHistory();
+    }
+  }
+
+  recordPrice(storeName, itemName, currentPrice) {
+    if (!storeName || !itemName || isNaN(currentPrice) || currentPrice <= 0) return;
+    const sNorm = this.normalizeKey(storeName);
+    const iNorm = this.normalizeKey(itemName);
+    const key = `${sNorm}__${iNorm}`;
+    const nowIso = new Date().toISOString();
+
+    const existing = this.history[key];
+    if (existing) {
+      existing.history = Array.isArray(existing.history) ? existing.history : [];
+      existing.history.push({ price: currentPrice, timestamp: nowIso });
+      existing.lastPrice = currentPrice;
+      existing.lowestPrice = Math.min(existing.lowestPrice || currentPrice, currentPrice);
+      existing.highestPrice = Math.max(existing.highestPrice || currentPrice, currentPrice);
+
+      const sum = existing.history.reduce((a, b) => a + (b.price || 0), 0);
+      existing.averagePrice = Math.round(sum / existing.history.length);
+      existing.lastUpdated = nowIso;
+      existing.storeName = storeName;
+    } else {
+      this.history[key] = {
+        storeId: 'rec_' + Date.now(),
+        storeName: storeName,
+        itemName: itemName,
+        itemKey: iNorm,
+        lastPrice: currentPrice,
+        averagePrice: currentPrice,
+        lowestPrice: currentPrice,
+        highestPrice: currentPrice,
+        lastUpdated: nowIso,
+        history: [{ price: currentPrice, timestamp: nowIso }]
+      };
+    }
+
+    this.saveHistory();
+  }
+
+  comparePrice(storeName, itemName, currentPrice) {
+    if (!itemName || isNaN(currentPrice) || currentPrice <= 0) {
+      return { status: 'none' };
+    }
+
+    const sNorm = this.normalizeKey(storeName || state?.selectedStore || '');
+    const iNorm = this.normalizeKey(itemName);
+    const exactKey = `${sNorm}__${iNorm}`;
+
+    let record = this.history[exactKey];
+
+    // Fuzzy search jika exact key di toko ini tidak ditemukan
+    if (!record) {
+      for (const k of Object.keys(this.history)) {
+        if (k.startsWith(`${sNorm}__`)) {
+          const recItemKey = this.history[k].itemKey;
+          if (recItemKey.includes(iNorm) || iNorm.includes(recItemKey)) {
+            record = this.history[k];
+            break;
+          }
+        }
+      }
+    }
+
+    if (record && record.lastPrice > 0) {
+      const lastPrice = record.lastPrice;
+      const diff = currentPrice - lastPrice;
+      const pct = Math.abs(Math.round(((diff / lastPrice) * 100) * 10) / 10);
+
+      if (diff > 0) {
+        return {
+          status: 'surge',
+          diff,
+          pct,
+          lastPrice,
+          lowestPrice: record.lowestPrice,
+          highestPrice: record.highestPrice,
+          avgPrice: record.averagePrice,
+          lastDate: record.lastUpdated,
+          storeName: record.storeName
+        };
+      } else if (diff < 0) {
+        return {
+          status: 'deal',
+          diff: Math.abs(diff),
+          pct,
+          lastPrice,
+          lowestPrice: record.lowestPrice,
+          highestPrice: record.highestPrice,
+          avgPrice: record.averagePrice,
+          lastDate: record.lastUpdated,
+          storeName: record.storeName
+        };
+      } else {
+        return {
+          status: 'stable',
+          diff: 0,
+          pct: 0,
+          lastPrice,
+          lowestPrice: record.lowestPrice,
+          highestPrice: record.highestPrice,
+          avgPrice: record.averagePrice,
+          lastDate: record.lastUpdated,
+          storeName: record.storeName
+        };
+      }
+    }
+
+    // Cross-store comparison jika ada data di toko lain
+    let crossRecord = null;
+    for (const k of Object.keys(this.history)) {
+      const rec = this.history[k];
+      if (rec.itemKey === iNorm || rec.itemKey.includes(iNorm) || iNorm.includes(rec.itemKey)) {
+        if (!crossRecord || (rec.lowestPrice && rec.lowestPrice < crossRecord.lowestPrice)) {
+          crossRecord = rec;
+        }
+      }
+    }
+
+    if (crossRecord) {
+      return {
+        status: 'new_with_cross_store',
+        storeName: storeName || state?.selectedStore,
+        otherStore: crossRecord.storeName,
+        otherPrice: crossRecord.lastPrice,
+        lowestPrice: crossRecord.lowestPrice
+      };
+    }
+
+    return {
+      status: 'new',
+      storeName: storeName || state?.selectedStore
+    };
+  }
+}
+
+const priceFluctuationEngine = new PriceFluctuationEngine();
 
 // -----------------------------------------------------------------------------
 // 1.5. REAL-TIME SUPERMARKET PRODUCT CATALOG DATABASE & SMART AUTO-ASSIGN
@@ -325,10 +466,26 @@ class AppState {
     this.lightMode = localStorage.getItem('sg_light_mode') || 'dark'; // 'light' | 'dark'
     this.isBentoFluid = localStorage.getItem('sg_layout_mode') === 'fluid';
     this.appliedVoucher = this.loadData('sg_applied_voucher', null);
-    this.selectedStore = localStorage.getItem('sg_selected_store') || 'Lotte Mart Grocery - Boulevard';
+    this.selectedStore = localStorage.getItem('sg_selected_store') || '';
     this.selectedDate = localStorage.getItem('sg_selected_date') || new Date().toISOString().split('T')[0];
     this.userCoords = null;
-    this.liveNearbyStores = null;
+    this.currentRadarRadius = 3000;
+    this.radarStoreSearchQuery = '';
+    this.liveNearbyStores = [];
+
+    // Muat cache toko nyata jika ada dari sesi sebelumnya
+    const cachedStoresRaw = localStorage.getItem('sg_cached_stores');
+    if (cachedStoresRaw) {
+      try {
+        const parsed = JSON.parse(cachedStoresRaw);
+        if (Array.isArray(parsed.stores) && parsed.stores.length > 0) {
+          this.liveNearbyStores = parsed.stores;
+          if (!this.selectedStore) {
+            this.selectedStore = parsed.stores[0].name;
+          }
+        }
+      } catch (_) {}
+    }
     this.scannerStream = null;
     this.scannerMode = 'barcode';
     this.scannerDetector = null;
@@ -1085,6 +1242,17 @@ function renderCartItems() {
     const isImpulse = item.category === 'Camilan' || item.category === 'Lainnya';
     const isChecked = item.checked !== false;
 
+    // Real-Time Price Fluctuation Comparison for this store
+    const fluc = priceFluctuationEngine.comparePrice(item.store, item.name, item.price);
+    let flucBadgeHtml = '';
+    if (fluc.status === 'surge') {
+      flucBadgeHtml = `<span class="shrink-0 whitespace-nowrap text-[9px] font-bold px-1.5 py-0.5 rounded-md bg-rose-50 text-rose-700 dark:bg-rose-950/70 dark:text-rose-300 border border-rose-200 dark:border-rose-900/60 inline-flex items-center gap-0.5" title="Harga naik Rp ${formatRupiah(fluc.diff)} (+${fluc.pct}%) dari belanja sebelumnya"><i data-lucide="trending-up" class="w-2.5 h-2.5"></i> +${fluc.pct}%</span>`;
+    } else if (fluc.status === 'deal') {
+      flucBadgeHtml = `<span class="shrink-0 whitespace-nowrap text-[9px] font-bold px-1.5 py-0.5 rounded-md bg-emerald-50 text-emerald-700 dark:bg-emerald-950/70 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-900/60 inline-flex items-center gap-0.5" title="Harga promo turun Rp ${formatRupiah(fluc.diff)} (-${fluc.pct}%)"><i data-lucide="trending-down" class="w-2.5 h-2.5"></i> -${fluc.pct}%</span>`;
+    } else if (fluc.status === 'stable') {
+      flucBadgeHtml = `<span class="shrink-0 whitespace-nowrap text-[9px] font-bold px-1.5 py-0.5 rounded-md bg-sky-50 text-sky-700 dark:bg-sky-950/70 dark:text-sky-300 border border-sky-200 dark:border-sky-900/60 inline-flex items-center gap-0.5" title="Harga sama stabil seperti terakhir kali"><i data-lucide="minus" class="w-2.5 h-2.5"></i> Stabil</span>`;
+    }
+
     let discountBadgeHtml = '';
     if (pricing.hasDiscount) {
       discountBadgeHtml = `
@@ -1105,7 +1273,8 @@ function renderCartItems() {
               <div class="flex items-center gap-1.5 flex-wrap">
                 <span class="text-[10px] px-2 py-0.5 rounded-md font-semibold bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300">${item.category}</span>
                 ${isImpulse ? '<span class="text-[9px] font-bold px-1.5 py-0.2 rounded bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300">Non-Esensial</span>' : '<span class="text-[9px] font-bold px-1.5 py-0.2 rounded bg-brand-50 text-brand-700 dark:bg-slate-700 dark:text-brand-400">Esensial</span>'}
-                <span class="text-[10px] text-slate-400 font-medium">@ ${item.store || 'Super Indo'}</span>
+                <span class="text-[10px] text-slate-400 font-medium">@ ${item.store || state?.selectedStore || 'Supermarket'}</span>
+                ${flucBadgeHtml}
               </div>
               <h4 class="text-sm font-bold text-slate-900 dark:text-white leading-snug ${isChecked ? '' : 'line-through text-slate-400 dark:text-slate-500'}">${item.name}</h4>
               <div class="text-[11px] text-slate-500 dark:text-slate-400 font-mono">
@@ -1518,6 +1687,8 @@ function validateAndAddItemToCart(itemData) {
     return false;
   }
 
+  const targetStore = itemData.store || state.selectedStore || 'Super Indo Supermarket';
+
   // Commit item
   if (itemData.id) {
     const existing = state.cart.find(i => i.id === itemData.id);
@@ -1528,7 +1699,7 @@ function validateAndAddItemToCart(itemData) {
       existing.qty = itemData.qty;
       existing.price = itemData.price;
       existing.discount = itemData.discount;
-      existing.store = itemData.store;
+      existing.store = targetStore;
     }
   } else {
     state.cart.push({
@@ -1539,11 +1710,14 @@ function validateAndAddItemToCart(itemData) {
       qty: itemData.qty,
       price: itemData.price,
       discount: itemData.discount || { mode: 'none' },
-      store: itemData.store || 'Super Indo',
+      store: targetStore,
       isEssential: !isImpulse,
       checked: true
     });
   }
+
+  // Auto-record price history in Fluctuation Engine for future baseline comparison
+  priceFluctuationEngine.recordPrice(targetStore, itemData.name, itemData.price);
 
   state.saveCart();
   renderCartItems();
@@ -1593,67 +1767,145 @@ function matchStoreProfile(name = '') {
   return { multiplier: 1.00, badge: 'Supermarket Terdekat', type: 'Ritel Belanja' };
 }
 
-async function fetchNearbySupermarketsOverpass(latitude, longitude, areaName) {
+function formatDistinctStoreName(el, distMeters) {
+  const rawName = (el.tags?.name || el.tags?.brand || el.tags?.operator || '').trim();
+  const shopType = el.tags?.shop || 'supermarket';
+  let cleanName = rawName;
+  if (!cleanName) {
+    cleanName = shopType === 'supermarket' ? 'Supermarket' :
+                shopType === 'convenience' ? 'Minimarket' :
+                shopType === 'greengrocer' ? 'Toko Buah & Sayur' :
+                shopType === 'department_store' ? 'Toserba' : 'Toko Sembako';
+  }
+
+  const branch = el.tags?.branch || el.tags?.['branch:id'];
+  const street = el.tags?.['addr:street'];
+  const distText = distMeters < 1000 ? `${distMeters}m` : `${(distMeters / 1000).toFixed(1)}km`;
+
+  if (branch) {
+    return `${cleanName} (${branch}) • ${distText}`;
+  } else if (street) {
+    return `${cleanName} - ${street} • ${distText}`;
+  } else {
+    return `${cleanName} • ${distText}`;
+  }
+}
+
+async function fetchNearbySupermarketsOverpass(latitude, longitude, areaName, radius = 3000) {
+  state.currentRadarRadius = radius;
+  const statusEl = document.getElementById('radarLocationStatus');
+  if (statusEl) {
+    statusEl.innerHTML = `<span class="animate-pulse text-brand-600 dark:text-brand-400">📡 Memindai toko & supermarket nyata (radius ${(radius/1000).toFixed(1)} km)...</span>`;
+  }
+
+  const query = `[out:json][timeout:25];(node["shop"~"supermarket|convenience|grocery|greengrocer|department_store|mall"](around:${radius},${latitude},${longitude});way["shop"~"supermarket|convenience|grocery|greengrocer|department_store|mall"](around:${radius},${latitude},${longitude}););out center 40;`;
+
   try {
-    const query = `[out:json][timeout:8];(node["shop"~"supermarket|convenience|grocery"](around:4000,${latitude},${longitude});way["shop"~"supermarket|convenience|grocery"](around:4000,${latitude},${longitude}););out center 12;`;
-    const response = await fetch(`https://overpass-api.de/api/interpreter?data=${encodeURIComponent(query)}`);
-    if (!response.ok) throw new Error('Overpass status ' + response.status);
+    const response = await fetch('https://overpass-api.de/api/interpreter', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' },
+      body: `data=${encodeURIComponent(query)}`
+    });
+
+    if (!response.ok) throw new Error('Overpass status: ' + response.status);
     const data = await response.json();
+
     if (Array.isArray(data.elements) && data.elements.length > 0) {
-      const liveStores = data.elements
-        .filter(el => el.tags && (el.tags.name || el.tags.brand))
-        .map(el => {
-          const storeName = el.tags.name || el.tags.brand;
-          const storeLat = el.lat || el.center?.lat;
-          const storeLon = el.lon || el.center?.lon;
-          const dist = calculateHaversineDistance(latitude, longitude, storeLat, storeLon);
-          const profile = matchStoreProfile(storeName);
-          const addr = el.tags['addr:street'] || el.tags['addr:full'] || `${areaName}`;
-          return {
-            id: 'live_' + el.id,
-            name: storeName,
+      const seenNames = new Set();
+      const liveStores = [];
+
+      data.elements.forEach(el => {
+        const storeLat = el.lat || el.center?.lat;
+        const storeLon = el.lon || el.center?.lon;
+        if (!storeLat || !storeLon) return;
+
+        const dist = calculateHaversineDistance(latitude, longitude, storeLat, storeLon);
+        const distinctName = formatDistinctStoreName(el, dist);
+        const profile = matchStoreProfile(el.tags?.name || el.tags?.brand || '');
+        const addr = el.tags?.['addr:street'] || el.tags?.['addr:full'] || `${areaName}`;
+
+        if (!seenNames.has(distinctName)) {
+          seenNames.add(distinctName);
+          liveStores.push({
+            id: 'osm_' + el.id,
+            name: distinctName,
+            baseName: el.tags?.name || el.tags?.brand || distinctName,
             type: profile.type,
             defaultDistanceMeters: dist,
             multiplier: profile.multiplier,
             badge: profile.badge,
-            address: addr
-          };
-        });
+            address: addr,
+            lat: storeLat,
+            lon: storeLon
+          });
+        }
+      });
 
       if (liveStores.length > 0) {
         liveStores.sort((a, b) => a.defaultDistanceMeters - b.defaultDistanceMeters);
         state.liveNearbyStores = liveStores;
+        localStorage.setItem('sg_cached_stores', JSON.stringify({
+          coords: { latitude, longitude },
+          areaName,
+          radius,
+          stores: liveStores,
+          timestamp: Date.now()
+        }));
+
         updateHeaderStoreSelector(liveStores);
+        if (statusEl) {
+          statusEl.textContent = `📍 ${areaName} • ${liveStores.length} supermarket/ritel nyata terdeteksi (Radius ${(radius/1000).toFixed(1)} km)`;
+        }
+        renderRealWorldRadar();
         return;
       }
     }
+    throw new Error('Tidak ada toko terdaftar di radius ini');
   } catch (err) {
-    console.warn('Overpass fetch fallback:', err);
+    console.warn('[Overpass] Live query error:', err.message);
+    if (statusEl) {
+      statusEl.textContent = `📍 ${areaName} • Sinyal Overpass sibuk. Menampilkan toko terdekat yang tersimpan.`;
+    }
+    // Jika ada cache lokal, pakai cache
+    if (state.liveNearbyStores && state.liveNearbyStores.length > 0) {
+      updateHeaderStoreSelector(state.liveNearbyStores);
+      renderRealWorldRadar();
+    }
   }
-
-  // Graceful fallback with authentic distance calculation from real coordinates
-  const calculatedStores = REAL_WORLD_STORES.map((store, i) => {
-    const dist = 350 + (i * 450);
-    return {
-      ...store,
-      defaultDistanceMeters: dist,
-      address: `${areaName || 'Kawasan Sekitar'} &bull; ${store.address}`
-    };
-  });
-  state.liveNearbyStores = calculatedStores;
-  updateHeaderStoreSelector(calculatedStores);
 }
 
 function updateHeaderStoreSelector(stores) {
-  const selector = document.getElementById('headerStoreSelector');
-  if (!selector || !Array.isArray(stores) || stores.length === 0) return;
-  const currentVal = selector.value;
-  let html = '';
-  stores.slice(0, 8).forEach(s => {
-    const isSelected = s.name === currentVal;
-    html += `<option value="${s.name}" ${isSelected ? 'selected' : ''}>${s.name}</option>`;
+  const headerSelector = document.getElementById('headerStoreSelector');
+  const customSelector = document.getElementById('customInputStore');
+  if (!Array.isArray(stores) || stores.length === 0) return;
+
+  // Deduplikasi nama
+  const seen = new Set();
+  const uniqueStores = [];
+  stores.forEach(s => {
+    if (!seen.has(s.name)) {
+      seen.add(s.name);
+      uniqueStores.push(s);
+    }
   });
-  selector.innerHTML = html;
+
+  const currentHeaderVal = state.selectedStore || headerSelector?.value || uniqueStores[0].name;
+
+  if (headerSelector) {
+    headerSelector.innerHTML = uniqueStores.map(s => {
+      const isSel = s.name === currentHeaderVal;
+      return `<option value="${s.name}" ${isSel ? 'selected' : ''}>${s.name}</option>`;
+    }).join('');
+    state.selectedStore = headerSelector.value;
+  }
+
+  if (customSelector) {
+    const currentCustomVal = customSelector.value || currentHeaderVal;
+    customSelector.innerHTML = uniqueStores.map(s => {
+      const isSel = s.name === currentCustomVal;
+      return `<option value="${s.name}" ${isSel ? 'selected' : ''}>${s.name}</option>`;
+    }).join('');
+  }
 }
 
 function renderRealWorldRadar() {
@@ -1662,16 +1914,32 @@ function renderRealWorldRadar() {
   const winnerSavings = document.getElementById('radarWinnerSavings');
   if (!container) return;
 
-  const storesToUse = (Array.isArray(state.liveNearbyStores) && state.liveNearbyStores.length > 0)
-    ? state.liveNearbyStores
-    : REAL_WORLD_STORES;
+  let storesToUse = Array.isArray(state.liveNearbyStores) ? [...state.liveNearbyStores] : [];
+
+  // Filter pencarian toko manual jika user mengetik di search input
+  if (state.radarStoreSearchQuery && state.radarStoreSearchQuery.trim()) {
+    const q = state.radarStoreSearchQuery.toLowerCase().trim();
+    storesToUse = storesToUse.filter(s => s.name.toLowerCase().includes(q) || s.address.toLowerCase().includes(q));
+  }
+
+  if (storesToUse.length === 0) {
+    container.innerHTML = `
+      <div class="p-6 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-center space-y-2">
+        <i data-lucide="map-pin-off" class="w-8 h-8 text-slate-400 mx-auto"></i>
+        <h4 class="text-xs font-bold text-slate-700 dark:text-slate-300">Belum ada toko nyata terdeteksi</h4>
+        <p class="text-[10px] text-slate-500">Klik "Lokasi Saya" di atas untuk memindai supermarket & toko terdekat via OpenStreetMap Overpass API.</p>
+      </div>
+    `;
+    safeCreateIcons();
+    return;
+  }
 
   const storeEvaluations = storesToUse.map(store => {
     let storeTotal = 0;
     state.cart.forEach(item => {
       const baseItemPrice = item.price || 15000;
       const qty = item.qty || 1;
-      storeTotal += Math.round(baseItemPrice * store.multiplier) * qty;
+      storeTotal += Math.round(baseItemPrice * (store.multiplier || 1.0)) * qty;
     });
 
     return {
@@ -1731,9 +1999,10 @@ function renderRealWorldRadar() {
   safeCreateIcons();
 }
 
-async function handleDetectLocation() {
+async function handleDetectLocation(customRadius = null) {
   const btn = document.getElementById('detectLocationBtn');
   const statusEl = document.getElementById('radarLocationStatus');
+  const radius = customRadius || state.currentRadarRadius || 3000;
 
   if (!navigator.geolocation) {
     showToast('Perangkat tidak mendukung geolokasi GPS.', 'alert-triangle');
@@ -1768,7 +2037,7 @@ async function handleDetectLocation() {
         statusEl.textContent = `📍 ${areaName} (Akurasi: ±${Math.round(accuracy)}m)`;
       }
 
-      await fetchNearbySupermarketsOverpass(latitude, longitude, areaName);
+      await fetchNearbySupermarketsOverpass(latitude, longitude, areaName, radius);
 
       if (btn) {
         btn.disabled = false;
@@ -1777,25 +2046,49 @@ async function handleDetectLocation() {
       showToast(`Lokasi GPS terverifikasi: ${areaName}!`, 'check-circle');
       renderRealWorldRadar();
     },
-    (error) => {
+    async (error) => {
       if (btn) {
         btn.disabled = false;
         btn.classList.remove('opacity-60');
       }
-      let msg = 'Izin GPS tidak diberikan, menggunakan radius standar.';
+      let msg = 'Izin lokasi GPS belum aktif.';
       if (error.code === 1) {
-        msg = 'Izin lokasi GPS ditolak. Silakan aktifkan izin lokasi di browser.';
-      } else if (error.code === 2) {
-        msg = 'Sinyal GPS tidak tersedia saat ini.';
-      } else if (error.code === 3) {
-        msg = 'Permintaan lokasi GPS melewati batas waktu (timeout).';
+        msg = 'Izin GPS ditolak. Memindai area standar via Overpass API.';
       }
       if (statusEl) statusEl.textContent = msg;
       showToast(msg, 'alert-triangle');
+
+      // Fallback coordinate nyata (Jakarta Pusat: -6.1754, 106.8272) untuk menjamin Overpass tetap query toko nyata
+      await fetchNearbySupermarketsOverpass(-6.1754, 106.8272, 'Jakarta Pusat', radius);
       renderRealWorldRadar();
     },
     { enableHighAccuracy: true, timeout: 10000, maximumAge: 30000 }
   );
+}
+
+// Inisialisasi Otomatis Store Locator saat Aplikasi Dimuat
+async function initLiveStoreLocator() {
+  // Jika sudah ada cache, render dulu
+  if (state.liveNearbyStores && state.liveNearbyStores.length > 0) {
+    updateHeaderStoreSelector(state.liveNearbyStores);
+    renderRealWorldRadar();
+  }
+
+  // Coba dapatkan lokasi GPS otomatis
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        handleDetectLocation(state.currentRadarRadius);
+      },
+      () => {
+        // Jika tidak diizinkan, jalankan query Overpass area standar jika belum ada toko
+        if (!state.liveNearbyStores || state.liveNearbyStores.length === 0) {
+          fetchNearbySupermarketsOverpass(-6.1754, 106.8272, 'Jakarta Pusat', 3000);
+        }
+      },
+      { timeout: 5000, maximumAge: 60000 }
+    );
+  }
 }
 
 // -----------------------------------------------------------------------------
@@ -1950,6 +2243,17 @@ function openCustomItemModalForNew() {
     suggestionsBox.innerHTML = '';
   }
 
+  // Set default store from header selector
+  const storeEl = document.getElementById('customInputStore');
+  if (storeEl && state.selectedStore) {
+    storeEl.value = state.selectedStore;
+  }
+
+  const flucContainer = document.getElementById('priceFluctuationContainer');
+  if (flucContainer) flucContainer.classList.add('hidden');
+  const popover = document.getElementById('priceFluctuationPopover');
+  if (popover) popover.classList.add('hidden');
+
   state.itemFormDiscount = { mode: 'none', singlePercent: 0, tier1: 50, tier2: 20, nominalAmount: 0 };
   updateDiscountModeButtonsUI();
   updateCustomPreview();
@@ -1982,8 +2286,21 @@ function openCustomItemModalForEdit(item) {
   if (unitEl) unitEl.value = item.unit || 'pcs';
   if (qtyEl) qtyEl.value = item.qty || 1;
   if (priceEl) priceEl.value = item.price || 0;
-  if (storeEl) storeEl.value = item.store || 'Super Indo';
+  if (storeEl) storeEl.value = item.store || state.selectedStore || 'Super Indo';
   if (title) title.textContent = 'Edit Barang Belanja';
+
+  if (badgeEl) {
+    badgeEl.classList.remove('hidden');
+    badgeEl.textContent = `Kategori: ${item.category} • Satuan: ${item.unit || 'pcs'}`;
+  }
+
+  state.itemFormDiscount = item.discount || { mode: 'none', singlePercent: 0, tier1: 50, tier2: 20, nominalAmount: 0 };
+  updateDiscountModeButtonsUI();
+  updateCustomPreview();
+  updatePriceFluctuationBadge();
+
+  if (modal) modal.classList.remove('hidden');
+}
 
   if (badgeEl) {
     badgeEl.classList.remove('hidden');
@@ -2169,6 +2486,95 @@ function updateCustomPreview() {
       noteEl.classList.add('hidden');
     }
   }
+
+  // Update Real-Time Price Fluctuation Comparison
+  updatePriceFluctuationBadge();
+}
+
+function updatePriceFluctuationBadge() {
+  const nameInput = document.getElementById('customInputName');
+  const priceInput = document.getElementById('customInputPrice');
+  const storeInput = document.getElementById('customInputStore');
+  const container = document.getElementById('priceFluctuationContainer');
+  const badge = document.getElementById('priceFluctuationBadge');
+  const popover = document.getElementById('priceFluctuationPopover');
+
+  if (!container || !badge) return;
+
+  const name = nameInput?.value.trim();
+  const price = Number(priceInput?.value) || 0;
+  const store = storeInput?.value || state.selectedStore;
+
+  if (!name || price <= 0) {
+    container.classList.add('hidden');
+    if (popover) popover.classList.add('hidden');
+    return;
+  }
+
+  const res = priceFluctuationEngine.comparePrice(store, name, price);
+  if (res.status === 'none') {
+    container.classList.add('hidden');
+    return;
+  }
+
+  container.classList.remove('hidden');
+
+  let badgeClass = '';
+  let iconName = '';
+  let badgeText = '';
+
+  if (res.status === 'surge') {
+    badgeClass = 'bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 border-rose-300 dark:border-rose-800';
+    iconName = 'trending-up';
+    badgeText = `Naik ${formatRupiah(res.diff)} (+${res.pct}%) dari belanja terakhir di ${res.storeName}`;
+  } else if (res.status === 'deal') {
+    badgeClass = 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border-emerald-300 dark:border-emerald-800';
+    iconName = 'trending-down';
+    badgeText = `Turun ${formatRupiah(res.diff)} (-${res.pct}%)! Lebih hemat dari biasanya`;
+  } else if (res.status === 'stable') {
+    badgeClass = 'bg-sky-50 dark:bg-sky-950/60 text-sky-700 dark:text-sky-300 border-sky-300 dark:border-sky-800';
+    iconName = 'minus';
+    badgeText = `Harga sama seperti terakhir kali (${formatRupiah(res.lastPrice)})`;
+  } else if (res.status === 'new_with_cross_store') {
+    badgeClass = 'bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border-amber-300 dark:border-amber-800';
+    iconName = 'sparkles';
+    badgeText = `Harga baru di toko ini (Pernah ${formatRupiah(res.otherPrice)} di ${res.otherStore})`;
+  } else {
+    badgeClass = 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700';
+    iconName = 'sparkles';
+    badgeText = `Harga pertama tercatat di toko ini`;
+  }
+
+  badge.className = `cursor-pointer inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold border shadow-xs transition active:scale-95 ${badgeClass}`;
+  badge.innerHTML = `
+    <i data-lucide="${iconName}" class="w-3.5 h-3.5 shrink-0"></i>
+    <span class="truncate">${badgeText}</span>
+    <i data-lucide="chevron-down" class="w-3 h-3 opacity-60 shrink-0 ml-0.5"></i>
+  `;
+
+  // Update Popover contents
+  const popStore = document.getElementById('popoverStoreName');
+  const popLast = document.getElementById('popoverLastPrice');
+  const popLowest = document.getElementById('popoverLowestPrice');
+  const popAvg = document.getElementById('popoverAvgPrice');
+  const popCross = document.getElementById('popoverCrossStoreTip');
+  const popCrossText = document.getElementById('popoverCrossStoreText');
+
+  if (popStore) popStore.textContent = res.storeName || store;
+  if (popLast) popLast.textContent = res.lastPrice ? formatRupiah(res.lastPrice) : '-';
+  if (popLowest) popLowest.textContent = res.lowestPrice ? formatRupiah(res.lowestPrice) : formatRupiah(price);
+  if (popAvg) popAvg.textContent = res.avgPrice ? formatRupiah(res.avgPrice) : formatRupiah(price);
+
+  if (popCross && popCrossText) {
+    if (res.otherStore && res.otherPrice) {
+      popCross.classList.remove('hidden');
+      popCrossText.textContent = `Pernah tercatat ${formatRupiah(res.otherPrice)} di ${res.otherStore}`;
+    } else {
+      popCross.classList.add('hidden');
+    }
+  }
+
+  safeCreateIcons();
 }
 
 function handleSaveCustomItem() {
@@ -2825,12 +3231,55 @@ document.addEventListener('DOMContentLoaded', () => {
     closeCartDrawer();
   });
 
+  // Real-Time Price Fluctuation Interactive Popover & Input Hooks
+  document.getElementById('priceFluctuationBadge')?.addEventListener('click', () => {
+    const pop = document.getElementById('priceFluctuationPopover');
+    if (pop) {
+      pop.classList.toggle('hidden');
+      sounds.playClick();
+      safeCreateIcons();
+    }
+  });
+
+  ['customInputName', 'customInputPrice', 'customInputStore'].forEach(id => {
+    const el = document.getElementById(id);
+    el?.addEventListener('input', updatePriceFluctuationBadge);
+    el?.addEventListener('change', updatePriceFluctuationBadge);
+  });
+
+  // Radar: Radius selector buttons
+  document.querySelectorAll('.radar-radius-btn').forEach(btn => {
+    btn.onclick = () => {
+      const radius = Number(btn.getAttribute('data-radius')) || 3000;
+      document.querySelectorAll('.radar-radius-btn').forEach(b => {
+        b.className = 'radar-radius-btn px-2.5 py-1 rounded-lg text-[10px] font-bold border transition active:scale-95 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700';
+      });
+      btn.className = 'radar-radius-btn active px-2.5 py-1 rounded-lg text-[10px] font-bold border transition active:scale-95 bg-brand-500 text-white border-brand-500 shadow-xs';
+      state.currentRadarRadius = radius;
+      sounds.playClick();
+      if (state.userCoords) {
+        fetchNearbySupermarketsOverpass(state.userCoords.latitude, state.userCoords.longitude, 'Lokasi Terdeteksi', radius);
+      } else {
+        handleDetectLocation(radius);
+      }
+    };
+  });
+
+  // Radar: Search store filter
+  document.getElementById('radarStoreSearchInput')?.addEventListener('input', (e) => {
+    state.radarStoreSearchQuery = e.target.value;
+    renderRealWorldRadar();
+  });
+
   // Horizontal Quick Select Carousel & Modal Chevrons
   renderQuickSelectCarousel();
   setupModalChipsChevrons();
 
   // Supermarket Catalog Autocomplete & Smart Auto-Assign
   setupSupermarketCatalogAutocomplete();
+
+  // Live Real-World Store Locator (Overpass API auto-boot)
+  initLiveStoreLocator();
 
   safeCreateIcons();
 });
