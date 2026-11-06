@@ -89,6 +89,14 @@
 
   <!-- Lucide Icons -->
   <script src="https://unpkg.com/lucide@latest"></script>
+  <script>
+    // Inisialisasi cepat ikon Lucide segera setelah DOM siap
+    document.addEventListener('DOMContentLoaded', () => {
+      if (typeof lucide !== 'undefined' && typeof lucide.createIcons === 'function') {
+        lucide.createIcons();
+      }
+    });
+  </script>
 
   <style>
     :root {
@@ -250,7 +258,7 @@
     <!-- ========================================================================= -->
     <!-- MAIN CONTENT VIEWS (Bento Grid Ready)                                     -->
     <!-- ========================================================================= -->
-    <main class="flex-1 px-3.5 pt-3">
+    <main class="flex-1 px-3.5 pt-3 pb-48">
 
       <!-- TAB 1: TROLI BELANJA (Active Shopping, Cascading Discount & Voucher System) -->
       <section id="tab-belanja" class="tab-content space-y-3">
@@ -1034,8 +1042,8 @@
     </main>
 
     <!-- STICKY / FLOATING RUNNING TOTAL & QUICK ACTION DOCK -->
-    <aside id="stickyActionDock" class="fixed bottom-14 left-1/2 -translate-x-1/2 z-40 w-full max-w-lg px-3 pb-1 transition-all duration-300 pointer-events-auto">
-      <div class="p-2.5 rounded-2xl bg-white/95 dark:bg-[#1E293B]/95 backdrop-blur-xl border border-slate-200/90 dark:border-slate-700/80 shadow-xl space-y-2">
+    <aside id="stickyActionDock" class="fixed bottom-16 sm:bottom-[70px] left-1/2 -translate-x-1/2 z-30 w-full max-w-lg px-3 pb-1 transition-all duration-300 pointer-events-none">
+      <div class="p-2.5 rounded-2xl bg-white/95 dark:bg-[#1E293B]/95 backdrop-blur-xl border border-slate-200/90 dark:border-slate-700/80 shadow-xl space-y-2 pointer-events-auto">
         
         <!-- Row 1: Running Total & Review Drawer Trigger -->
         <div id="dockReviewTrigger" class="flex items-center justify-between px-2.5 py-1.5 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-100 dark:border-slate-800 cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800/80 transition active:scale-[0.99]" title="Klik untuk membuka rincian troli belanja">
@@ -1077,7 +1085,7 @@
     </aside>
 
     <!-- INTERACTIVE CART DRAWER / ITEMIZED REVIEW MODAL (BOTTOM SHEET) -->
-    <div id="cartReviewDrawer" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm transition-opacity duration-300">
+    <div id="cartReviewDrawer" class="hidden pointer-events-none fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm transition-opacity duration-300">
       <div id="cartDrawerPanel" class="fixed inset-x-0 bottom-0 max-w-lg mx-auto bg-white dark:bg-[#1E293B] rounded-t-[2rem] border-t border-slate-200 dark:border-slate-700 shadow-2xl flex flex-col max-h-[85vh] animate-slide-up">
         
         <!-- Drawer Drag Bar & Header -->
@@ -1588,10 +1596,10 @@
   </div>
 
   <!-- Firebase Service Module -->
-  <script type="module" src="./firebase-service.js?v=26"></script>
+  <script type="module" src="./firebase-service.js?v=28"></script>
 
   <!-- Application Script -->
-  <script defer src="./app.js?v=26"></script>
+  <script defer src="./app.js?v=28"></script>
 
   <!-- PWA Service Worker Registration -->
   <script>

@@ -67,7 +67,6 @@ class PriceFluctuationEngine {
   constructor() {
     this.storageKey = 'sg_store_price_history';
     this.history = this.loadHistory();
-    this.seedBaselineCatalog();
   }
 
   normalizeKey(str = '') {
@@ -252,12 +251,10 @@ class PriceFluctuationEngine {
 
     return {
       status: 'new',
-      storeName: storeName || state?.selectedStore
+      storeName: storeName || (typeof state !== 'undefined' ? state?.selectedStore : '')
     };
   }
 }
-
-const priceFluctuationEngine = new PriceFluctuationEngine();
 
 // -----------------------------------------------------------------------------
 // 1.5. REAL-TIME SUPERMARKET PRODUCT CATALOG DATABASE & SMART AUTO-ASSIGN
@@ -602,6 +599,8 @@ class AppState {
 }
 
 const state = new AppState();
+const priceFluctuationEngine = new PriceFluctuationEngine();
+priceFluctuationEngine.seedBaselineCatalog();
 
 // -----------------------------------------------------------------------------
 // 4. SOUND ENGINE (WEB AUDIO API SYNTHESIZER)
@@ -1263,7 +1262,7 @@ function renderCartItems() {
     }
 
     html += `
-      <div class="p-3.5 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700/80 shadow-xs flex flex-col space-y-2 transition-all ${isChecked ? '' : 'opacity-60 bg-slate-50 dark:bg-slate-800/50'}">
+      <div class="p-3.5 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700/80 shadow-xs flex flex-col space-y-2 transition-all ${isChecked ? '' : 'opacity-70 bg-slate-50/80 dark:bg-slate-800/60'}">
         <div class="flex items-start justify-between">
           <div class="flex items-start gap-2.5">
             <button class="btn-toggle-check w-5 h-5 mt-0.5 rounded-md flex items-center justify-center transition active:scale-90 shrink-0 ${isChecked ? 'bg-brand-500 text-white shadow-xs' : 'border-2 border-slate-300 dark:border-slate-600 bg-transparent hover:border-brand-500'}" data-id="${item.id}" title="${isChecked ? 'Dicentang: Masuk total belanja' : 'Tidak Dicentang: Klik untuk memasukkan ke total'}">
@@ -1276,7 +1275,7 @@ function renderCartItems() {
                 <span class="text-[10px] text-slate-400 font-medium">@ ${item.store || state?.selectedStore || 'Supermarket'}</span>
                 ${flucBadgeHtml}
               </div>
-              <h4 class="text-sm font-bold text-slate-900 dark:text-white leading-snug ${isChecked ? '' : 'line-through text-slate-400 dark:text-slate-500'}">${item.name}</h4>
+              <h4 class="text-sm font-bold text-slate-900 dark:text-white leading-snug">${item.name}</h4>
               <div class="text-[11px] text-slate-500 dark:text-slate-400 font-mono">
                 ${formatRupiah(pricing.finalUnitPrice)} / ${item.unit || 'pcs'}
                 ${pricing.hasDiscount ? `<span class="line-through text-slate-400 ml-1.5">${formatRupiah(item.price)}</span>` : ''}
@@ -1285,7 +1284,7 @@ function renderCartItems() {
           </div>
           
           <div class="text-right">
-            <div class="text-sm font-black font-mono ${isChecked ? 'text-slate-900 dark:text-white' : 'line-through text-slate-400 dark:text-slate-500'}">${formatRupiah(pricing.rowTotal)}</div>
+            <div class="text-sm font-black font-mono text-slate-900 dark:text-white">${formatRupiah(pricing.rowTotal)}</div>
             ${pricing.hasDiscount ? `<span class="text-[9px] font-bold text-brand-600 dark:text-brand-400">Hemat ${formatRupiah(pricing.rowSavings)}</span>` : ''}
           </div>
         </div>
@@ -1399,7 +1398,8 @@ function attachCartEventListeners() {
 function openCartDrawer() {
   const drawer = document.getElementById('cartReviewDrawer');
   if (!drawer) return;
-  drawer.classList.remove('hidden');
+  drawer.classList.remove('hidden', 'pointer-events-none');
+  drawer.classList.add('pointer-events-auto');
   renderCartDrawer();
   sounds.playClick();
   safeCreateIcons();
@@ -1407,7 +1407,10 @@ function openCartDrawer() {
 
 function closeCartDrawer() {
   const drawer = document.getElementById('cartReviewDrawer');
-  if (drawer) drawer.classList.add('hidden');
+  if (drawer) {
+    drawer.classList.add('hidden', 'pointer-events-none');
+    drawer.classList.remove('pointer-events-auto');
+  }
 }
 
 function renderCartDrawer() {
@@ -1879,13 +1882,37 @@ function updateHeaderStoreSelector(stores) {
   const customSelector = document.getElementById('customInputStore');
   if (!Array.isArray(stores) || stores.length === 0) return;
 
-  // Deduplikasi nama
+  const priorityBaselineStores = [
+    'Super Indo Supermarket',
+    'Indomaret',
+    'Alfamart',
+    'Pasar Tradisional / Pasar Jaya',
+    'Hypermart Central'
+  ];
+
+  // Deduplikasi nama secara ketat agar tidak ada nama toko/minimarket yang muncul berulang
   const seen = new Set();
   const uniqueStores = [];
+
   stores.forEach(s => {
-    if (!seen.has(s.name)) {
-      seen.add(s.name);
-      uniqueStores.push(s);
+    let cleanName = (s.baseName || s.name || '').split('•')[0].trim();
+    if (cleanName && !seen.has(cleanName)) {
+      seen.add(cleanName);
+      uniqueStores.push({
+        ...s,
+        name: cleanName
+      });
+    }
+  });
+
+  priorityBaselineStores.forEach(pStore => {
+    if (!seen.has(pStore)) {
+      seen.add(pStore);
+      uniqueStores.push({
+        name: pStore,
+        baseName: pStore,
+        multiplier: 1.0
+      });
     }
   });
 
@@ -2831,6 +2858,16 @@ document.addEventListener('DOMContentLoaded', () => {
     const activeSection = document.getElementById(targetId);
     if (activeSection) activeSection.classList.remove('hidden');
 
+    // Tampilkan sticky action dock HANYA di tab belanja troli aktif agar tidak menutupi tab lain
+    const actionDock = document.getElementById('stickyActionDock');
+    if (actionDock) {
+      if (targetId === 'tab-belanja') {
+        actionDock.classList.remove('hidden');
+      } else {
+        actionDock.classList.add('hidden');
+      }
+    }
+
     document.querySelectorAll('.nav-tab-btn').forEach(btn => {
       const match = btn.getAttribute('data-target') === targetId;
       btn.className = match
@@ -2869,7 +2906,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const headerDatePicker = document.getElementById('headerDatePicker');
   if (headerDatePicker) {
-    if (state.selectedDate) headerDatePicker.value = state.selectedDate;
+    if (!state.selectedDate) {
+      state.selectedDate = new Date().toISOString().split('T')[0];
+    }
+    headerDatePicker.value = state.selectedDate;
     headerDatePicker.addEventListener('change', (e) => {
       state.saveSelectedDate(e.target.value);
       sounds.playClick();
